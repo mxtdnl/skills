@@ -11,18 +11,18 @@
 From the repository root:
 
 ```bash
-node audit/evidence/attacks.mjs skills-assessment-hult.html
+node audit/evidence/attacks.mjs legacy/skills-assessment-hult.html
 ```
 
 ```bash
-node audit/evidence/cons.mjs skills-assessment-hult.html
+node audit/evidence/cons.mjs legacy/skills-assessment-hult.html
 ```
 
 ```bash
 node audit/evidence/browser.cjs
 ```
 
-The first two need only Node. The third needs Playwright and Chromium. If Session 0 moves the legacy file to `legacy/`, update the path arguments.
+The first two need only Node; the path argument is optional and defaults to `legacy/skills-assessment-hult.html`. The third needs Playwright and Chromium. Session 0 moved the prototype from the repository root to `legacy/`; line references in the audit report are unchanged because the file content was not modified. The same results are asserted by `tests/legacy-scoring.test.mjs` (`npm test`).
 
 ## Verdict in one paragraph
 

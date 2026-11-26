@@ -3,7 +3,7 @@ const { chromium } = require('playwright');
   const b = await chromium.launch();
   const p = await b.newPage({ viewport: { width: 1280, height: 900 } });
   await p.route(/fonts\.(googleapis|gstatic)/, r => r.abort());
-  await p.goto('file://' + require('path').resolve(__dirname, '../../skills-assessment-hult.html'));
+  await p.goto('file://' + require('path').resolve(__dirname, '../../legacy/skills-assessment-hult.html'));
   const log = (...a) => console.log(...a);
   const active = () => p.evaluate(() => document.querySelector('.screen.active').id);
 
