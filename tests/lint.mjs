@@ -1,4 +1,4 @@
-// Static checks across every .html and .css file in the repository.
+// Static checks across every .html, .css and .js file in the repository.
 // Adapted from mxtdnl/slides tests/lint.mjs.
 // Usage: npm run lint  (or: node tests/lint.mjs)
 // Exits non-zero on any failure. Allowlisted legacy files and PLACEHOLDER: counts are
@@ -26,7 +26,7 @@ function walk(dir, out = []) {
     const p = join(dir, name);
     const st = statSync(p);
     if (st.isDirectory()) walk(p, out);
-    else if (name.endsWith('.html') || name.endsWith('.css')) out.push(p);
+    else if (name.endsWith('.html') || name.endsWith('.css') || name.endsWith('.js')) out.push(p);
   }
   return out;
 }
@@ -43,6 +43,24 @@ for (const file of files) {
   if (ALLOWLIST.has(file)) continue;
   const src = readFileSync(join(ROOT, file), 'utf8');
   const isHtml = file.endsWith('.html');
+  const isJs = file.endsWith('.js');
+
+  // JavaScript modules (S3): no remote imports or requests, no curly quotes, no innerHTML.
+  if (isJs) {
+    const jsPatterns = [
+      [/\bimport\s*(?:[^'"`]*?\bfrom\s*)?\(?\s*["'`]\s*https?:/g, 'http(s) URL in import'],
+      [/\bfetch\s*\(\s*["'`]?\s*https?:/g, 'http(s) URL in fetch()'],
+      [/XMLHttpRequest|navigator\.sendBeacon|new\s+WebSocket|new\s+EventSource/g, 'network API'],
+      [/\.(?:innerHTML|outerHTML)\s*\+?=|insertAdjacentHTML\s*\(/g, 'HTML string injection (audit K-5)'],
+      [/[\u2018\u2019\u201C\u201D]/g, 'curly quote'],
+    ];
+    for (const [re, msg] of jsPatterns) {
+      for (const m of src.matchAll(re)) fail(file, `${msg} at line ${lineOf(src, m.index)}`);
+    }
+    const ph = (src.match(/PLACEHOLDER:/g) || []).length;
+    if (ph) warnings.push(`${file}: ${ph} PLACEHOLDER: string(s)`);
+    continue;
+  }
 
   // 1. <meta charset="utf-8"> present and first in <head> (HTML only)
   if (isHtml) {

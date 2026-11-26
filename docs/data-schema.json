@@ -1,0 +1,386 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "skills5c-data-schema-v1",
+  "title": "5C Skills Assessment data model",
+  "description": "Records stored under skills5c:v1:* and in JSON exports. Generated from src/core/schema.js; do not edit by hand. Cross-field rules are listed in docs/DATA-SCHEMA.md.",
+  "$defs": {
+    "participant": {
+      "description": "One student, identified only by a random pseudonymous code.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "participant"
+        },
+        "schemaVersion": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^P-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{5}$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "consent": {
+          "type": "object",
+          "properties": {
+            "noticeVersion": {
+              "type": "string"
+            },
+            "givenAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "programmeEvaluation": {
+              "type": "boolean"
+            },
+            "languageBackground": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "noticeVersion",
+            "givenAt",
+            "programmeEvaluation",
+            "languageBackground"
+          ],
+          "additionalProperties": false
+        },
+        "languageBackground": {
+          "type": "object",
+          "properties": {
+            "englishFirstLanguage": {
+              "type": "string",
+              "enum": [
+                "yes",
+                "no",
+                "prefer-not-to-say"
+              ]
+            }
+          },
+          "required": [
+            "englishFirstLanguage"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "type",
+        "schemaVersion",
+        "id",
+        "createdAt",
+        "consent"
+      ],
+      "additionalProperties": false
+    },
+    "sitting": {
+      "description": "One occasion on which a participant works through tasks in one mode with one form.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "sitting"
+        },
+        "schemaVersion": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^S-[0-9A-HJKMNP-TV-Z]{16}$"
+        },
+        "participantId": {
+          "type": "string",
+          "pattern": "^P-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{5}$"
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "practice",
+            "assessment"
+          ]
+        },
+        "formId": {
+          "type": "string",
+          "pattern": "^(A|B|practice)$"
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "appVersion": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z.-]+)?$"
+        },
+        "scoringVersion": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z.-]+)?$"
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "completedAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "type",
+        "schemaVersion",
+        "id",
+        "participantId",
+        "mode",
+        "formId",
+        "seed",
+        "appVersion",
+        "scoringVersion",
+        "startedAt",
+        "completedAt"
+      ],
+      "additionalProperties": false
+    },
+    "taskAttempt": {
+      "description": "One attempt at one task within a sitting, with every raw response and its timing.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "taskAttempt"
+        },
+        "schemaVersion": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^A-[0-9A-HJKMNP-TV-Z]{16}$"
+        },
+        "sittingId": {
+          "type": "string",
+          "pattern": "^S-[0-9A-HJKMNP-TV-Z]{16}$"
+        },
+        "skillId": {
+          "type": "string",
+          "pattern": "^[a-z0-9_][a-z0-9_-]*$"
+        },
+        "taskId": {
+          "type": "string",
+          "pattern": "^[a-z0-9_][a-z0-9_-]*$"
+        },
+        "itemResponses": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "itemId": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_.-]+$"
+              },
+              "response": {
+                "description": "Raw response; any JSON value. Its shape is defined by the task."
+              },
+              "rtMs": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0
+              },
+              "shownAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "itemId",
+              "response",
+              "rtMs",
+              "shownAt"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "rawScore": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "score": {
+          "type": [
+            "number",
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "scoringVersion": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z.-]+)?$"
+        },
+        "timing": {
+          "type": "object",
+          "properties": {
+            "limitMs": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "multiplier": {
+              "type": "number",
+              "minimum": 1
+            },
+            "extendedMs": {
+              "type": "number",
+              "minimum": 0
+            },
+            "pausedMs": {
+              "type": "number",
+              "minimum": 0
+            },
+            "expired": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "limitMs",
+            "multiplier",
+            "extendedMs",
+            "pausedMs",
+            "expired"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "type",
+        "schemaVersion",
+        "id",
+        "sittingId",
+        "skillId",
+        "taskId",
+        "itemResponses",
+        "rawScore",
+        "score",
+        "scoringVersion"
+      ],
+      "additionalProperties": false
+    },
+    "selfReport": {
+      "description": "One skill's self-report questionnaire within a sitting.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "selfReport"
+        },
+        "schemaVersion": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^R-[0-9A-HJKMNP-TV-Z]{16}$"
+        },
+        "sittingId": {
+          "type": "string",
+          "pattern": "^S-[0-9A-HJKMNP-TV-Z]{16}$"
+        },
+        "skillId": {
+          "type": "string",
+          "pattern": "^[a-z0-9_][a-z0-9_-]*$"
+        },
+        "responses": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "itemId": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_.-]+$"
+              },
+              "response": {
+                "description": "Raw response; any JSON value. Its shape is defined by the task."
+              },
+              "rtMs": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0
+              },
+              "shownAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "itemId",
+              "response",
+              "rtMs",
+              "shownAt"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "score": {
+          "type": [
+            "number",
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "scoringVersion": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z.-]+)?$"
+        }
+      },
+      "required": [
+        "type",
+        "schemaVersion",
+        "id",
+        "sittingId",
+        "skillId",
+        "responses",
+        "score",
+        "scoringVersion"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/participant"
+    },
+    {
+      "$ref": "#/$defs/sitting"
+    },
+    {
+      "$ref": "#/$defs/taskAttempt"
+    },
+    {
+      "$ref": "#/$defs/selfReport"
+    }
+  ]
+}
