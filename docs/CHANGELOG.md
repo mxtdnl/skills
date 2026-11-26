@@ -7,6 +7,7 @@
 | scoringVersion | Applies to | Status |
 |---|---|---|
 | 0.1.0 | Legacy prototype, `legacy/skills-assessment-hult.html` | Legacy; known defects, see `audit/AUDIT-REPORT.md` |
+| 0.2.0 | Rebuilt platform skeleton (S3). Only the developer stub task is scored | No skill measures; nothing to compare |
 
 ## Release checklist for scoringVersion 1.0.0
 
@@ -28,3 +29,14 @@ To be written in Session 15.
 - Added `docs/REVIEW-CHECKLIST.md`.
 - Facet codes unchanged. No change to scoring or code.
 - Revision 2 of `docs/CONSTRUCTS.md`, recording the owner's answers to the open questions: inclusion kept in CO1; CU3 kept; CT2 widened to include perspective-taking; new facet CT4 (statistical and base-rate reasoning) and task CT-T4; revision step in CT-T3; CR4 kept; constraints on automated originality scoring; optional spoken-communication items (CM-X1) reported separately; business and academic passages; per-facet reporting with a confidence flag. The SJT keying rule remains open. Decisions log in `audit/BUILD-PLAN.md` updated.
+
+### S3. Platform skeleton (2026-11-26)
+
+- Added the platform core as vanilla ES modules in `src/core/`: `version.js`, `rng.js` (mulberry32, rejection-sampled integers, Fisher-Yates shuffle), `ids.js` (participant codes with a check character, record IDs), `schema.js` (data model, `validate()`, JSON Schema export), `migrate.js`, `store.js` (adapter interface, `LocalStorageAdapter` with in-memory fallback and notice, `MemoryAdapter`), `timing.js` (end-timestamp timers with pause, extend, accommodation multiplier and untimed mode) and `router.js` (hash routes).
+- Added `src/skills/registry.js` (the only list of skill modules; manifest and content validation), `src/skills/runner.js` (runs a task, scores it, saves the attempt) and the developer stub skill `src/skills/_example/` with example content in `content/_example/pick.js`.
+- Added `dev/platform.html` and `dev/platform.js`, a developer harness that runs the stub end to end with `localStorage`.
+- Wrote `docs/DATA-SCHEMA.md` and `docs/ARCHITECTURE.md`; generated `docs/data-schema.json`; set the content convention in `docs/ITEM-BANK.md`.
+- Schema version 1 (storage prefix `skills5c:v1:`). `appVersion` 0.2.0 (`package.json` bumped).
+- **scoringVersion 0.1.0 to 0.2.0.** New section in `docs/SCORING.md`. No skill measure was added; the bump separates records from the rebuilt platform from legacy results. Legacy scoring and its characterisation tests are unchanged.
+- Added tests: `rng`, `ids`, `schema`, `store`, `migrate`, `timing`, `router`, `registry` (`tests/*.test.mjs`), shared fixtures in `tests/fixtures.mjs`, and `npm run schema` (`tests/write-data-schema.mjs`).
+- Extended `tests/lint.mjs` to `.js` files: no remote imports or requests, no network APIs, no `innerHTML`/`outerHTML` assignment or `insertAdjacentHTML`, no curly quotes.

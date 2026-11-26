@@ -6,7 +6,14 @@ No items have been written for the rebuilt tool yet. The legacy prototype's item
 
 ## Conventions
 
-Set in Session 3 (`content/` directory convention) and applied from Session 6. To be written then.
+Set in Session 3; applied from Session 6. The full contract is in `docs/ARCHITECTURE.md` (Content convention).
+
+- **Location.** `content/<skill>/<task>.js`, one ES module per task, exporting three arrays: `formA`, `formB` and `practice`.
+- **Item fields.** Every item has `id` (unique across the repository; letters, digits, `.`, `_`, `-`) and `status` (`"draft"` or `"reviewed"`). Other fields are defined by the task and documented in the table below when items are added. Text is plain text, rendered with `textContent`, never as HTML.
+- **ID pattern.** `<SKILL>-<TASK>-<POOL><NN>`, for example `CT-T1-A01`, `CT-T1-B01`, `CT-T1-P01`, where the pool letter is `A`, `B` or `P` (practice). The stub skill uses `EX-PICK-A01` and so on.
+- **Separation.** No item ID appears in more than one pool. `validateContent()` in `src/skills/registry.js` enforces this, and the runner refuses to run a task whose content fails it.
+- **Stability.** An item's ID never changes and is never reused, because stored responses refer to it. A materially changed item gets a new ID.
+- **Example content.** `content/_example/pick.js` belongs to the developer stub skill. It is not part of this bank and is never shown to students.
 
 ## Pools and forms
 

@@ -35,7 +35,7 @@ index.html                  Temporary landing page linking to the legacy prototy
 CLAUDE.md                   This file
 README.md                   What the tool is, status, how to run and test it
 LICENSE                     PLACEHOLDER: licence to be chosen by the owner
-package.json                npm scripts (test, lint); no runtime dependencies
+package.json                npm scripts (test, lint, schema); no runtime dependencies
 legacy/
   skills-assessment-hult.html   The original prototype, unchanged
 audit/
@@ -44,17 +44,22 @@ audit/
   README.md                 Index of the audit and how to reproduce the evidence
   evidence/                 Scripts that reproduce every quantitative finding, and their recorded output
 docs/                       Specifications (see Files)
+src/
+  core/                     Platform modules: version, rng, ids, schema, migrate, store, timing, router
+  skills/                   Skill registry, task runner, one directory per skill (_example is a developer stub)
+content/                    Item banks, content/<skill>/<task>.js exporting {formA, formB, practice}
+dev/                        Developer harness for the platform (not student-facing)
 tests/                      Node test and lint scripts (see Testing)
 ```
 
-Planned by later sessions (not yet present): `styles/` (S4), `src/` and `content/` (S3), `assets/` and `styleguide.html` (S4), `cohort.html` (S13), `analysis/` (S15). The target layout is in `audit/AUDIT-REPORT.md` section 4.
+Planned by later sessions (not yet present): `styles/`, `assets/` and `styleguide.html` (S4), `src/report/` (S11, S12), `cohort.html` (S13), `analysis/` (S15). The target layout is in `audit/AUDIT-REPORT.md` section 4.
 
 ## Files
 
 - `CLAUDE.md` — Repository rules, technical conventions, visual system, workflow and testing
 - `README.md` — What the tool is, its status, how to run it locally and how to run the tests
 - `LICENSE` — `PLACEHOLDER: licence to be chosen by the owner`
-- `package.json` — `"type": "module"`; scripts `test` and `lint`; no dependencies
+- `package.json` — `"type": "module"`; version 0.2.0 (= `APP_VERSION`); scripts `test`, `lint` and `schema`; no dependencies
 - `index.html` — Temporary landing page with a legacy-prototype notice and a link to `legacy/skills-assessment-hult.html`. Replaced by the skill hub in S5
 - `legacy/skills-assessment-hult.html` — The original single-file prototype (scoringVersion 0.1.0), moved here unchanged from the repository root in S0. Line references in the audit and in `docs/SCORING.md` refer to this file. Exempt from lint through the allowlist in `tests/lint.mjs`
 - `audit/AUDIT-REPORT.md` — Audit of the prototype against the brief: parameters, findings with severity and line references, premise challenges, target architecture, recommended measures, validation roadmap
@@ -67,14 +72,34 @@ Planned by later sessions (not yet present): `styles/` (S4), `src/` and `content
 - `audit/evidence/results.txt` — Recorded output of the three scripts above
 - `docs/CONSTRUCTS.md` — Draft operational definitions, facets, planned measures, coverage tables and open questions for each skill, marked DRAFT for Hult review; sign-off table in the header (S2 gate)
 - `docs/REVIEW-CHECKLIST.md` — Checklist Hult reviewers use to approve each skill in `docs/CONSTRUCTS.md`
-- `docs/SCORING.md` — Scoring specification. Currently documents the legacy formulas (scoringVersion 0.1.0); new measures add sections as they are built
-- `docs/ITEM-BANK.md` — Item bank conventions and the item table (empty until S6)
-- `docs/DATA-SCHEMA.md` — Data model and export formats (written in S3 and S12)
+- `docs/SCORING.md` — Scoring specification: legacy formulas (scoringVersion 0.1.0) and the platform skeleton with the stub task (0.2.0); new measures add sections as they are built
+- `docs/ITEM-BANK.md` — Item bank conventions (set in S3) and the item table (empty until S6)
+- `docs/ARCHITECTURE.md` — Module layout, routes, skill module contract, content convention, how a task runs, developer harness
+- `docs/DATA-SCHEMA.md` — Data model, identifiers, storage, migrations and export bundle (S3); student-facing export and import added in S12
+- `docs/data-schema.json` — The data model as JSON Schema, generated from `src/core/schema.js` by `npm run schema`; never edited by hand
 - `docs/VALIDATION-PLAN.md` — Pilot protocol, analyses and change thresholds (written in S15)
 - `docs/DESIGN.md` — Pointer to the Visual style section of this file
 - `docs/CHANGELOG.md` — Changes by session, including every `scoringVersion` bump
+- `src/core/version.js` — `SCHEMA_VERSION`, `APP_VERSION`, `SCORING_VERSION`
+- `src/core/rng.js` — Seeded generator (mulberry32), `seedFromString`, `randomSeed`, unbiased `int(n)` and Fisher-Yates `shuffle`
+- `src/core/ids.js` — Pseudonymous participant codes (`P-XXXX-XXXXC`, Crockford base 32 with a check character) and record IDs (`S-`, `A-`, `R-`)
+- `src/core/schema.js` — Data model as JSDoc types and field definitions; `validate()`, `assertValid()`, `toJsonSchema()`
+- `src/core/migrate.js` — Migration chain (empty at schema version 1) and `migrate(bundle)`
+- `src/core/store.js` — Storage adapter interface; `LocalStorageAdapter` (prefix `skills5c:v1:`, try/catch, memory fallback with notice), `MemoryAdapter`, `migrateStoredNamespaces`, `mountStorageNotice`
+- `src/core/timing.js` — End-timestamp timers with pause, extend, accommodation multiplier, untimed mode, snapshot and restore; `startTicker`, `formatMs`
+- `src/core/router.js` — Hash routes `#/hub`, `#/skill/<id>`, `#/task/<skill>/<task>`, `#/results/<skill>`, `#/profile`
+- `src/skills/registry.js` — `SKILL_MODULES` (empty until S6), `EXAMPLE_MODULES`, `validateManifest`, `validateContent`, `createRegistry`, `loadSkills`
+- `src/skills/runner.js` — `runTask` (loads content, mounts, scores, saves the attempt), `itemsFor`, `assignForm`
+- `src/skills/_example/index.js` — Developer stub skill manifest (accent `--accent-5`, not a skill hue)
+- `src/skills/_example/pick.js` — The stub's one task: `mount` and `score`
+- `content/_example/pick.js` — Example items for the stub (draft; not part of the item bank)
+- `dev/platform.html` — Developer harness page, served over HTTP; replaced by the hub in S5
+- `dev/platform.js` — Harness script: participant, sittings, routes, runs the stub task, shows saved attempts and the export
+- `tests/fixtures.mjs` — Valid example records shared by the tests
+- `tests/rng.test.mjs`, `tests/ids.test.mjs`, `tests/schema.test.mjs`, `tests/store.test.mjs`, `tests/migrate.test.mjs`, `tests/timing.test.mjs`, `tests/router.test.mjs`, `tests/registry.test.mjs` — Unit tests for the platform core, registry, runner and stub skill
+- `tests/write-data-schema.mjs` — Writes `docs/data-schema.json` (`npm run schema`)
 - `tests/legacy-scoring.test.mjs` — Characterisation tests asserting the prototype's current scores, ported from `audit/evidence/`
-- `tests/lint.mjs` — Static checks across every `.html` and `.css` file outside `audit/` and `legacy/`
+- `tests/lint.mjs` — Static checks across every `.html`, `.css` and `.js` file outside `audit/` and `legacy/`
 
 Keep this list current. Every session that adds, moves or removes a file updates it in the same commit.
 
@@ -250,14 +275,17 @@ npm run lint    # node tests/lint.mjs
 
 `npm test` runs every `tests/*.test.mjs` file with `node:test`. The script uses a shell glob rather than `node --test tests/`, because Node 22 treats a bare directory argument as a module path and fails.
 
+- The platform tests (`rng`, `ids`, `schema`, `store`, `migrate`, `timing`, `router`, `registry`) import the browser modules in `src/` directly; they need no DOM. Storage is tested through `MemoryStorage`, timers through an injected clock. The shuffle is checked for uniformity with chi-square tests over 10,000 shuffles, and the test is shown to catch a known biased shuffle. `schema.test.mjs` fails if `docs/data-schema.json` is out of date (`npm run schema`).
+
 - `tests/legacy-scoring.test.mjs` loads `legacy/skills-assessment-hult.html` into a Node VM, calls the prototype's own scoring functions and asserts their current outputs, which reproduce `audit/evidence/results.txt`. These are characterisation tests: they pin the defective behaviour (for example, keyword salad scoring 86) so that any change is deliberate. A change to an expected value goes with a `scoringVersion` bump and a `docs/CHANGELOG.md` entry.
 
-`tests/lint.mjs` checks every `.html` and `.css` file outside `audit/` and `legacy/` and exits non-zero on any failure:
+`tests/lint.mjs` checks every `.html`, `.css` and `.js` file outside `audit/` and `legacy/` and exits non-zero on any failure:
 
 - `<meta charset="utf-8">` present and first in `<head>` (HTML)
 - No `http:` or `https:` URLs in `src`, `href`, `url()`, `@import` or `fetch()`, and no `XMLHttpRequest`
 - No curly quotes inside `<script>` blocks (HTML)
 - No `border-radius` values other than `0` and `50%`
+- JavaScript (`.js`): no `http:` or `https:` URLs in `import` or `fetch()`; no `XMLHttpRequest`, `sendBeacon`, `WebSocket` or `EventSource`; no `innerHTML` or `outerHTML` assignment and no `insertAdjacentHTML` (audit K-5); no curly quotes
 - Files on the allowlist (currently only `legacy/skills-assessment-hult.html`) are exempt and printed as a warning
 - A count of `PLACEHOLDER:` strings per file, printed as a warning
 
@@ -271,4 +299,4 @@ To serve the repository locally:
 python3 -m http.server 8000
 ```
 
-Then open `http://localhost:8000/`.
+Then open `http://localhost:8000/`. The platform developer harness is at `http://localhost:8000/dev/platform.html`.

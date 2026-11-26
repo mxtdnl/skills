@@ -7,8 +7,23 @@
 | scoringVersion | Section | Status |
 |---|---|---|
 | 0.1.0 | [Legacy prototype](#legacy-scoringversion-010-known-defects-see-audit) | Legacy, known defects |
+| 0.2.0 | [Platform skeleton](#platform-skeleton-scoringversion-020) | Rebuilt platform; no skill measures yet |
 
 The rebuilt measures add their own sections from Session 6 onwards.
+
+---
+
+## Platform skeleton, scoringVersion 0.2.0
+
+Introduced in Session 3 so that records written by the rebuilt platform are never labelled with the legacy version. It contains no skill measure. The only scoring function is the developer stub's, which measures nothing and is never shown to students.
+
+**Where scoring lives.** Each task's `score(attempt, form)` in its skill module (`docs/ARCHITECTURE.md`). It is a pure function of the attempt's raw responses and the form's items, so any stored attempt can be re-scored. It returns `{ rawScore, score }`, where `score` is a number, null, or one value per facet code. The runner records `scoringVersion` (from `src/core/version.js`) on every attempt.
+
+**Stub task `_example/pick`** (`src/skills/_example/pick.js`). One multiple-choice question per screen.
+
+- Response: `{ choice, position }`, where `choice` is the index of the chosen option in the item's `options` and `position` is where it appeared on screen (option order is shuffled from the sitting seed).
+- `rawScore` = number of responses whose `choice` equals the item's `key`, counting only items of the form taken.
+- `score` = `{ EX1: rawScore / number of items in the form }`, or `{ EX1: null }` for an empty form.
 
 ---
 
