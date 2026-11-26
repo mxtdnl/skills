@@ -15,6 +15,15 @@ Finding IDs (e.g. `K-1`, `B-2`) refer to the audit report.
 3. Check the **Done when** list before merging.
 4. Every prompt assumes Claude reads `CLAUDE.md` first. Session 0 creates that file.
 
+## Decisions log
+
+| Date | Decision | Effect on this plan |
+|---|---|---|
+| 2026-11-26 | Prototype is not in use with students | S1 (legacy hotfixes) is **skipped** |
+| 2026-11-26 | Opening directly from a file is not required; the tool is served over HTTP (GitHub Pages, or a local server for previews) | S3 uses ES modules; the slides repo's `file://` rule does not apply to this repository |
+| 2026-11-26 | Consent wording drafted by Claude is acceptable | S5 writes final consent text; no placeholder. Programme-evaluation use may still need Hult data protection approval outside this repository. |
+| 2026-11-26 | Skill definitions drafted | `docs/CONSTRUCTS.md` exists; the S2 gate is pending owner sign-off |
+
 ## Global rules (repeated in CLAUDE.md, so they apply to every session)
 
 - **No invented facts, item keys or statistics.** Draft content is prefixed `PLACEHOLDER:` or marked `status: "draft"` in the item bank, and is listed at the end of the session.
@@ -60,8 +69,8 @@ Goal: repository foundations only. Do not change the behaviour of skills-assessm
    - a Visual style section that defers to the reference system: copy the tokens tables (light theme, eight accents, ink tones, feedback colours), geometry, typography, components and motion rules from slides/CLAUDE.md, plus the 5C accent mapping in audit/AUDIT-REPORT.md section J-4;
    - Workflow and Testing sections.
 2. Create README.md: what the tool is, its current status (legacy prototype, rebuild in progress, link to audit/), how to run it locally (python3 -m http.server), how to run tests.
-3. Create docs/ with these files, each with headings and a short statement of purpose but no invented content:
-   CONSTRUCTS.md, SCORING.md, ITEM-BANK.md, DATA-SCHEMA.md, VALIDATION-PLAN.md, DESIGN.md (pointer to CLAUDE.md visual style), CHANGELOG.md.
+3. Create docs/ with these files, each with headings and a short statement of purpose but no invented content. docs/CONSTRUCTS.md already exists: do not modify it.
+   SCORING.md, ITEM-BANK.md, DATA-SCHEMA.md, VALIDATION-PLAN.md, DESIGN.md (pointer to CLAUDE.md visual style), CHANGELOG.md.
    In SCORING.md, document the CURRENT legacy scoring formulas exactly as implemented (weights, thresholds, line references), labelled "legacy, scoringVersion 0.1.0, known defects: see audit".
 4. Create tests/:
    - tests/legacy-scoring.test.mjs: port audit/evidence/harness.mjs and attacks.mjs into characterisation tests using node:test and node:assert. They assert the CURRENT outputs (e.g. keyword salad = 86), so later fixes change them deliberately.
@@ -85,7 +94,7 @@ Run npm test and npm run lint. Commit on a new branch named build/s0-foundations
 
 ---
 
-### S1. Legacy hotfixes (only if the prototype is in use with students)
+### S1. Legacy hotfixes — SKIPPED (prototype not in use; see Decisions log)
 
 **Why:** K-1, K-2, K-3, C-2, B-2, B-5, I-1, F-3, F-4. Skip this session if no students use the prototype before the rebuild ships.
 
@@ -125,6 +134,8 @@ Bump the legacy scoringVersion to 0.2.0 in docs/SCORING.md and docs/CHANGELOG.md
 
 ### S2. Construct definitions draft **(Gate: Hult sign-off)**
 
+**Status:** Draft written (`docs/CONSTRUCTS.md`). Only the sign-off remains. Run the prompt below only if the draft needs regenerating; otherwise edit the file directly with reviewer changes.
+
 **Why:** A-0. Items cannot be written against undefined constructs.
 
 **Prompt:**
@@ -159,7 +170,7 @@ Commit on build/s2-constructs. Report the open questions as a numbered list.
 
 **Why:** K-4, C-3, D-1, D-6; architecture in audit section 4.
 
-**Decision needed first:** ES modules served over HTTP (recommended) or classic scripts on `file://`. The prompt assumes ES modules; edit it if the decision differs.
+**Decided:** ES modules served over HTTP. `file://` is not supported.
 
 **Prompt:**
 
@@ -252,7 +263,12 @@ Build the application shell in index.html using the platform (S3) and design sys
 
 1. First-run flow:
    - welcome screen (Hult logo, purpose, what is stored and where, prototype notice);
-   - consent step: separate checkboxes for (a) using the tool and (b) allowing exported data to be used for programme evaluation. Wording marked "PLACEHOLDER: Hult data protection wording";
+   - consent step: separate checkboxes for (a) using the tool and (b) allowing exported data to be used for programme evaluation. Write final, plain-English wording (owner has approved Claude-drafted wording). It must state:
+     - what is stored and where (this browser only);
+     - that nothing is sent anywhere unless the student exports a file and chooses to share it;
+     - what programme evaluation means;
+     - that consent (b) can be withdrawn by asking the coach to delete their file.
+     Record the consent wording version in the data;
    - optional language-background question, clearly optional, explained as used only for fairness checks;
    - pseudonymous ID shown with a "save this code" prompt.
 2. Skill hub (#/hub):
@@ -653,7 +669,7 @@ Commit on build/s15-validation.
 ## Dependency map
 
 ```
-S0 ─┬─ S1 (optional, legacy)
+S0 ─┬─ S1 (skipped)
     └─ S2 (Gate) ─┐
 S0 ── S3 ── S4 ── S5 ── S6 ─┬─ S7 ─┐
                             ├─ S8 ─┤
@@ -667,9 +683,9 @@ S2 approval is required before S6–S10.
 | Session | Input |
 |---|---|
 | S2 | Hult reviewer sign-off of construct definitions |
-| S3 | ES modules over HTTP or classic scripts on file:// |
+| S3 | None (decided: ES modules over HTTP) |
 | S4 | Official Hult logo SVG and any mandatory brand colour (optional; PNG fallback exists) |
-| S5 | Data protection consent wording |
+| S5 | None (consent wording drafted by Claude, approved in principle) |
 | S6–S10 | Subject-expert review of every draft item |
 | S10b | Expert panel keys for the collaboration SJT |
 | S15 | Pilot sample sizes, cut-offs, ethics process |
