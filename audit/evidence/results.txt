@@ -1,0 +1,67 @@
+# node audit/evidence/attacks.mjs skills-assessment-hult.html
+IG click all 15                                            81
+IG click 1 novel card                                      45
+IG click only 8 novel                                      80
+IG click 1 non-novel                                       5
+IG click 7 non-novel                                       35
+IG click 0                                                 0
+Wason correct (P, not-Q)                                   100
+Wason select ALL 4 cards                                   50
+Wason P only                                               50
+Wason classic error P+Q                                    25
+Wason Q only                                               0
+Wason: problems whose answer is cards [0,3] pre-shuffle    6/6
+AUT brick: 10 gibberish lines                              61
+AUT brick: 6 common uses                                   27
+AUT brick: 10 sensible varied uses                         67
+AUT brick: common uses padded with filler                  18
+AUT originality "use as ballast weight for a narrowboat"   0
+AUT originality "asdf qwerty"                              2
+ME careful human rewrites                                  44
+ME keyword salad (keywords list joined)                    86
+ME original pasted back unchanged                          33
+ME keyword salad, each kw once, comma-separated            87
+PG 20 every round                                          100
+PG 0 every round                                           0
+PG 10 every round                                          50
+PG alternating 0/20                                        30
+PG start 20, decline to 0 (reciprocity-like)               41
+SA all 1 (disagree all) + best FC                          self=96 likert=100 fc=94 r=0.00
+SA all 5 (agree all) + worst FC                            self=28 likert=0 fc=46 r=0.00
+SA all 3 midpoint                                          self=76 likert=50 fc=94 r=0.00
+SA 1,2,1,2,1 (very consistent)                             self=92 likert=90 fc=94 r=0.00
+SA 1,5,1,5,1 (inconsistent)                                self=80 likert=60 fc=94 r=0.00
+SA 2,1,2,1,2                                               self=90 likert=85 fc=94 r=0.00
+FC pairs with score gap >=0.5                              13/20
+FC theoretical min/max self per skill                      collaboration:46-94 curiosity:48-100 criticalThinking:39-100 creativity:66-95 communication:53-98
+Composite: cog 0.40, self 1.00, 0 flags                    67
+Composite: cog 0.60, self 0.45, 0 flags                    53
+
+# node audit/evidence/cons.mjs skills-assessment-hult.html
+{
+  patterns: 3125,
+  flagged_notice_lt0_3: '62.5%',
+  badge_check_lt0_5: '65.6%',
+  exactly_zero: '16.0%',
+  nan: 0
+}
+straight-line 1 r= 0
+straight-line 2 r= 0
+straight-line 3 r= 0
+straight-line 4 r= 0
+straight-line 5 r= 0
+
+# node audit/evidence/browser.cjs
+first tab focus: begin-btn
+focus outline style: auto
+likert buttons have aria-label/role radio: checked below
+likert btn aria-label: null | role: null
+faking flag visible after Next: false | page now: Curiosity
+screen after SA: screen-task-intro
+Wason one click on Confirm: before = Problem 1 of 6 | after = Problem 2 of 6 | feedback = "" | button = Confirm Selection
+after wason: screen-task-intro
+AUT screen has any button (pause/extend): 0
+after reload: screen-intro | localStorage keys: 0
+external requests in page: [
+  'https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap'
+]
