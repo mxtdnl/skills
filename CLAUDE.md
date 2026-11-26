@@ -65,7 +65,8 @@ Planned by later sessions (not yet present): `styles/` (S4), `src/` and `content
 - `audit/evidence/cons.mjs` — Exhaustive check of the within-person consistency statistic over 3,125 response patterns
 - `audit/evidence/browser.cjs` — Playwright run of the prototype (keyboard, Wason flow, reload, external requests)
 - `audit/evidence/results.txt` — Recorded output of the three scripts above
-- `docs/CONSTRUCTS.md` — Draft operational definitions and facets for each skill, awaiting Hult sign-off (S2 gate)
+- `docs/CONSTRUCTS.md` — Draft operational definitions, facets, planned measures, coverage tables and open questions for each skill, marked DRAFT for Hult review; sign-off table in the header (S2 gate)
+- `docs/REVIEW-CHECKLIST.md` — Checklist Hult reviewers use to approve each skill in `docs/CONSTRUCTS.md`
 - `docs/SCORING.md` — Scoring specification. Currently documents the legacy formulas (scoringVersion 0.1.0); new measures add sections as they are built
 - `docs/ITEM-BANK.md` — Item bank conventions and the item table (empty until S6)
 - `docs/DATA-SCHEMA.md` — Data model and export formats (written in S3 and S12)

@@ -49,6 +49,7 @@ See the Testing section of `CLAUDE.md` for details, and `audit/README.md` to rep
 | File | Contents |
 |---|---|
 | [`docs/CONSTRUCTS.md`](docs/CONSTRUCTS.md) | Draft definitions and facets for each skill |
+| [`docs/REVIEW-CHECKLIST.md`](docs/REVIEW-CHECKLIST.md) | Checklist for Hult reviewers approving each skill |
 | [`docs/SCORING.md`](docs/SCORING.md) | Scoring specification (currently the legacy formulas) |
 | [`docs/ITEM-BANK.md`](docs/ITEM-BANK.md) | Item bank conventions and item table |
 | [`docs/DATA-SCHEMA.md`](docs/DATA-SCHEMA.md) | Data model and export formats |
