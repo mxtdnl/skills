@@ -35,6 +35,7 @@ Skill: ______________________   Reviewer (name or role): ______________________ 
 ## 5. Open questions
 
 - [ ] Every open question for this skill in `docs/CONSTRUCTS.md` has an answer recorded below.
+- [ ] The owner's decisions recorded for this skill are acceptable to Hult, or changes are recorded below.
 
 ## Decision
 

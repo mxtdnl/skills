@@ -2,6 +2,8 @@
 
 **DRAFT for Hult review.** Nothing in this document is an official Hult definition, and no wording here is attributed to Hult. These are working definitions written for an assessment and development tool used with undergraduate students. They become operative only when a Hult reviewer approves them in the sign-off table below.
 
+**Revision 2 (26 November 2026).** Updated with the owner's answers to the first round of open questions. Each skill's former "Open questions" section is now "Decisions and open questions". The owner's answers are not a Hult sign-off; the sign-off table is still empty.
+
 ## Sign-off
 
 The S2 gate (`audit/BUILD-PLAN.md`) is passed when every row below is completed. No measure or item may be written against a skill until its row records approval. Reviewers should use `docs/REVIEW-CHECKLIST.md`.
@@ -22,10 +24,10 @@ Each skill has:
 
 - a **working definition** in one sentence;
 - two to four **facets**: the parts of the skill the tool measures and develops separately;
-- for each facet, a definition and **observable behaviours**: two of an undergraduate who is strong, two of one who is still developing;
+- for each facet, a definition and **observable behaviours**: at least two of an undergraduate who is strong, and at least two of one who is still developing;
 - **out of scope**: what the skill does *not* include in this tool, so that skills do not overlap and scores are not over-read;
 - **planned measures**, from `audit/AUDIT-REPORT.md` section 5, mapped to facets in a coverage table;
-- **open questions** for Hult reviewers.
+- **decisions and open questions**: the owner's answers so far, and anything still to be settled by Hult.
 
 "Developing" describes a point on a path, not a deficit. The behaviours are examples to guide item writing and coaching; they are not a checklist or a scoring rubric.
 
@@ -41,7 +43,7 @@ Citations are given only where a facet draws on published work that the author i
 
 ### CO1. Information sharing and integration
 
-Making sure the team has what it needs to decide well: offering what you know, asking for what others know, and combining the two. Informed by research on hidden profiles, which shows that groups tend to discuss information everyone already holds and neglect information only one member holds (Stasser & Titus, 1985).
+Making sure the team has what it needs to decide well: offering what you know, asking for what others know, and combining the two. This includes making sure that every member is heard; inclusion is part of this facet, not a separate one. Informed by research on hidden profiles, which shows that groups tend to discuss information everyone already holds and neglect information only one member holds (Stasser & Titus, 1985).
 
 | Strong | Developing |
 |---|---|
@@ -94,11 +96,22 @@ A solo online task can measure collaboration-relevant *judgement* and behaviour 
 
 **Gap.** Until peer evaluation exists, CO2 and CO3 rest on self-report and judgement only; neither observes behaviour.
 
-### Open questions for Hult reviewers
+### Decisions and open questions
 
-1. Should inclusion (making sure every member is heard) be a separate facet, or stay within CO1 as drafted?
-2. Who sits on the expert panel that keys the situational judgement test, and how many panel members are needed for a key to be accepted?
-3. Should the scenarios reflect Hult's own group-work settings (for example, multicultural project teams), or stay generic?
+**Decided by the owner (26 November 2026):**
+
+- Inclusion stays within CO1 (see the CO1 definition).
+- SJT scenarios use a mix of Hult's own group-work settings (for example, multicultural project teams) and generic settings. Scenarios set at Hult must still pass the cultural-neutrality checks in `docs/REVIEW-CHECKLIST.md`.
+
+**Still open:**
+
+1. **Keying the situational judgement test.** An SJT has no answer that is correct by logic; its key is the judgement of experienced people about how effective each response option is. Hult needs to decide:
+   - *who* the panel is: for example, faculty who teach or assess group work, and coaches;
+   - *how many* panel members rate each option independently;
+   - *how the key is set*: for example, the mean of the panel's effectiveness ratings for each option;
+   - *when an item is dropped*: for example, when panel members disagree strongly about which option is most effective.
+
+   No numbers are proposed here: the panel size and the agreement rule should be fixed by Hult and recorded in `docs/SCORING.md` before the SJT is scored (S10).
 
 ---
 
@@ -147,7 +160,7 @@ Engaging willingly with unfamiliar subjects, methods and viewpoints, including o
 | Code | Measure | Type |
 |---|---|---|
 | CU-SR | Self-report, balanced keying; IPIP intellect or openness items where they align with a facet (public domain). Other published scales, such as the Five-Dimensional Curiosity Scale (Kashdan et al., 2018), only after a licence check | Self-report |
-| CU-T1 | Information seeking with costs: rate prior knowledge and curiosity per question, then choose which answers to obtain with a limited budget or by waiting; scored relative to the stated knowledge gap | Behaviour |
+| CU-T1 | Information seeking with costs: rate prior knowledge and curiosity per question, then choose which answers to obtain with a limited budget or by waiting; scored relative to the stated knowledge gap. Topics span many fields, mainly business, psychology, economics and politics | Behaviour |
 | CU-T2 | Question generation: write questions about a stimulus; classified as explanatory (why, how) or factual (what, when) by a transparent rule set plus manual review | Production |
 
 ### Coverage
@@ -160,10 +173,14 @@ Engaging willingly with unfamiliar subjects, methods and viewpoints, including o
 
 **Gap.** CU3 is measured only by self-report. CU-T2 asks students to write in English, so it carries some language load (see Communication, out of scope).
 
-### Open questions for Hult reviewers
+### Decisions and open questions
 
-4. Is CU3 (openness) wanted, given that it can only be self-reported for now? The alternative is to drop it and keep curiosity to CU1 and CU2.
-5. Does Hult want topics in the information-seeking task to span many fields (to observe breadth), or to stay close to business and the social sciences (to reduce differences in prior knowledge)?
+**Decided by the owner (26 November 2026):**
+
+- CU3 (openness) is kept, measured by self-report only for now.
+- CU-T1 topics span many fields, mainly business, psychology, economics and politics. Political topics must be factual and non-partisan, and must not depend on one country's institutions (`docs/REVIEW-CHECKLIST.md`, section 3). Every answer cites a source, and contested claims are described as contested (audit A-3).
+
+No open questions remain for this skill.
 
 ---
 
@@ -180,14 +197,18 @@ Drawing valid conclusions from given information, and recognising which cases wo
 | Identifies the cases that could prove a rule wrong, not only the cases that fit it | Looks only for examples that confirm a rule |
 | Distinguishes what follows necessarily from what merely seems likely | Treats plausible conclusions as if they were proven |
 
-### CT2. Argument and evidence evaluation
+### CT2. Argument evaluation and perspective-taking
 
-Identifying assumptions, flaws and the strength of evidence in an argument.
+Identifying assumptions, flaws and the strength of evidence in an argument, including arguments for positions one does not hold; stating another view fairly before judging it.
 
 | Strong | Developing |
 |---|---|
 | Spots an unstated assumption, or a gap between the evidence and the conclusion | Accepts a conclusion because it sounds reasonable or matches their own view |
 | Judges which evidence would most strengthen or weaken a claim | Treats all evidence as equally strong, or relies on a single anecdote |
+| States an opposing view in a form its supporters would accept, then evaluates it | Argues against a weak or distorted version of the opposing view |
+| Applies the same standard of evidence to arguments they agree with and arguments they disagree with | Is critical only of arguments whose conclusion they dislike |
+
+*Boundary with Curiosity:* CU3 concerns the **willingness** to engage with other views. CT2 concerns how **accurately** a person represents them and how **well** they evaluate them.
 
 ### CT3. Calibration and self-correction
 
@@ -198,14 +219,24 @@ Holding conclusions with a confidence that matches the evidence, and revising th
 | Is more confident when right and less confident when wrong | Is equally confident whether right or wrong, usually too confident |
 | Changes a view when shown better evidence, and can say why | Defends a view whatever the new evidence |
 
+### CT4. Statistical and base-rate reasoning
+
+Reasoning correctly about proportions, samples, chance and how common something is, when judging a claim.
+
+| Strong | Developing |
+|---|---|
+| Asks how common something is in general before judging a single case | Judges a single case only by how well it matches a description, ignoring how common it is |
+| Treats a result from a small or self-selected sample with caution | Generalises from a few cases or a striking example |
+
 ### Out of scope
 
 - Subject knowledge in any particular discipline.
 - Mathematical skill beyond basic proportions.
 - Scepticism as a personality trait: doubting everything is not the same as evaluating well.
-- Ethical reasoning, unless reviewers decide otherwise (question 6).
+- Ethical reasoning (deciding what is right). Perspective-taking is in scope as part of CT2.
+- Statistical skill beyond proportions, percentages and simple chance: no formulas, and no calculation that needs a calculator.
 
-The scope of critical thinking is wider than these three facets; published batteries also cover, for example, statistical and base-rate reasoning (Stanovich, West & Toplak, 2016). The facets were chosen to match the planned measures. No proprietary test items (for example, Watson-Glaser or HCTA) are used.
+Statistical and base-rate reasoning is a standard part of published critical-thinking batteries (Stanovich, West & Toplak, 2016). No proprietary test items (for example, Watson-Glaser or HCTA) are used.
 
 ### Planned measures
 
@@ -213,24 +244,30 @@ The scope of critical thinking is wider than these three facets; published batte
 |---|---|---|
 | CT-SR | Self-report, balanced keying per facet | Self-report |
 | CT-T1 | Conditional reasoning: abstract and rule-based items reported separately; varied negations so the answer pattern differs; all-or-nothing scoring per item | Performance |
-| CT-T2 | Argument and evidence evaluation: identify the flaw, the assumption or the strongest evidence in short business or news scenarios | Performance |
-| CT-T3 | Calibration: two-choice factual or estimation items with confidence ratings; scored for accuracy and for over- or under-confidence | Performance |
+| CT-T2 | Argument evaluation and perspective-taking: identify the flaw, the assumption or the strongest evidence in short business or news scenarios; some items ask for the fairest statement of a view, or the strongest objection to a position | Performance |
+| CT-T3 | Calibration with a revision step: two-choice factual or estimation items with confidence ratings; on some items the student then sees new evidence and may revise the answer and confidence. Scored for accuracy, over- or under-confidence, and appropriate revision | Performance |
+| CT-T4 | Statistical and base-rate reasoning: short scenarios in which the answer depends on a base rate, a sample size or a proportion; one defensible key per item | Performance |
 
 ### Coverage
 
-| Facet | CT-SR | CT-T1 Conditional reasoning | CT-T2 Argument evaluation | CT-T3 Calibration |
-|---|---|---|---|---|
-| CT1 Logical reasoning | ✓ | ✓ primary | | |
-| CT2 Argument and evidence evaluation | ✓ | | ✓ primary | |
-| CT3 Calibration and self-correction | ✓ | | | ✓ primary (calibration part only) |
+| Facet | CT-SR | CT-T1 Conditional reasoning | CT-T2 Argument evaluation | CT-T3 Calibration and revision | CT-T4 Statistical reasoning |
+|---|---|---|---|---|---|
+| CT1 Logical reasoning | ✓ | ✓ primary | | | |
+| CT2 Argument evaluation and perspective-taking | ✓ | | ✓ primary | | |
+| CT3 Calibration and self-correction | ✓ | | | ✓ primary | |
+| CT4 Statistical and base-rate reasoning | ✓ | | ✓ (some evidence items) | | ✓ primary |
 
-**Gap.** CT-T3 measures calibration but not *self-correction* (revising a view after new evidence). Self-correction rests on self-report unless a revision step is added to CT-T2 or CT-T3.
+**Time.** Four tasks plus a revision step will exceed the audit's target of 8 to 10 minutes per skill (audit section 5). The owner accepted this; pilot timings will decide whether tasks are shortened. CT4 items use plain numbers and short text to keep the reading and calculation load low for students writing in a second language.
 
-### Open questions for Hult reviewers
+### Decisions and open questions
 
-6. Should critical thinking include ethical reasoning or perspective-taking, or is that outside this framework?
-7. Should statistical and base-rate reasoning become a fourth facet, which would need a fourth task?
-8. Should CT-T3 add a revision step (answer, see new evidence, answer again) so that self-correction is measured directly, at the cost of about two more minutes?
+**Decided by the owner (26 November 2026):**
+
+- Perspective-taking is in scope and ethical reasoning is not. To keep to four facets, perspective-taking is part of CT2 rather than a facet of its own.
+- Statistical and base-rate reasoning is a fourth facet (CT4), with its own task (CT-T4).
+- CT-T3 gains a revision step, so self-correction is measured directly.
+
+No open questions remain for this skill. The build plan's S7 prompt describes three tasks; it must be read together with this section (see the decisions log in `audit/BUILD-PLAN.md`).
 
 ---
 
@@ -304,10 +341,17 @@ Divergent-thinking tasks measure part of creative *potential*, and results must 
 
 **Gap.** Whether CR-T2 contributes to CR1 to CR3 depends on the rubric, which is not yet written. Both tasks ask students to write in English, so typing speed and English vocabulary affect fluency; see audit E-1.
 
-### Open questions for Hult reviewers
+### Decisions and open questions
 
-9. Is problem finding (CR4) wanted, or should creativity stay limited to idea generation (CR1 to CR3)?
-10. Should originality ever be scored by an automated method (semantic distance or a language model) once the disabled adapter exists, or only by frequency norms and human rating?
+**Decided by the owner (26 November 2026):**
+
+- Problem finding (CR4) is kept.
+- Originality should be scored automatically where possible. This is bounded by the technical conventions in `CLAUDE.md`:
+  - A semantic-distance method may run in the browser only if its data ships with the tool as a static file. No network calls.
+  - Language-model scoring stays behind the disabled adapter (audit F-5). It is switched on only after data protection approval, because responses would leave the browser.
+  - Until an automated method has been compared with human ratings in the pilot, the frequency-norm score is the reported score, and any automated score is recorded alongside it, not in its place.
+
+No open questions remain for this skill.
 
 ---
 
@@ -358,6 +402,9 @@ Any written task in English partly reflects English proficiency. The tool limits
 | CM-T1 | "Which is clearer?" paired comparisons; selection only, fixed key | Receptive |
 | CM-T2 | Diagnose: identify the problem in an *unmarked* passage (ambiguity, buried main point, jargon, missing reasoning, wrong register) | Receptive |
 | CM-T3 | One rewrite, scored by a transparent checklist that the student also uses to check their own work; coach or language-model scoring optional later | Productive |
+| CM-X1 | Optional, not in the first version's score: self-report items and scenario-based judgement items about spoken situations (for example, how to open a presentation, or how to respond when listeners look confused). Reported separately from the written score | Self-report and judgement |
+
+Passages in CM-T1 to CM-T3 use both business writing (emails, briefs, reports) and academic writing (essay paragraphs, summaries of findings), in roughly equal numbers on each form.
 
 The receptive tasks (CM-T1, CM-T2) carry most of the score, to limit the advantage of native English speakers.
 
@@ -371,17 +418,23 @@ The receptive tasks (CM-T1, CM-T2) carry most of the score, to limit the advanta
 
 Each facet needs items of its own in every task, so that facet scores can be reported separately. The item bank (`docs/ITEM-BANK.md`) records the facet of every item.
 
-### Open questions for Hult reviewers
+### Decisions and open questions
 
-11. Is written communication alone acceptable for the first version, with spoken communication explicitly deferred?
-12. Should the passages use business writing only (emails, briefs, reports), or also academic writing?
+**Decided by the owner (26 November 2026):**
+
+- The first version measures written communication. Spoken communication may be added as self-report and scenario-based judgement items (CM-X1), reported separately. These items cannot observe actual speaking, so they do not change the working definition, and results must not present them as a measure of speaking skill.
+- Passages use both business and academic writing.
+
+No open questions remain for this skill.
 
 ---
 
-## Questions across all skills
+## Decisions across all skills
 
-13. Do any of these definitions conflict with how the 5Cs are taught, assessed or described to students at Hult? If Hult has internal descriptions, rubrics or learning outcomes for the 5Cs, the reviewer is asked to share them so that the definitions can be aligned.
-14. Should results be reported per facet, or only per skill? Per-facet reporting is more useful for coaching but each facet has fewer items, so it will be less reliable.
+**Decided by the owner (26 November 2026):**
+
+- No conflicts are known between these definitions and how the 5Cs are taught at Hult. No Hult rubrics or learning outcomes were supplied for comparison; a Hult reviewer should still complete section 4 of `docs/REVIEW-CHECKLIST.md`.
+- Results are reported both per skill and per facet. Each facet result carries a flag showing how much confidence it supports. Before the pilot, no reliability figures exist, so every facet result is flagged as provisional and based on few items; after the pilot, the flag is set from the reliability estimates recorded in `docs/VALIDATION-PLAN.md`.
 
 ---
 
