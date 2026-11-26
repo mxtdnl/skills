@@ -34,7 +34,7 @@ dev/
   platform.html  developer harness (not student-facing), replaced by the hub in S5
 ```
 
-Planned: `styles/` and `assets/` (S4), `src/report/` (S11, S12), `cohort.html` (S13).
+Design system (S4): `styles/` (tokens, base, components), `assets/` and `styleguide.html`; see `docs/DESIGN.md`. Planned: `src/report/` (S11, S12), `cohort.html` (S13).
 
 ## Routes
 

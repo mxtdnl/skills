@@ -40,3 +40,12 @@ To be written in Session 15.
 - **scoringVersion 0.1.0 to 0.2.0.** New section in `docs/SCORING.md`. No skill measure was added; the bump separates records from the rebuilt platform from legacy results. Legacy scoring and its characterisation tests are unchanged.
 - Added tests: `rng`, `ids`, `schema`, `store`, `migrate`, `timing`, `router`, `registry` (`tests/*.test.mjs`), shared fixtures in `tests/fixtures.mjs`, and `npm run schema` (`tests/write-data-schema.mjs`).
 - Extended `tests/lint.mjs` to `.js` files: no remote imports or requests, no network APIs, no `innerHTML`/`outerHTML` assignment or `insertAdjacentHTML`, no curly quotes.
+
+### S4. Design system port (2026-11-26)
+
+- Added `styles/tokens.css` (reference palette, ink tones and feedback colours copied exactly from `slides/CLAUDE.md`; skill tokens `--skill-<id>` with `-ink`, `-on` and `-tint`), `styles/base.css` and `styles/components.css` (buttons, cards, Likert radio group, choice cards, timer ring, progress dots, feedback, notices, skill tiles, results bar with uncertainty band, banners, decorative geometry). No legacy styles were reused.
+- Added `assets/hult-logo.png` (one copy of the prototype's base64 PNG, extracted unchanged; all nine embedded copies were identical) and `assets/favicon.svg` with `assets/favicon.png`. Favicon links added to `index.html` and `dev/platform.html`.
+- Added `styleguide.html`, a living specimen of every token and component in every state.
+- Extended `tests/lint.mjs` with a reference-palette check and a contrast check over a `CONTRAST_PAIRS` table (70 pairs).
+- Communication text uses `--accent-7-ink`, because `--accent-3` fails AA as body text; recorded as an open decision in `docs/DESIGN.md` and in the 5C mapping table in `CLAUDE.md`.
+- No change to scoring, data or `scoringVersion`.

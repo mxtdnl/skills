@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Style guide · 5C Skills Assessment</title>
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/favicon.png" type="image/png" sizes="32x32">
+<link rel="stylesheet" href="styles/tokens.css">
+<link rel="stylesheet" href="styles/base.css">
+<link rel="stylesheet" href="styles/components.css">
+<!--
+  Living specimen of the design system (Session 4). Every token and component, in every
+  state, with the five skill accents. For visual review only; not student-facing.
+  Hover and focus states are shown statically through .sg-hover and .sg-focus, which the
+  script at the end derives from the real :hover and :focus-visible rules at load time,
+  so the specimens cannot drift from the stylesheets.
+-->
+<style>
+  /* Specimen layout only. Components live in styles/components.css. */
+  .sg-hero { padding: var(--space-7) 0 var(--space-6); }
+  .sg-hero h1 { max-width: 16ch; }
+  .sg-hero .geo-square { --geo-color: var(--accent-1); --geo-size: 26rem; top: -8rem; right: -8rem; }
+  .sg-hero .geo-ring { --geo-color: var(--accent-4); --geo-size: 15rem; --geo-thickness: 1.75rem; bottom: -6rem; left: 38%; opacity: 0.12; }
+  .sg-hero .geo-bar { --geo-color: var(--accent-2); top: 72%; left: -20%; opacity: 0.08; }
+  .sg-toc { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); margin: 0; padding: 0; list-style: none; font-size: 0.85rem; font-weight: var(--weight-label); text-transform: uppercase; letter-spacing: 0.08em; }
+  .sg-section { padding: var(--space-6) 0; }
+  .sg-section > .wrap > .colour-bar { margin: 0 0 var(--space-4); width: 6rem; }
+  .sg-sub { margin: var(--space-6) 0 var(--space-3); font-size: 0.85rem; font-weight: var(--weight-label); text-transform: uppercase; letter-spacing: 0.12em; }
+  .sg-note { font-size: 0.9rem; color: var(--text-muted); max-width: var(--measure); }
+  .sg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 12rem), 1fr)); gap: var(--space-3); }
+  .sg-grid-wide { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr)); gap: var(--space-4); }
+  .sg-swatch { background: var(--bg-card); border: var(--rule) solid var(--border); }
+  .sg-swatch-fill { height: 4.5rem; background: var(--sw); border-bottom: var(--rule) solid var(--border); display: flex; align-items: flex-end; padding: var(--space-2) var(--space-3); }
+  .sg-swatch-body { padding: var(--space-2) var(--space-3) var(--space-3); }
+  .sg-swatch-name { display: block; font-size: 0.85rem; font-weight: var(--weight-label); }
+  .sg-swatch code, .sg-ratio { display: block; font-size: 0.75rem; color: var(--text-muted); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; overflow-wrap: anywhere; }
+  .sg-skill { background: var(--bg-card); border: var(--rule) solid var(--border); border-left: var(--rail) solid var(--accent); }
+  .sg-skill-fill { padding: var(--space-4); background: var(--accent); color: var(--accent-on); }
+  .sg-skill-fill strong { display: block; font-size: 1.2rem; font-weight: var(--weight-label); text-transform: uppercase; letter-spacing: 0.08em; }
+  .sg-skill-meta { padding: var(--space-2) var(--space-4); border-bottom: var(--rule) solid var(--border); display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); align-items: baseline; }
+  .sg-skill-meta code { font-size: 0.8rem; }
+  .sg-skill-row { display: grid; grid-template-columns: 1fr 1fr; }
+  .sg-skill-row > div { padding: var(--space-3) var(--space-4); }
+  .sg-skill-row > div + div { background: var(--accent-tint); }
+  .sg-skill-ink { color: var(--accent-ink); font-size: 0.85rem; font-weight: var(--weight-label); text-transform: uppercase; letter-spacing: 0.1em; }
+  .sg-states { display: flex; flex-wrap: wrap; gap: var(--space-4); align-items: flex-start; }
+  .sg-state { display: grid; gap: var(--space-2); justify-items: start; }
+  .sg-state > .micro { color: var(--text-muted); text-transform: uppercase; font-weight: var(--weight-label); letter-spacing: 0.1em; }
+  .sg-geo-demo { height: 12rem; background: var(--bg-card); border: var(--rule) solid var(--border); }
+  .sg-geo-demo > span.micro { position: absolute; left: var(--space-3); bottom: var(--space-2); z-index: 1; color: var(--text-muted); text-transform: uppercase; font-weight: var(--weight-label); letter-spacing: 0.1em; }
+  .sg-type > * { margin-bottom: var(--space-3); }
+  .sg-timers { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr)); gap: var(--space-4); align-items: start; }
+  .sg-timers .timer { display: flex; }
+  @media (max-width: 600px) {
+    .sg-skill-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">
+      <img class="brand-logo" src="assets/hult-logo.png" alt="Hult International Business School">
+      <span class="brand-name">5C Skills<br>Assessment</span>
+    </a>
+    <span class="tag accent">Style guide · S4</span>
+  </div>
+  <div class="skill-rail" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+</header>
+
+<main>
+
+<section class="sg-hero geo-field">
+  <span class="geo geo-square" aria-hidden="true"></span>
+  <span class="geo geo-ring" aria-hidden="true"></span>
+  <span class="geo geo-bar" aria-hidden="true"></span>
+  <div class="wrap">
+    <p class="eyebrow">Design system</p>
+    <h1>A warm, hard-edged system for five skills</h1>
+    <p class="lede">Every token and component of the rebuilt tool, in every state. Tokens are in <code>styles/tokens.css</code>, components in <code>styles/components.css</code>. Specimen copy marked PLACEHOLDER: is not item content.</p>
+    <nav aria-label="Sections">
+      <ul class="sg-toc">
+        <li><a href="#tokens">Tokens</a></li>
+        <li><a href="#skills">Skills</a></li>
+        <li><a href="#type">Type</a></li>
+        <li><a href="#buttons">Buttons</a></li>
+        <li><a href="#cards">Cards</a></li>
+        <li><a href="#likert">Likert</a></li>
+        <li><a href="#choices">Choice cards</a></li>
+        <li><a href="#timer">Timer</a></li>
+        <li><a href="#progress">Progress</a></li>
+        <li><a href="#feedback">Feedback</a></li>
+        <li><a href="#notices">Notices</a></li>
+        <li><a href="#tiles">Skill tiles</a></li>
+        <li><a href="#results">Results</a></li>
+        <li><a href="#banners">Banners</a></li>
+        <li><a href="#geometry">Geometry</a></li>
+      </ul>
+    </nav>
+  </div>
+</section>
+
+<!-- ============================================================ TOKENS -->
+<section class="sg-section" id="tokens">
+  <div class="wrap">
+    <span class="colour-bar" data-accent="1" aria-hidden="true"></span>
+    <p class="eyebrow">01 · Tokens</p>
+    <h2>Colour tokens</h2>
+    <p class="sg-note">Values copied exactly from the reference system (<code>mxtdnl/slides</code>, Visual style, light theme). Hex values below are read from the live stylesheet. Ratios are against <code>--bg-card</code> unless stated.</p>
+
+    <h3 class="sg-sub">Surfaces and text</h3>
+    <div class="sg-grid">
+      <div class="sg-swatch" style="--sw: var(--bg)"><div class="sg-swatch-fill"></div><div class="sg-swatch-body"><span class="sg-swatch-name">--bg</span><code data-token="--bg"></code></div></div>
+      <div class="sg-swatch" style="--sw: var(--bg-card)"><div class="sg-swatch-fill"></div><div class="sg-swatch-body"><span class="sg-swatch-name">--bg-card</span><code data-token="--bg-card"></code></div></div>
+      <div class="sg-swatch" style="--sw: var(--bg-deep)"><div class="sg-swatch-fill"></div><div class="sg-swatch-body"><span class="sg-swatch-name">--bg-deep</span><code data-token="--bg-deep"></code></div></div>
+      <div class="sg-swatch" style="--sw: var(--text)"><div class="sg-swatch-fill"></div><div class="sg-swatch-body"><span class="sg-swatch-name">--text</span><code data-token="--text"></code><span class="sg-ratio" data-pair="--text|--bg-card"></span></div></div>
+      <div class="sg-swatch" style="--sw: var(--text-muted)"><div class="sg-swatch-fill"></div><div class="sg-swatch-body"><span class="sg-swatch-name">--text-muted</span><code data-token="--text-muted"></code><span class="sg-ratio" data-pair="--text-muted|--bg"></span></div></div>
+      <div class="sg-swatch" style="--sw: var(--border)"><div class="sg-swatch-fill"></div><div class="sg-swatch-body"><span class="sg-swatch-name">--border</span><code data-token="--border"></code></div></div>
+    </div>
+
+    <h3 class="sg-sub">Eight accents</h3>
+    <div class="sg-grid">
+      <div class="sg-swatch" style="--sw: var(--accent-1)"><div class="sg-swatch-fill"></div><div class="sg-swatch-body"><span class="sg-swatch-name">--accent-1 purple</span><code data-token="--accent-1"></code><span class="sg-ratio" data-pair="--on-accent|--accent-1"></span></div></div>
+      <div class="sg-swatch" style="--sw: var(--accent-2)"><div class="sg-swatch-fill"></div><div class="sg-swatch-body"><span class="sg-swatch-name">--accent-2 red</span><code data-token="--accent-2"></code><span class="sg-ratio" data-pair="--on-accent|--accent-2"></span></div></div>
+      <div class="sg-swatch" style="--sw: var(--accent-3)"><div class="sg-swatch-fill"></div><div class="sg-swatch-body"><span class="sg-swatch-name">--accent-3 burnt orange</span><code data-token="--accent-3"></code><span class="sg-ratio" data-pair="--on-accent|--accent-3"></span></div></div>
+      <div class="sg-swatch" style="--sw: var(--accent-4)"><div class="sg-swatch-fill"></div><div class="sg-swatch-body"><span class="sg-swatch-name">--accent-4 gold</span><code data-token="--accent-4"></code><span class="sg-ratio" data-pair="--text|--accent-4"></span></div></div>
+      <div class="sg-swatch" style="--sw: var(--accent-5)"><div class="sg-swatch-fill"></div><div class="sg-swatch-body"><span class="sg-swatch-name">--accent-5 brown</span><code data-token="--accent-5"></code><span class="sg-ratio" data-pair="--on-accent|--accent-5"></span></div></div>
+      <div class="sg-swatch" style="--sw: var(--accent-6)"><div class="sg-swatch-fill"></div><div class="sg-swatch-body"><span class="sg-swatch-name">--accent-6 magenta</span><code data-token="--accent-6"></code><span class="sg-ratio" data-pair="--on-accent|--accent-6"></span></div></div>
+      <div class="sg-swatch" style="--sw: var(--accent-7)"><div class="sg-swatch-fill"></div><div class="sg-swatch-body"><span class="sg-swatch-name">--accent-7 orange</span><code data-token="--accent-7"></code><span class="sg-ratio" data-pair="--text|--accent-7"></span></div></div>
+      <div class="sg-swatch" style="--sw: var(--accent-8)"><div class="sg-swatch-fill"></div><div class="sg-swatch-body"><span class="sg-swatch-name">--accent-8 lighter purple</span><code data-token="--accent-8"></code><span class="sg-ratio" data-pair="--on-accent|--accent-8"></span></div></div>
+    </div>
+    <p class="sg-note">Ratios on accents are for the text colour used on that fill (white, or <code>--text</code> on gold and orange). Burnt orange and orange fills carry large text only.</p>
+
+    <h3 class="sg-sub">Ink tones (text only)</h3>
+    <div class="sg-grid">
+      <div class="sg-swatch" style="--sw: var(--accent-4-ink)"><div class="sg-swatch-fill"></div><div class="sg-swatch-body"><span class="sg-swatch-name">--accent-4-ink</span><code data-token="--accent-4-ink"></code><span class="sg-ratio" data-pair="--accent-4-ink|--bg"></span></div></div>
+      <div class="sg-swatch" style="--sw: var(--accent-7-ink)"><div class="sg-swatch-fill"></div><div class="sg-swatch-body"><span class="sg-swatch-name">--accent-7-ink</span><code data-token="--accent-7-ink"></code><span class="sg-ratio" data-pair="--accent-7-ink|--bg"></span></div></div>
+    </div>
+
+    <h3 class="sg-sub">Feedback</h3>
+    <div class="sg-grid">
+      <div class="sg-swatch" style="--sw: var(--correct)"><div class="sg-swatch-fill"></div><div class="sg-swatch-body"><span class="sg-swatch-name">--correct</span><code data-token="--correct"></code></div></div>
+      <div class="sg-swatch" style="--sw: var(--correct-ink)"><div class="sg-swatch-fill"></div><div class="sg-swatch-body"><span class="sg-swatch-name">--correct-ink</span><code data-token="--correct-ink"></code><span class="sg-ratio" data-pair="--correct-ink|--correct-tint"></span></div></div>
+      <div class="sg-swatch" style="--sw: var(--correct-tint)"><div class="sg-swatch-fill"></div><div class="sg-swatch-body"><span class="sg-swatch-name">--correct-tint</span><code data-token="--correct-tint"></code></div></div>
+      <div class="sg-swatch" style="--sw: var(--incorrect)"><div class="sg-swatch-fill"></div><div class="sg-swatch-body"><span class="sg-swatch-name">--incorrect</span><code data-token="--incorrect"></code></div></div>
+      <div class="sg-swatch" style="--sw: var(--incorrect-ink)"><div class="sg-swatch-fill"></div><div class="sg-swatch-body"><span class="sg-swatch-name">--incorrect-ink</span><code data-token="--incorrect-ink"></code><span class="sg-ratio" data-pair="--incorrect-ink|--incorrect-tint"></span></div></div>
+      <div class="sg-swatch" style="--sw: var(--incorrect-tint)"><div class="sg-swatch-fill"></div><div class="sg-swatch-body"><span class="sg-swatch-name">--incorrect-tint</span><code data-token="--incorrect-tint"></code></div></div>
+      <div class="sg-swatch" style="--sw: var(--ambiguous)"><div class="sg-swatch-fill"></div><div class="sg-swatch-body"><span class="sg-swatch-name">--ambiguous</span><code data-token="--ambiguous"></code></div></div>
+      <div class="sg-swatch" style="--sw: var(--ambiguous-ink)"><div class="sg-swatch-fill"></div><div class="sg-swatch-body"><span class="sg-swatch-name">--ambiguous-ink</span><code data-token="--ambiguous-ink"></code><span class="sg-ratio" data-pair="--ambiguous-ink|--ambiguous-tint"></span></div></div>
+      <div class="sg-swatch" style="--sw: var(--ambiguous-tint)"><div class="sg-swatch-fill"></div><div class="sg-swatch-body"><span class="sg-swatch-name">--ambiguous-tint</span><code data-token="--ambiguous-tint"></code></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ SKILLS -->
+<section class="sg-section" id="skills">
+  <div class="wrap">
+    <span class="colour-bar" data-accent="2" aria-hidden="true"></span>
+    <p class="eyebrow">02 · Skills</p>
+    <h2>The five skill accents</h2>
+    <p class="sg-note">Each skill always appears in its accent (audit J-4), in canonical order. Each card shows the fill with its on-colour (large text), the ratio of that on-colour, the ink on <code>--bg-card</code>, and the ink on the skill tint.</p>
+    <div class="sg-grid-wide">
+      <div class="sg-skill" data-skill="collaboration">
+        <div class="sg-skill-fill"><strong>Collaboration</strong></div>
+        <div class="sg-skill-meta"><code>--skill-collaboration</code><span class="sg-ratio">Fill text <span data-pair="--skill-collaboration-on|--skill-collaboration"></span></span></div>
+        <div class="sg-skill-row"><div><span class="sg-skill-ink">Ink on card</span><span class="sg-ratio" data-pair="--skill-collaboration-ink|--bg-card"></span></div><div><span class="sg-skill-ink">Ink on tint</span><span class="sg-ratio" data-pair="--skill-collaboration-ink|--skill-collaboration-tint"></span></div></div>
+      </div>
+      <div class="sg-skill" data-skill="curiosity">
+        <div class="sg-skill-fill"><strong>Curiosity</strong></div>
+        <div class="sg-skill-meta"><code>--skill-curiosity</code><span class="sg-ratio">Fill text <span data-pair="--skill-curiosity-on|--skill-curiosity"></span></span></div>
+        <div class="sg-skill-row"><div><span class="sg-skill-ink">Ink on card</span><span class="sg-ratio" data-pair="--skill-curiosity-ink|--bg-card"></span></div><div><span class="sg-skill-ink">Ink on tint</span><span class="sg-ratio" data-pair="--skill-curiosity-ink|--skill-curiosity-tint"></span></div></div>
+      </div>
+      <div class="sg-skill" data-skill="critical">
+        <div class="sg-skill-fill"><strong>Critical thinking</strong></div>
+        <div class="sg-skill-meta"><code>--skill-critical</code><span class="sg-ratio">Fill text <span data-pair="--skill-critical-on|--skill-critical"></span></span></div>
+        <div class="sg-skill-row"><div><span class="sg-skill-ink">Ink on card</span><span class="sg-ratio" data-pair="--skill-critical-ink|--bg-card"></span></div><div><span class="sg-skill-ink">Ink on tint</span><span class="sg-ratio" data-pair="--skill-critical-ink|--skill-critical-tint"></span></div></div>
+      </div>
+      <div class="sg-skill" data-skill="creativity">
+        <div class="sg-skill-fill"><strong>Creativity</strong></div>
+        <div class="sg-skill-meta"><code>--skill-creativity</code><span class="sg-ratio">Fill text <span data-pair="--skill-creativity-on|--skill-creativity"></span></span></div>
+        <div class="sg-skill-row"><div><span class="sg-skill-ink">Ink on card</span><span class="sg-ratio" data-pair="--skill-creativity-ink|--bg-card"></span></div><div><span class="sg-skill-ink">Ink on tint</span><span class="sg-ratio" data-pair="--skill-creativity-ink|--skill-creativity-tint"></span></div></div>
+      </div>
+      <div class="sg-skill" data-skill="communication">
+        <div class="sg-skill-fill"><strong>Communication</strong></div>
+        <div class="sg-skill-meta"><code>--skill-communication</code><span class="sg-ratio">Fill text <span data-pair="--skill-communication-on|--skill-communication"></span></span></div>
+        <div class="sg-skill-row"><div><span class="sg-skill-ink">Ink on card</span><span class="sg-ratio" data-pair="--skill-communication-ink|--bg-card"></span></div><div><span class="sg-skill-ink">Ink on tint</span><span class="sg-ratio" data-pair="--skill-communication-ink|--skill-communication-tint"></span></div></div>
+      </div>
+    </div>
+    <div class="notice notice-warning" style="margin-top: var(--space-5)">
+      <strong class="notice-title">Decision needed</strong>
+      <p>Communication text uses <code>--accent-7-ink</code>, because burnt orange is 4.32:1 on <code>--bg-card</code> and fails AA at body size. Its fill carries large text only, and <code>.btn-accent</code> in Communication is outlined.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ TYPE -->
+<section class="sg-section" id="type">
+  <div class="wrap">
+    <span class="colour-bar" data-accent="4" aria-hidden="true"></span>
+    <p class="eyebrow">03 · Typography</p>
+    <h2>System fonts, weight and case</h2>
+    <div class="card card-rail sg-type" data-accent="4">
+      <p class="eyebrow">Eyebrow on a card, in the accent ink</p>
+      <h1>Heading one, weight 800</h1>
+      <h2>Heading two, sentence case</h2>
+      <h3>Heading three</h3>
+      <h4>Heading four</h4>
+      <p class="lede">Lede paragraph. A short introduction at 1.1rem in the muted text colour, set to a reading measure.</p>
+      <p>Body text at 1rem, weight 400, line-height 1.55. Plain English for an undergraduate population, many with English as a second language. <a href="#type">An inline link</a> uses the purple accent with a 2px underline.</p>
+      <p class="small">Small text, 0.9rem.</p>
+      <p class="micro">Micro text, 0.75rem.</p>
+      <p class="quiet">Quiet text in --text-muted.</p>
+      <p><span class="pip" aria-hidden="true"></span> Accent pip marking a list item &nbsp; <span class="tag">Tag</span> <span class="tag accent">Accent tag</span> <span class="tag correct">Correct</span> <span class="tag incorrect">Incorrect</span> <span class="tag ambiguous">Ambiguous</span></p>
+    </div>
+    <p class="eyebrow" style="margin-top: var(--space-5)">Eyebrow on --bg stays in --text</p>
+    <table>
+      <thead><tr><th>Role</th><th>Size</th><th>Weight</th><th>Case</th></tr></thead>
+      <tbody>
+        <tr><td>Headings</td><td>clamp(), 1.05rem to 3.25rem</td><td>800</td><td>Sentence</td></tr>
+        <tr><td>Body</td><td>1rem (lede 1.1rem)</td><td>400</td><td>Sentence</td></tr>
+        <tr><td>Labels, buttons, eyebrows</td><td>0.68rem to 0.85rem</td><td>700</td><td>Uppercase</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ BUTTONS -->
+<section class="sg-section" id="buttons">
+  <div class="wrap">
+    <span class="colour-bar" data-accent="6" aria-hidden="true"></span>
+    <p class="eyebrow">04 · Buttons</p>
+    <h2>Primary, ghost and accent</h2>
+
+    <h3 class="sg-sub">Primary</h3>
+    <div class="sg-states">
+      <div class="sg-state"><span class="micro">Default</span><button type="button" class="btn">Continue</button></div>
+      <div class="sg-state"><span class="micro">Hover</span><button type="button" class="btn sg-hover">Continue</button></div>
+      <div class="sg-state"><span class="micro">Focus</span><button type="button" class="btn sg-focus">Continue</button></div>
+      <div class="sg-state"><span class="micro">Disabled</span><button type="button" class="btn" disabled>Continue</button></div>
+      <div class="sg-state"><span class="micro">Small</span><button type="button" class="btn btn-small">Skip</button></div>
+    </div>
+
+    <h3 class="sg-sub">Ghost</h3>
+    <div class="sg-states">
+      <div class="sg-state"><span class="micro">Default</span><button type="button" class="btn btn-ghost">Back</button></div>
+      <div class="sg-state"><span class="micro">Hover</span><button type="button" class="btn btn-ghost sg-hover">Back</button></div>
+      <div class="sg-state"><span class="micro">Focus</span><button type="button" class="btn btn-ghost sg-focus">Back</button></div>
+      <div class="sg-state"><span class="micro">Disabled</span><button type="button" class="btn btn-ghost" disabled>Back</button></div>
+    </div>
+
+    <h3 class="sg-sub">Accent, by skill</h3>
+    <div class="sg-states">
+      <div class="sg-state" data-skill="collaboration"><span class="micro">Collaboration</span><button type="button" class="btn btn-accent">Start</button><button type="button" class="btn btn-accent sg-hover">Hover</button></div>
+      <div class="sg-state" data-skill="curiosity"><span class="micro">Curiosity</span><button type="button" class="btn btn-accent">Start</button><button type="button" class="btn btn-accent sg-hover">Hover</button></div>
+      <div class="sg-state" data-skill="critical"><span class="micro">Critical thinking</span><button type="button" class="btn btn-accent">Start</button><button type="button" class="btn btn-accent sg-hover">Hover</button></div>
+      <div class="sg-state" data-skill="creativity"><span class="micro">Creativity</span><button type="button" class="btn btn-accent">Start</button><button type="button" class="btn btn-accent sg-hover">Hover</button></div>
+      <div class="sg-state" data-skill="communication"><span class="micro">Communication (outlined)</span><button type="button" class="btn btn-accent">Start</button><button type="button" class="btn btn-accent sg-hover">Hover</button></div>
+    </div>
+
+    <h3 class="sg-sub">Accent, other palette fills</h3>
+    <div class="sg-states">
+      <div class="sg-state" data-accent="5"><span class="micro">Accent 5</span><button type="button" class="btn btn-accent">Export</button></div>
+      <div class="sg-state" data-accent="8"><span class="micro">Accent 8</span><button type="button" class="btn btn-accent">Export</button></div>
+      <div class="sg-state" data-accent="7"><span class="micro">Accent 7 (outlined)</span><button type="button" class="btn btn-accent">Export</button></div>
+      <div class="sg-state" data-accent="2"><span class="micro">Disabled</span><button type="button" class="btn btn-accent" disabled>Export</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ CARDS -->
+<section class="sg-section" id="cards">
+  <div class="wrap">
+    <span class="colour-bar" data-accent="3" aria-hidden="true"></span>
+    <p class="eyebrow">05 · Cards</p>
+    <h2>Cards with an accent rail</h2>
+    <div class="card-grid">
+      <div class="card"><p class="eyebrow">Plain</p><p>Card fill, 2px border, no rail. No resting shadow.</p></div>
+      <div class="card card-rail" data-skill="collaboration"><p class="eyebrow">Left rail</p><p>Collaboration rail, label in the skill ink.</p></div>
+      <div class="card card-top" data-skill="curiosity"><p class="eyebrow">Top rule</p><p>Curiosity rule; gold label uses the ink tone.</p></div>
+      <div class="card card-rail card-tint" data-skill="critical"><p class="eyebrow">Tint</p><p>Critical thinking tint, 10% over the card.</p></div>
+      <a class="card card-rail card-link" data-skill="creativity" href="#cards"><p class="eyebrow">Interactive</p><p>Hover lifts the card and shifts the border to the accent.</p></a>
+      <a class="card card-rail card-link sg-hover" data-skill="creativity" href="#cards"><p class="eyebrow">Interactive, hover</p><p>Warm shadow on hover only.</p></a>
+      <a class="card card-rail card-link sg-focus" data-skill="communication" href="#cards"><p class="eyebrow">Interactive, focus</p><p>Thick purple focus outline.</p></a>
+      <div class="card card-rail selected" data-skill="communication"><p class="eyebrow">Selected</p><p>Border and fill shift to the accent.</p></div>
+      <div class="card card-rail disabled" data-skill="collaboration"><p class="eyebrow">Disabled</p><p>Opacity 0.4.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ LIKERT -->
+<section class="sg-section" id="likert">
+  <div class="wrap">
+    <span class="colour-bar" data-accent="2" aria-hidden="true"></span>
+    <p class="eyebrow">06 · Likert</p>
+    <h2>Likert scale as a radio group</h2>
+    <p class="sg-note">Real <code>input type="radio"</code> elements inside a <code>fieldset</code> with a <code>legend</code>; every point has a visible label. Arrow keys move between points. The checked mark is solid <code>--text</code>, so it never depends on the accent's contrast. Stacks vertically on narrow screens.</p>
+
+    <fieldset class="likert" data-skill="collaboration">
+      <legend class="likert-prompt">PLACEHOLDER: specimen statement, unanswered.</legend>
+      <div class="likert-scale">
+        <label class="likert-option"><input type="radio" name="lk1" value="1"><span class="likert-label">Strongly disagree</span></label>
+        <label class="likert-option"><input type="radio" name="lk1" value="2"><span class="likert-label">Disagree</span></label>
+        <label class="likert-option"><input type="radio" name="lk1" value="3"><span class="likert-label">Neither agree nor disagree</span></label>
+        <label class="likert-option"><input type="radio" name="lk1" value="4"><span class="likert-label">Agree</span></label>
+        <label class="likert-option"><input type="radio" name="lk1" value="5"><span class="likert-label">Strongly agree</span></label>
+      </div>
+    </fieldset>
+
+    <fieldset class="likert" data-skill="curiosity">
+      <legend class="likert-prompt">PLACEHOLDER: specimen statement, answered (Agree), with hover on Disagree and focus on Agree.</legend>
+      <div class="likert-scale">
+        <label class="likert-option"><input type="radio" name="lk2" value="1"><span class="likert-label">Strongly disagree</span></label>
+        <label class="likert-option sg-hover"><input type="radio" name="lk2" value="2"><span class="likert-label">Disagree</span></label>
+        <label class="likert-option"><input type="radio" name="lk2" value="3"><span class="likert-label">Neither agree nor disagree</span></label>
+        <label class="likert-option"><input type="radio" name="lk2" value="4" class="sg-focus" checked><span class="likert-label">Agree</span></label>
+        <label class="likert-option"><input type="radio" name="lk2" value="5"><span class="likert-label">Strongly agree</span></label>
+      </div>
+    </fieldset>
+
+    <fieldset class="likert" data-skill="communication" disabled>
+      <legend class="likert-prompt">PLACEHOLDER: specimen statement, disabled after submission (Strongly agree).</legend>
+      <div class="likert-scale">
+        <label class="likert-option"><input type="radio" name="lk3" value="1"><span class="likert-label">Strongly disagree</span></label>
+        <label class="likert-option"><input type="radio" name="lk3" value="2"><span class="likert-label">Disagree</span></label>
+        <label class="likert-option"><input type="radio" name="lk3" value="3"><span class="likert-label">Neither agree nor disagree</span></label>
+        <label class="likert-option"><input type="radio" name="lk3" value="4"><span class="likert-label">Agree</span></label>
+        <label class="likert-option"><input type="radio" name="lk3" value="5" checked><span class="likert-label">Strongly agree</span></label>
+      </div>
+    </fieldset>
+  </div>
+</section>
+
+<!-- ============================================================ CHOICE CARDS -->
+<section class="sg-section" id="choices">
+  <div class="wrap">
+    <span class="colour-bar" data-accent="1" aria-hidden="true"></span>
+    <p class="eyebrow">07 · Choice cards</p>
+    <h2>Choice cards with aria-pressed</h2>
+    <p class="sg-note">Toggle buttons. The pressed state adds a thicker border, a filled key and a visible "Selected" label. Revealed states use the feedback colours and change the label text. Click the first group to toggle.</p>
+
+    <div class="sg-grid-wide">
+      <div class="choice-list" data-skill="critical" data-demo="choices">
+        <button type="button" class="choice-card" aria-pressed="false"><span class="choice-key">A</span><span class="choice-text">PLACEHOLDER: option, default</span><span class="choice-flag">Selected</span></button>
+        <button type="button" class="choice-card sg-hover" aria-pressed="false"><span class="choice-key">B</span><span class="choice-text">PLACEHOLDER: option, hover</span><span class="choice-flag">Selected</span></button>
+        <button type="button" class="choice-card" aria-pressed="true"><span class="choice-key">C</span><span class="choice-text">PLACEHOLDER: option, pressed</span><span class="choice-flag">Selected</span></button>
+        <button type="button" class="choice-card sg-focus" aria-pressed="false"><span class="choice-key">D</span><span class="choice-text">PLACEHOLDER: option, focus</span><span class="choice-flag">Selected</span></button>
+        <button type="button" class="choice-card" aria-pressed="false" disabled><span class="choice-key">E</span><span class="choice-text">PLACEHOLDER: option, disabled</span><span class="choice-flag">Selected</span></button>
+      </div>
+      <div class="choice-list" data-skill="curiosity">
+        <button type="button" class="choice-card" aria-pressed="true"><span class="choice-key">A</span><span class="choice-text">PLACEHOLDER: pressed in Curiosity (gold key, dark text)</span><span class="choice-flag">Selected</span></button>
+        <button type="button" class="choice-card locked correct" aria-pressed="true" aria-disabled="true"><span class="choice-key">B</span><span class="choice-text">PLACEHOLDER: revealed, correct</span><span class="choice-flag">Correct</span></button>
+        <button type="button" class="choice-card locked incorrect" aria-pressed="true" aria-disabled="true"><span class="choice-key">C</span><span class="choice-text">PLACEHOLDER: revealed, incorrect</span><span class="choice-flag">Incorrect</span></button>
+        <button type="button" class="choice-card locked ambiguous" aria-pressed="false" aria-disabled="true"><span class="choice-key">D</span><span class="choice-text">PLACEHOLDER: revealed, ambiguous</span><span class="choice-flag">Arguable</span></button>
+        <button type="button" class="choice-card locked" aria-pressed="false" aria-disabled="true"><span class="choice-key">E</span><span class="choice-text">PLACEHOLDER: locked, not chosen</span><span class="choice-flag">Selected</span></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ TIMER -->
+<section class="sg-section" id="timer">
+  <div class="wrap">
+    <span class="colour-bar" data-accent="4" aria-hidden="true"></span>
+    <p class="eyebrow">08 · Timer</p>
+    <h2>Timer ring with pause and extend</h2>
+    <p class="sg-note">The remaining time is always printed; the ring is supplementary. Every timed task offers Pause and Add time (WCAG 2.2.1). In the product the live region announces only at set thresholds, not every second.</p>
+    <div class="sg-timers">
+      <div class="timer running" data-skill="critical">
+        <div class="timer-ring" style="--timer-progress: 0.72"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="timer-track" cx="50" cy="50" r="44"/><circle class="timer-arc" cx="50" cy="50" r="44" pathLength="100"/></svg><span class="timer-value" role="timer" aria-label="Time remaining">3:36</span><span class="timer-state">Running</span></div>
+        <div class="timer-controls"><button type="button" class="btn btn-ghost btn-small">Pause</button><button type="button" class="btn btn-ghost btn-small">Add 1 minute</button></div>
+      </div>
+      <div class="timer paused" data-skill="collaboration">
+        <div class="timer-ring" style="--timer-progress: 0.45"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="timer-track" cx="50" cy="50" r="44"/><circle class="timer-arc" cx="50" cy="50" r="44" pathLength="100"/></svg><span class="timer-value" role="timer" aria-label="Time remaining">2:15</span><span class="timer-state">Paused</span></div>
+        <div class="timer-controls"><button type="button" class="btn btn-small">Resume</button><button type="button" class="btn btn-ghost btn-small">Add 1 minute</button></div>
+      </div>
+      <div class="timer running low" data-skill="creativity">
+        <div class="timer-ring" style="--timer-progress: 0.1"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="timer-track" cx="50" cy="50" r="44"/><circle class="timer-arc" cx="50" cy="50" r="44" pathLength="100"/></svg><span class="timer-value" role="timer" aria-label="Time remaining">0:30</span><span class="timer-state">Under 1 min</span></div>
+        <div class="timer-controls"><button type="button" class="btn btn-ghost btn-small">Pause</button><button type="button" class="btn btn-ghost btn-small">Add 1 minute</button></div>
+      </div>
+      <div class="timer running" data-skill="curiosity">
+        <div class="timer-ring" style="--timer-progress: 0.6"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="timer-track" cx="50" cy="50" r="44"/><circle class="timer-arc" cx="50" cy="50" r="44" pathLength="100"/></svg><span class="timer-value" role="timer" aria-label="Time remaining">3:00</span><span class="timer-state">Extended</span></div>
+        <div class="timer-controls"><button type="button" class="btn btn-ghost btn-small">Pause</button><button type="button" class="btn btn-ghost btn-small sg-focus">Add 1 minute</button></div>
+        <p class="timer-note">1 minute added.</p>
+      </div>
+      <div class="timer expired" data-skill="communication">
+        <div class="timer-ring" style="--timer-progress: 0"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="timer-track" cx="50" cy="50" r="44"/><circle class="timer-arc" cx="50" cy="50" r="44" pathLength="100"/></svg><span class="timer-value" role="timer" aria-label="Time remaining">0:00</span><span class="timer-state">Time is up</span></div>
+        <div class="timer-controls"><button type="button" class="btn btn-small">Continue</button></div>
+      </div>
+      <div class="timer untimed" data-skill="critical">
+        <div class="timer-ring"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="timer-track" cx="50" cy="50" r="44"/><circle class="timer-arc" cx="50" cy="50" r="44" pathLength="100"/></svg><span class="timer-value">Untimed</span></div>
+        <p class="timer-note">Untimed mode: no limit applies.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ PROGRESS -->
+<section class="sg-section" id="progress">
+  <div class="wrap">
+    <span class="colour-bar" data-accent="6" aria-hidden="true"></span>
+    <p class="eyebrow">09 · Progress</p>
+    <h2>Progress dots</h2>
+    <p class="sg-note">Done dots fill with the skill accent and keep a <code>--text</code> border; the current dot is solid <code>--text</code> with an accent ring; skipped dots are dashed. The count is always printed.</p>
+    <div class="card" style="display: grid; gap: var(--space-4)">
+      <div class="progress" data-skill="collaboration"><ol class="progress-dots" aria-label="Progress"><li class="done"><span class="visually-hidden">Item 1, answered</span></li><li class="done"><span class="visually-hidden">Item 2, answered</span></li><li class="active" aria-current="step"><span class="visually-hidden">Item 3, current</span></li><li><span class="visually-hidden">Item 4</span></li><li><span class="visually-hidden">Item 5</span></li><li><span class="visually-hidden">Item 6</span></li></ol><span class="progress-count">Item 3 of 6</span></div>
+      <div class="progress" data-skill="curiosity"><ol class="progress-dots" aria-label="Progress"><li class="done"><span class="visually-hidden">Item 1, answered</span></li><li class="skipped"><span class="visually-hidden">Item 2, skipped</span></li><li class="done"><span class="visually-hidden">Item 3, answered</span></li><li class="done"><span class="visually-hidden">Item 4, answered</span></li><li class="active" aria-current="step"><span class="visually-hidden">Item 5, current</span></li><li><span class="visually-hidden">Item 6</span></li></ol><span class="progress-count">Item 5 of 6</span></div>
+      <div class="progress" data-skill="critical"><ol class="progress-dots" aria-label="Progress"><li class="done"><span class="visually-hidden">Item 1</span></li><li class="done"><span class="visually-hidden">Item 2</span></li><li class="done"><span class="visually-hidden">Item 3</span></li><li class="done"><span class="visually-hidden">Item 4</span></li></ol><span class="progress-count">Complete</span></div>
+      <div class="progress" data-skill="creativity"><ol class="progress-dots" aria-label="Progress"><li class="active" aria-current="step"><span class="visually-hidden">Item 1, current</span></li><li><span class="visually-hidden">Item 2</span></li><li><span class="visually-hidden">Item 3</span></li></ol><span class="progress-count">Item 1 of 3</span></div>
+      <div class="progress" data-skill="communication"><ol class="progress-dots" aria-label="Progress"><li class="done"><span class="visually-hidden">Item 1</span></li><li class="active" aria-current="step"><span class="visually-hidden">Item 2, current</span></li><li><span class="visually-hidden">Item 3</span></li></ol><span class="progress-count">Item 2 of 3</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ FEEDBACK -->
+<section class="sg-section" id="feedback">
+  <div class="wrap">
+    <span class="colour-bar" data-accent="2" aria-hidden="true"></span>
+    <p class="eyebrow">10 · Feedback</p>
+    <h2>Feedback boxes</h2>
+    <p class="sg-note">Only items with a single defensible answer resolve as correct or incorrect. Text uses the feedback ink, never the fill.</p>
+    <div class="feedback correct" role="status"><p class="feedback-label">Correct</p><p>PLACEHOLDER: specimen explanation of why the answer holds.</p></div>
+    <div class="feedback incorrect" role="status"><p class="feedback-label">Not quite</p><p>PLACEHOLDER: specimen explanation of the error.</p></div>
+    <div class="feedback ambiguous" role="status"><p class="feedback-label">Arguable</p><p>PLACEHOLDER: specimen explanation of why more than one answer can be defended.</p></div>
+  </div>
+</section>
+
+<!-- ============================================================ NOTICES -->
+<section class="sg-section" id="notices">
+  <div class="wrap">
+    <span class="colour-bar" data-accent="5" aria-hidden="true"></span>
+    <p class="eyebrow">11 · Notices</p>
+    <h2>Notices</h2>
+    <div class="notice" role="status"><strong class="notice-title">Information</strong><p>Default notice in the context accent (purple here). Text stays in --text.</p></div>
+    <div class="notice" data-skill="curiosity" role="status"><strong class="notice-title">Information, Curiosity</strong><p>The title uses the skill ink tone.</p></div>
+    <div class="notice notice-warning" role="status"><strong class="notice-title">Warning</strong><p>Warning notice in the ambiguous colours.</p></div>
+    <div class="notice storage-notice" role="status">Storage notice, as mounted by src/core/store.js (text only, no title): progress will not be saved in this browser.</div>
+    <div class="notice notice-error" role="alert"><strong class="notice-title">Error</strong><p>Error notice in the incorrect colours.</p></div>
+  </div>
+</section>
+
+<!-- ============================================================ SKILL TILES -->
+<section class="sg-section" id="tiles">
+  <div class="wrap">
+    <span class="colour-bar" data-accent="3" aria-hidden="true"></span>
+    <p class="eyebrow">12 · Skill tiles</p>
+    <h2>Skill tiles</h2>
+    <p class="sg-note">States from left: not started, in progress, completed, hover, focus, locked.</p>
+    <div class="skill-grid geo-field" style="padding: var(--space-2)">
+      <a class="skill-tile" data-skill="collaboration" href="#tiles"><span class="geo geo-square" aria-hidden="true"></span><span class="eyebrow">Skill 1 of 5</span><span class="skill-tile-name">Collaboration</span><span class="skill-tile-desc">PLACEHOLDER: one-line description from docs/CONSTRUCTS.md once approved.</span><span class="skill-tile-status tag">Not started</span></a>
+      <a class="skill-tile active" data-skill="curiosity" href="#tiles"><span class="geo geo-circle" aria-hidden="true"></span><span class="eyebrow">Skill 2 of 5</span><span class="skill-tile-name">Curiosity</span><span class="skill-tile-desc">PLACEHOLDER: one-line description.</span><span class="skill-tile-status tag">In progress · 2 of 3 tasks</span></a>
+      <a class="skill-tile completed" data-skill="critical" href="#tiles"><span class="geo geo-tri" aria-hidden="true"></span><span class="eyebrow">Skill 3 of 5</span><span class="skill-tile-name">Critical thinking</span><span class="skill-tile-desc">PLACEHOLDER: one-line description.</span><span class="skill-tile-status tag correct">Completed</span></a>
+      <a class="skill-tile sg-hover" data-skill="creativity" href="#tiles"><span class="geo geo-ring" aria-hidden="true"></span><span class="eyebrow">Skill 4 of 5</span><span class="skill-tile-name">Creativity</span><span class="skill-tile-desc">PLACEHOLDER: one-line description.</span><span class="skill-tile-status tag">Not started</span></a>
+      <a class="skill-tile sg-focus" data-skill="communication" href="#tiles"><span class="geo geo-square" aria-hidden="true"></span><span class="eyebrow">Skill 5 of 5</span><span class="skill-tile-name">Communication</span><span class="skill-tile-desc">PLACEHOLDER: one-line description.</span><span class="skill-tile-status tag">Not started</span></a>
+      <div class="skill-tile locked" data-skill="communication" aria-disabled="true"><span class="geo geo-circle" aria-hidden="true"></span><span class="eyebrow">Skill 5 of 5</span><span class="skill-tile-name">Communication</span><span class="skill-tile-desc">PLACEHOLDER: one-line description.</span><span class="skill-tile-status tag">Opens after consent</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ RESULTS -->
+<section class="sg-section" id="results">
+  <div class="wrap">
+    <span class="colour-bar" data-accent="1" aria-hidden="true"></span>
+    <p class="eyebrow">13 · Results</p>
+    <h2>Results bars with an uncertainty band</h2>
+    <div class="notice notice-warning"><strong class="notice-title">Specimen values</strong><p>These numbers are invented to show the component. They are not results, and no score scale or band width has been set (docs/SCORING.md, docs/VALIDATION-PLAN.md).</p></div>
+    <div class="card">
+      <div class="results-list">
+        <div class="results-bar" data-skill="collaboration" style="--est: 62; --lo: 54; --hi: 70; --i: 0"><span class="results-label">Collaboration</span><span class="results-track" aria-hidden="true"><span class="results-fill"></span><span class="results-band"></span><span class="results-marker"></span></span><span class="results-value">62<span class="results-range">likely 54 to 70</span></span></div>
+        <div class="results-bar" data-skill="curiosity" style="--est: 48; --lo: 41; --hi: 55; --i: 1"><span class="results-label">Curiosity</span><span class="results-track" aria-hidden="true"><span class="results-fill"></span><span class="results-band"></span><span class="results-marker"></span></span><span class="results-value">48<span class="results-range">likely 41 to 55</span></span></div>
+        <div class="results-bar" data-skill="critical" style="--est: 71; --lo: 65; --hi: 77; --i: 2"><span class="results-label">Critical thinking</span><span class="results-track" aria-hidden="true"><span class="results-fill"></span><span class="results-band"></span><span class="results-marker"></span></span><span class="results-value">71<span class="results-range">likely 65 to 77</span></span></div>
+        <div class="results-bar low-confidence" data-skill="creativity" style="--est: 55; --lo: 30; --hi: 80; --i: 3"><span class="results-label">Creativity</span><span class="results-track" aria-hidden="true"><span class="results-fill"></span><span class="results-band"></span><span class="results-marker"></span></span><span class="results-value">55<span class="results-range">likely 30 to 80 · low confidence</span></span></div>
+        <div class="results-bar no-data" data-skill="communication" style="--i: 4"><span class="results-label">Communication</span><span class="results-track" aria-hidden="true"></span><span class="results-value">—<span class="results-range">not yet taken</span></span></div>
+      </div>
+      <ul class="results-legend" data-skill="critical">
+        <li><span class="legend-swatch fill" aria-hidden="true"></span>Score</li>
+        <li><span class="legend-swatch marker" aria-hidden="true"></span>Best estimate</li>
+        <li><span class="legend-swatch band" aria-hidden="true"></span>Likely range</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ BANNERS -->
+<section class="sg-section" id="banners">
+  <div class="wrap">
+    <span class="colour-bar" data-accent="6" aria-hidden="true"></span>
+    <p class="eyebrow">14 · Banners</p>
+    <h2>Colour-block banners</h2>
+    <p class="sg-note">Solid accent fill; all text inside is large (at least 18.66px bold), so burnt orange passes at 3:1.</p>
+    <div style="display: grid; gap: var(--space-3)">
+      <section class="banner" data-skill="collaboration"><span class="geo geo-circle" style="--geo-size: 14rem; right: -4rem; top: -5rem; opacity: 0.12" aria-hidden="true"></span><p class="banner-eyebrow">Skill 1</p><h3 class="banner-title">Collaboration</h3><p class="banner-text">Banner text, large and bold.</p></section>
+      <section class="banner" data-skill="curiosity"><span class="geo geo-square" style="--geo-size: 10rem; right: 2rem; top: -3rem; opacity: 0.12; --geo-color: var(--text)" aria-hidden="true"></span><p class="banner-eyebrow">Skill 2</p><h3 class="banner-title">Curiosity</h3><p class="banner-text">Gold carries --text, not white.</p></section>
+      <section class="banner" data-skill="critical"><span class="geo geo-ring" style="--geo-size: 12rem; right: 10%; bottom: -6rem; opacity: 0.12" aria-hidden="true"></span><p class="banner-eyebrow">Skill 3</p><h3 class="banner-title">Critical thinking</h3><p class="banner-text">Banner text, large and bold.</p><p style="margin: var(--space-4) 0 0"><button type="button" class="btn btn-ghost btn-small sg-focus" style="color: inherit; border-color: currentColor">Focus on fill</button></p></section>
+      <section class="banner" data-skill="creativity"><span class="geo geo-tri" style="--geo-size: 10rem; right: 4rem; top: -1rem; opacity: 0.12" aria-hidden="true"></span><p class="banner-eyebrow">Skill 4</p><h3 class="banner-title">Creativity</h3><p class="banner-text">Banner text, large and bold.</p></section>
+      <section class="banner" data-skill="communication"><span class="geo geo-bar" style="top: 40%; left: -10%; opacity: 0.12; --geo-thickness: 1.5rem" aria-hidden="true"></span><p class="banner-eyebrow">Skill 5</p><h3 class="banner-title">Communication</h3><p class="banner-text">Burnt orange carries large text only.</p></section>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ GEOMETRY -->
+<section class="sg-section" id="geometry">
+  <div class="wrap">
+    <span class="colour-bar" data-accent="4" aria-hidden="true"></span>
+    <p class="eyebrow">15 · Geometry</p>
+    <h2>Decorative geometry helpers</h2>
+    <p class="sg-note">Empty <code>aria-hidden</code> elements, <code>position: absolute; pointer-events: none</code>, inside a <code>.geo-field</code> that clips them. Background opacity 0.06 to 0.12; <code>.geo-fg</code> at full opacity for markers.</p>
+    <div class="sg-grid-wide">
+      <div class="sg-geo-demo geo-field"><span class="geo geo-square geo-strong" style="--geo-color: var(--accent-1); top: -2rem; right: -2rem" aria-hidden="true"></span><span class="geo geo-square geo-fg" style="--geo-color: var(--accent-2); --geo-size: 2.5rem; --geo-rotate: 30deg; top: 2rem; left: 2rem" aria-hidden="true"></span><span class="micro">.geo-square · .geo-strong and .geo-fg</span></div>
+      <div class="sg-geo-demo geo-field"><span class="geo geo-circle" style="--geo-color: var(--accent-4); left: -3rem; top: -3rem" aria-hidden="true"></span><span class="geo geo-ring geo-strong" style="--geo-color: var(--accent-6); --geo-size: 8rem; right: 1rem; bottom: -2rem" aria-hidden="true"></span><span class="micro">.geo-circle and .geo-ring</span></div>
+      <div class="sg-geo-demo geo-field"><span class="geo geo-bar" style="--geo-color: var(--accent-2); top: 30%; left: -20%" aria-hidden="true"></span><span class="geo geo-bar geo-faint" style="--geo-color: var(--accent-3); --geo-rotate: 6deg; --geo-thickness: 2.5rem; top: 55%; left: -20%" aria-hidden="true"></span><span class="micro">.geo-bar and .geo-faint</span></div>
+      <div class="sg-geo-demo geo-field"><span class="geo geo-tri geo-strong" style="--geo-color: var(--accent-1); right: 1rem; top: 1rem" aria-hidden="true"></span><span class="geo geo-tri geo-fg" style="--geo-color: var(--accent-4); --geo-size: 2rem; --geo-rotate: -10deg; left: 2rem; top: 2rem" aria-hidden="true"></span><span class="micro">.geo-tri</span></div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <a class="brand" href="index.html">
+      <img class="brand-logo" src="assets/hult-logo.png" alt="Hult International Business School">
+      <span class="brand-name">5C Skills<br>Assessment</span>
+    </a>
+    <p class="small quiet" style="margin: 0">Style guide for visual review. No data is collected on this page.</p>
+  </div>
+</footer>
+
+<script>
+  // Specimen helpers. No network calls, no HTML strings.
+  (function () {
+    'use strict';
+    var root = document.documentElement;
+
+    // 1. Static hover and focus specimens, derived from the real rules.
+    var extra = document.createElement('style');
+    document.head.appendChild(extra);
+    var copied = 0;
+    Array.prototype.forEach.call(document.styleSheets, function (sheet) {
+      var rules;
+      try { rules = sheet.cssRules; } catch (e) { return; }
+      (function walk(list) {
+        Array.prototype.forEach.call(list, function (rule) {
+          if (rule.cssRules && !rule.selectorText) {
+            if (rule.media && !window.matchMedia(rule.media.mediaText).matches) return;
+            walk(rule.cssRules);
+            return;
+          }
+          if (!rule.selectorText || !/:hover|:focus-visible/.test(rule.selectorText)) return;
+          var sel = rule.selectorText
+            .replace(/:hover/g, '.sg-hover')
+            .replace(/:focus-visible/g, '.sg-focus');
+          try { extra.sheet.insertRule(sel + '{' + rule.style.cssText + '}', extra.sheet.cssRules.length); copied++; } catch (e) { /* skip */ }
+        });
+      })(rules);
+    });
+    root.setAttribute('data-sg-rules', String(copied));
+
+    // 2. Token values from the live stylesheet.
+    var cs = getComputedStyle(root);
+    document.querySelectorAll('[data-token]').forEach(function (el) {
+      el.textContent = cs.getPropertyValue(el.getAttribute('data-token')).trim().toUpperCase();
+    });
+
+    // 3. Contrast ratios for listed pairs, resolved by the browser.
+    var probe = document.createElement('span');
+    probe.style.display = 'none';
+    document.body.appendChild(probe);
+    function rgb(token) {
+      probe.style.color = 'var(' + token + ')';
+      var v = getComputedStyle(probe).color;
+      var m = v.match(/^rgba?\(([^)]+)\)/);
+      if (m) return m[1].split(',').slice(0, 3).map(function (x) { return parseFloat(x); });
+      m = v.match(/^color\(srgb ([^)]+)\)/);
+      if (m) return m[1].trim().split(/\s+/).slice(0, 3).map(function (x) { return parseFloat(x) * 255; });
+      return null;
+    }
+    function lum(c) {
+      var l = c.map(function (v) { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+      return 0.2126 * l[0] + 0.7152 * l[1] + 0.0722 * l[2];
+    }
+    document.querySelectorAll('[data-pair]').forEach(function (el) {
+      var p = el.getAttribute('data-pair').split('|');
+      var a = rgb(p[0]), b = rgb(p[1]);
+      if (!a || !b) return;
+      var la = lum(a), lb = lum(b);
+      var r = (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+      var grade = r >= 4.5 ? 'AA' : r >= 3 ? 'AA large / UI' : 'fails';
+      el.textContent = r.toFixed(2) + ':1 ' + grade;
+    });
+    probe.remove();
+
+    // 4. Interactive choice cards (first group): single selection with aria-pressed.
+    var group = document.querySelector('[data-demo="choices"]');
+    if (group) {
+      group.addEventListener('click', function (e) {
+        var btn = e.target.closest('.choice-card');
+        if (!btn || btn.disabled) return;
+        group.querySelectorAll('.choice-card').forEach(function (b) {
+          b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+        });
+      });
+    }
+  })();
+</script>
+</body>
+</html>

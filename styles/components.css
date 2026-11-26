@@ -1,0 +1,959 @@
+/*
+ * Components for the 5C Skills Assessment.
+ * Requires styles/tokens.css and styles/base.css to load first.
+ *
+ * Accent context. Components read four context properties:
+ *   --accent       fill, rail, border and shape colour
+ *   --accent-ink   text on --bg-card and on --accent-tint
+ *   --accent-on    text on a solid --accent fill
+ *   --accent-tint  the accent at 10% over --bg-card
+ * plus --accent-btn-bg, --accent-btn-fg and --accent-btn-border for .btn-accent.
+ * Set the context with data-skill="<id>" (one of the five skills) or data-accent="1".."8"
+ * on the component or any ancestor. The default context is --accent-1.
+ *
+ * Contrast rules that the context encodes (checked by tests/lint.mjs):
+ *   - Accent text sits on --bg-card or the accent tint, not on --bg (magenta, lighter
+ *     purple and burnt orange fail at body size on --bg).
+ *   - Burnt orange (--accent-3, Communication) and orange (--accent-7) fills carry large
+ *     text only (at least 18.66px bold). .btn-accent in those contexts is outlined.
+ */
+
+/* ---------------------------------------------------------------- accent context */
+
+:root,
+[data-accent="1"],
+[data-skill="critical"] {
+  --accent: var(--accent-1);
+  --accent-ink: var(--accent-1);
+  --accent-on: var(--on-accent);
+  --accent-tint: color-mix(in srgb, var(--accent-1) 10%, var(--bg-card));
+  --accent-btn-bg: var(--accent-1);
+  --accent-btn-fg: var(--on-accent);
+  --accent-btn-border: var(--accent-1);
+}
+[data-accent="2"],
+[data-skill="collaboration"] {
+  --accent: var(--accent-2);
+  --accent-ink: var(--accent-2);
+  --accent-on: var(--on-accent);
+  --accent-tint: color-mix(in srgb, var(--accent-2) 10%, var(--bg-card));
+  --accent-btn-bg: var(--accent-2);
+  --accent-btn-fg: var(--on-accent);
+  --accent-btn-border: var(--accent-2);
+}
+[data-accent="3"],
+[data-skill="communication"] {
+  --accent: var(--accent-3);
+  --accent-ink: var(--accent-7-ink);
+  --accent-on: var(--on-accent);
+  --accent-tint: color-mix(in srgb, var(--accent-3) 10%, var(--bg-card));
+  --accent-btn-bg: var(--bg-card);
+  --accent-btn-fg: var(--text);
+  --accent-btn-border: var(--accent-3);
+}
+[data-accent="4"],
+[data-skill="curiosity"] {
+  --accent: var(--accent-4);
+  --accent-ink: var(--accent-4-ink);
+  --accent-on: var(--text);
+  --accent-tint: color-mix(in srgb, var(--accent-4) 10%, var(--bg-card));
+  --accent-btn-bg: var(--accent-4);
+  --accent-btn-fg: var(--text);
+  --accent-btn-border: var(--accent-4);
+}
+[data-accent="5"] {
+  --accent: var(--accent-5);
+  --accent-ink: var(--accent-5);
+  --accent-on: var(--on-accent);
+  --accent-tint: color-mix(in srgb, var(--accent-5) 10%, var(--bg-card));
+  --accent-btn-bg: var(--accent-5);
+  --accent-btn-fg: var(--on-accent);
+  --accent-btn-border: var(--accent-5);
+}
+[data-accent="6"],
+[data-skill="creativity"] {
+  --accent: var(--accent-6);
+  --accent-ink: var(--accent-6);
+  --accent-on: var(--on-accent);
+  --accent-tint: color-mix(in srgb, var(--accent-6) 10%, var(--bg-card));
+  --accent-btn-bg: var(--accent-6);
+  --accent-btn-fg: var(--on-accent);
+  --accent-btn-border: var(--accent-6);
+}
+[data-accent="7"] {
+  --accent: var(--accent-7);
+  --accent-ink: var(--accent-7-ink);
+  --accent-on: var(--text);
+  --accent-tint: color-mix(in srgb, var(--accent-7) 10%, var(--bg-card));
+  --accent-btn-bg: var(--bg-card);
+  --accent-btn-fg: var(--text);
+  --accent-btn-border: var(--accent-7);
+}
+[data-accent="8"] {
+  --accent: var(--accent-8);
+  --accent-ink: var(--accent-8);
+  --accent-on: var(--on-accent);
+  --accent-tint: color-mix(in srgb, var(--accent-8) 10%, var(--bg-card));
+  --accent-btn-bg: var(--accent-8);
+  --accent-btn-fg: var(--on-accent);
+  --accent-btn-border: var(--accent-8);
+}
+
+/* ---------------------------------------------------------------- eyebrow, lede, pip, tag */
+
+.eyebrow {
+  display: block;
+  margin: 0 0 var(--space-2);
+  font-size: 0.78rem;
+  font-weight: var(--weight-label);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  line-height: 1.3;
+  color: var(--text);
+}
+/* Coloured eyebrows sit on cards, tints or banners, never on --bg (see header note). */
+.card .eyebrow,
+.skill-tile .eyebrow,
+.eyebrow.accent { color: var(--accent-ink); }
+
+.lede {
+  font-size: 1.1rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+  max-width: var(--measure);
+  margin: 0 0 var(--space-5);
+}
+
+.pip {
+  display: inline-block;
+  flex: none;
+  width: 0.65rem;
+  height: 0.65rem;
+  background: var(--accent);
+  vertical-align: 0.05em;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.15rem 0.5rem;
+  border: var(--rule) solid var(--text);
+  background: var(--bg-card);
+  color: var(--text);
+  font-size: 0.7rem;
+  font-weight: var(--weight-label);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  line-height: 1.5;
+}
+.tag.correct { border-color: var(--correct); background: var(--correct-tint); color: var(--correct-ink); }
+.tag.incorrect { border-color: var(--incorrect); background: var(--incorrect-tint); color: var(--incorrect-ink); }
+.tag.ambiguous { border-color: var(--ambiguous); background: var(--ambiguous-tint); color: var(--ambiguous-ink); }
+.tag.accent { border-color: var(--accent); background: var(--accent-tint); color: var(--accent-ink); }
+
+/* ---------------------------------------------------------------- colour bars */
+
+.colour-bar {
+  display: block;
+  height: var(--rail);
+  background: var(--accent);
+  border: 0;
+  margin: var(--space-5) 0;
+}
+.skill-rail {
+  display: flex;
+  height: var(--rail);
+}
+.skill-rail > span { flex: 1; }
+.skill-rail > span:nth-child(1) { background: var(--skill-collaboration); }
+.skill-rail > span:nth-child(2) { background: var(--skill-curiosity); }
+.skill-rail > span:nth-child(3) { background: var(--skill-critical); }
+.skill-rail > span:nth-child(4) { background: var(--skill-creativity); }
+.skill-rail > span:nth-child(5) { background: var(--skill-communication); }
+
+/* ---------------------------------------------------------------- brand lockup */
+
+.site-header,
+.site-footer {
+  position: relative;
+  background: var(--bg-card);
+}
+.site-header { border-bottom: var(--rule) solid var(--border); }
+.site-footer { border-top: var(--rule) solid var(--border); margin-top: var(--space-7); }
+.site-header .wrap,
+.site-footer .wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-5);
+  padding-top: var(--space-3);
+  padding-bottom: var(--space-3);
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  color: var(--text);
+  text-decoration: none;
+}
+/* assets/hult-logo.png is 640x737 with transparent padding; the mark occupies the
+   middle band. object-fit crops the padding without editing the file. */
+.brand-logo {
+  width: 7.5rem;
+  aspect-ratio: 605 / 334;
+  object-fit: cover;
+}
+.brand-name {
+  padding-left: var(--space-4);
+  border-left: var(--rule) solid var(--text);
+  font-size: 0.8rem;
+  font-weight: var(--weight-label);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  line-height: 1.3;
+}
+
+/* ---------------------------------------------------------------- buttons */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--touch);
+  padding: 0.65rem 1.25rem;
+  background: var(--accent-1);
+  color: var(--on-accent);
+  border: 3px solid var(--accent-1);
+  border-radius: 0;
+  font-family: var(--font);
+  font-size: 0.85rem;
+  font-weight: var(--weight-label);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-colour) ease,
+    border-color var(--dur-colour) ease,
+    color var(--dur-colour) ease,
+    transform var(--dur-hover) ease;
+}
+.btn:hover:not(:disabled):not([aria-disabled="true"]):not(.disabled) {
+  background: var(--accent-2);
+  border-color: var(--accent-2);
+  color: var(--on-accent);
+  transform: var(--lift);
+}
+.btn:active:not(:disabled) { transform: none; }
+.btn:disabled,
+.btn[aria-disabled="true"],
+.btn.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--text);
+}
+.btn-ghost:hover:not(:disabled):not([aria-disabled="true"]):not(.disabled) {
+  background: transparent;
+  border-color: var(--accent-1);
+  color: var(--accent-1);
+}
+
+/* Accent variant: the context accent as fill. Outlined (card fill, accent border) in
+   burnt orange and orange contexts, whose fills fail AA for button-size text. */
+.btn-accent {
+  background: var(--accent-btn-bg);
+  color: var(--accent-btn-fg);
+  border-color: var(--accent-btn-border);
+}
+.btn-accent:hover:not(:disabled):not([aria-disabled="true"]):not(.disabled) {
+  background: var(--accent-btn-bg);
+  color: var(--accent-btn-fg);
+  border-color: var(--text);
+  box-shadow: var(--shadow-hover);
+}
+
+.btn-small {
+  min-height: 2.25rem;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.75rem;
+}
+@media (max-width: 600px) {
+  .btn-small { min-height: var(--touch); }
+}
+
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+/* ---------------------------------------------------------------- cards */
+
+.card {
+  position: relative;
+  background: var(--bg-card);
+  border: var(--rule) solid var(--border);
+  border-radius: 0;
+  padding: var(--space-5);
+  overflow: hidden;
+}
+.card > :last-child { margin-bottom: 0; }
+.card-rail { border-left: var(--rail) solid var(--accent); }
+.card-top { border-top: var(--rail) solid var(--accent); }
+.card-tint { background: var(--accent-tint); }
+
+/* Interactive card (a link or button styled as a card). */
+.card-link {
+  display: block;
+  color: var(--text);
+  text-decoration: none;
+  text-align: left;
+  width: 100%;
+  font: inherit;
+  transition:
+    border-color var(--dur-colour) ease,
+    transform var(--dur-hover) ease;
+}
+.card-link:hover {
+  color: var(--text);
+  border-color: var(--accent);
+  transform: var(--lift);
+  box-shadow: var(--shadow-hover);
+}
+.card.selected { border-color: var(--accent); background: var(--accent-tint); }
+.card.disabled { opacity: 0.4; }
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+  gap: var(--space-4);
+}
+
+/* ---------------------------------------------------------------- likert (radio group) */
+
+/* Markup: <fieldset class="likert"> <legend class="likert-prompt">…</legend>
+   <div class="likert-scale"> <label class="likert-option"> <input type="radio" …>
+   <span class="likert-label">Visible label</span> </label> … </div> </fieldset> */
+.likert {
+  margin: 0 0 var(--space-5);
+  padding: var(--space-5);
+  min-width: 0;
+  background: var(--bg-card);
+  border: var(--rule) solid var(--border);
+  border-left: var(--rail) solid var(--accent);
+}
+.likert-prompt {
+  float: left;          /* keeps the legend inside the padded box */
+  width: 100%;
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  font-size: 1.1rem;
+  font-weight: var(--weight-label);
+  line-height: 1.4;
+}
+.likert-scale {
+  clear: both;
+  display: grid;
+  grid-template-columns: repeat(var(--likert-points, 5), minmax(0, 1fr));
+  gap: var(--space-2);
+}
+.likert-option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch);
+  padding: var(--space-3) var(--space-2);
+  background: var(--bg-card);
+  border: var(--rule) solid var(--border);
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color var(--dur-colour) ease,
+    background-color var(--dur-colour) ease;
+}
+.likert-option:hover { border-color: var(--accent); }
+.likert-option input {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: none;
+  width: 1.35rem;
+  height: 1.35rem;
+  margin: 0;
+  background: var(--bg-card);
+  border: var(--rule) solid var(--text);
+  border-radius: 0;
+  cursor: pointer;
+}
+/* Checked: a solid --text centre (15:1), so the state never depends on the accent's contrast. */
+.likert-option input:checked {
+  background: var(--text);
+  box-shadow: inset 0 0 0 3px var(--bg-card);
+}
+.likert-option:has(input:checked) {
+  border-color: var(--accent);
+  border-width: var(--rule-thick);
+  padding: calc(var(--space-3) - 2px) calc(var(--space-2) - 2px);
+  background: var(--accent-tint);
+}
+.likert-option:has(input:checked) .likert-label { font-weight: var(--weight-label); }
+.likert-option:has(input:focus-visible) {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+.likert-option input:focus-visible { outline: none; }
+.likert-option:has(input:disabled) { opacity: 0.4; cursor: not-allowed; }
+.likert-option:has(input:disabled) input { cursor: not-allowed; }
+.likert-label {
+  font-size: 0.85rem;
+  line-height: 1.3;
+  color: var(--text);
+}
+@media (max-width: 600px) {
+  .likert-scale { grid-template-columns: 1fr; }
+  .likert-option {
+    flex-direction: row;
+    justify-content: flex-start;
+    text-align: left;
+    padding: var(--space-3) var(--space-4);
+  }
+  .likert-option:has(input:checked) { padding: calc(var(--space-3) - 2px) calc(var(--space-4) - 2px); }
+  .likert-label { font-size: 0.95rem; }
+}
+
+/* ---------------------------------------------------------------- choice cards */
+
+/* Markup: <button type="button" class="choice-card" aria-pressed="false">
+   <span class="choice-key">A</span> <span class="choice-text">…</span>
+   <span class="choice-flag">Selected</span> </button>
+   Revealed states add .correct, .incorrect or .ambiguous and change the flag text. */
+.choice-list {
+  display: grid;
+  gap: var(--space-3);
+}
+.choice-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+  min-height: var(--touch);
+  padding: var(--space-4);
+  background: var(--bg-card);
+  color: var(--text);
+  border: var(--rule) solid var(--border);
+  border-radius: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--dur-colour) ease,
+    background-color var(--dur-colour) ease,
+    transform var(--dur-hover) ease;
+}
+.choice-card:hover:not(:disabled):not(.locked) {
+  border-color: var(--accent);
+  transform: var(--lift);
+  box-shadow: var(--shadow-hover);
+}
+.choice-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: var(--rule) solid var(--text);
+  font-size: 0.85rem;
+  font-weight: var(--weight-label);
+  text-transform: uppercase;
+}
+.choice-text { font-size: 1rem; line-height: 1.45; }
+.choice-flag {
+  font-size: 0.7rem;
+  font-weight: var(--weight-label);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  visibility: hidden;
+}
+.choice-card[aria-pressed="true"] {
+  border-color: var(--accent);
+  border-width: var(--rule-thick);
+  padding: calc(var(--space-4) - 2px);
+  background: var(--accent-tint);
+}
+.choice-card[aria-pressed="true"] .choice-key {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-on);
+}
+.choice-card[aria-pressed="true"] .choice-flag { visibility: visible; color: var(--accent-ink); }
+.choice-card:disabled { opacity: 0.4; cursor: not-allowed; }
+.choice-card.locked { cursor: default; }
+.choice-card.correct,
+.choice-card.incorrect,
+.choice-card.ambiguous {
+  border-width: var(--rule-thick);
+  padding: calc(var(--space-4) - 2px);
+}
+.choice-card.correct { border-color: var(--correct); background: var(--correct-tint); }
+.choice-card.incorrect { border-color: var(--incorrect); background: var(--incorrect-tint); }
+.choice-card.ambiguous { border-color: var(--ambiguous); background: var(--ambiguous-tint); }
+.choice-card.correct .choice-flag { visibility: visible; color: var(--correct-ink); }
+.choice-card.incorrect .choice-flag { visibility: visible; color: var(--incorrect-ink); }
+.choice-card.ambiguous .choice-flag { visibility: visible; color: var(--ambiguous-ink); }
+.choice-card.correct .choice-key { background: var(--correct); border-color: var(--correct); color: var(--on-accent); }
+.choice-card.incorrect .choice-key { background: var(--incorrect); border-color: var(--incorrect); color: var(--on-accent); }
+.choice-card.ambiguous .choice-key { background: var(--ambiguous-tint); border-color: var(--ambiguous); color: var(--ambiguous-ink); }
+
+/* ---------------------------------------------------------------- timer ring */
+
+/* Markup: <div class="timer running"> <div class="timer-ring" style="--timer-progress: 0.6">
+   <svg viewBox="0 0 100 100" aria-hidden="true"> <circle class="timer-track" …/>
+   <circle class="timer-arc" pathLength="100" …/> </svg>
+   <span class="timer-value" role="timer">3:42</span> <span class="timer-state">Running</span>
+   </div> <div class="timer-controls">…</div> </div>
+   The time is always printed as text; the ring is supplementary. */
+.timer {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+  padding: var(--space-4) var(--space-5);
+  background: var(--bg-card);
+  border: var(--rule) solid var(--border);
+  border-top: var(--rail) solid var(--accent);
+}
+.timer-ring {
+  position: relative;
+  flex: none;
+  width: 7.5rem;
+  height: 7.5rem;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  text-align: center;
+}
+.timer-ring svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+.timer-track { fill: none; stroke: var(--bg-deep); stroke-width: 10; }
+.timer-arc {
+  fill: none;
+  stroke: var(--timer-arc, var(--text));
+  stroke-width: 10;
+  stroke-linecap: butt;
+  stroke-dasharray: calc(var(--timer-progress, 1) * 100) 100;
+  transition: stroke-dasharray 1s linear, stroke var(--dur-colour) ease;
+}
+.timer-value {
+  position: relative;
+  font-size: 1.6rem;
+  font-weight: var(--weight-heading);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.timer-state {
+  position: relative;
+  margin-top: var(--space-1);
+  font-size: 0.68rem;
+  font-weight: var(--weight-label);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+.timer-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.timer-note { flex-basis: 100%; margin: 0; font-size: 0.85rem; color: var(--text-muted); }
+.timer.paused .timer-arc { --timer-arc: var(--text-muted); stroke-dasharray: calc(var(--timer-progress, 1) * 100 - 2) 2; }
+.timer.paused .timer-state { color: var(--text); }
+.timer.low .timer-arc { --timer-arc: var(--incorrect); }
+.timer.low .timer-state,
+.timer.low .timer-value { color: var(--incorrect-ink); }
+.timer.expired { border-top-color: var(--incorrect); }
+.timer.expired .timer-track { stroke: var(--incorrect); }
+.timer.expired .timer-arc { stroke-dasharray: 0 100; }
+.timer.expired .timer-value,
+.timer.expired .timer-state { color: var(--incorrect-ink); }
+.timer.untimed .timer-track { stroke-dasharray: 4 4; }
+.timer.untimed .timer-arc { display: none; }
+.timer.untimed .timer-value { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: var(--weight-label); }
+
+/* ---------------------------------------------------------------- progress dots */
+
+/* Markup: <ol class="progress-dots" aria-label="Progress"> <li class="done">
+   <span class="visually-hidden">Item 1, answered</span></li> <li class="active" aria-current="step"> … */
+.progress {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+.progress-dots {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.progress-dots li {
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 50%;
+  border: var(--rule) solid var(--text-muted);
+  background: var(--bg-card);
+  transition: background-color var(--dur-colour) ease, border-color var(--dur-colour) ease;
+}
+.progress-dots li.done { background: var(--accent); border-color: var(--text); }
+.progress-dots li.active {
+  width: 1.2rem;
+  height: 1.2rem;
+  background: var(--text);
+  border-color: var(--text);
+  box-shadow: 0 0 0 3px var(--bg-card), 0 0 0 5px var(--accent);
+}
+.progress-dots li.skipped { border-style: dashed; }
+.progress-count {
+  font-size: 0.78rem;
+  font-weight: var(--weight-label);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* ---------------------------------------------------------------- feedback boxes */
+
+.feedback {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border-left: var(--rail) solid var(--feedback-fill, var(--border));
+  background: var(--feedback-tint, var(--bg-card));
+  color: var(--feedback-ink, var(--text));
+  animation: reveal var(--dur-reveal) ease both;
+}
+.feedback > :last-child { margin-bottom: 0; }
+.feedback-label {
+  margin: 0 0 var(--space-1);
+  font-size: 0.78rem;
+  font-weight: var(--weight-label);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+.feedback.correct { --feedback-fill: var(--correct); --feedback-ink: var(--correct-ink); --feedback-tint: var(--correct-tint); }
+.feedback.incorrect { --feedback-fill: var(--incorrect); --feedback-ink: var(--incorrect-ink); --feedback-tint: var(--incorrect-tint); }
+.feedback.ambiguous { --feedback-fill: var(--ambiguous); --feedback-ink: var(--ambiguous-ink); --feedback-tint: var(--ambiguous-tint); }
+
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(0.4rem); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---------------------------------------------------------------- notice */
+
+/* Neutral information (default), warning (.notice-warning, also the storage notice from
+   src/core/store.js) and error (.notice-error). Text is always --text for legibility. */
+.notice {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border: var(--rule) solid var(--accent);
+  border-left-width: var(--rail);
+  background: var(--accent-tint);
+  color: var(--text);
+}
+.notice > :last-child { margin-bottom: 0; }
+.notice[hidden] { display: none; }
+.notice-title {
+  display: block;
+  margin: 0 0 var(--space-1);
+  font-size: 0.78rem;
+  font-weight: var(--weight-label);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent-ink);
+}
+.notice-warning,
+.storage-notice { border-color: var(--ambiguous); background: var(--ambiguous-tint); }
+.notice-warning .notice-title,
+.storage-notice .notice-title { color: var(--ambiguous-ink); }
+.notice-error { border-color: var(--incorrect); background: var(--incorrect-tint); }
+.notice-error .notice-title { color: var(--incorrect-ink); }
+
+/* ---------------------------------------------------------------- skill tile */
+
+/* Markup: <a class="skill-tile" data-skill="collaboration" href="#/skill/collaboration">
+   <span class="geo geo-square" aria-hidden="true"></span>
+   <span class="eyebrow">Skill 1 of 5</span> <span class="skill-tile-name">Collaboration</span>
+   <span class="skill-tile-desc">…</span> <span class="skill-tile-status tag">Not started</span> </a>
+   States: .active (in progress), .completed, .locked (render as <div aria-disabled="true">). */
+.skill-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 13rem), 1fr));
+  gap: var(--space-4);
+}
+.skill-tile {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-height: 13rem;
+  padding: var(--space-5);
+  background: var(--bg-card);
+  color: var(--text);
+  border: var(--rule) solid var(--border);
+  border-top: 0.75rem solid var(--accent);
+  text-decoration: none;
+  overflow: hidden;
+  transition:
+    border-color var(--dur-colour) ease,
+    transform var(--dur-hover) ease;
+}
+.skill-tile > :not(.geo) { position: relative; z-index: 1; }
+.skill-tile .eyebrow { margin: 0; }
+.skill-tile-name {
+  font-size: 1.35rem;
+  font-weight: var(--weight-heading);
+  line-height: 1.15;
+}
+.skill-tile-desc { font-size: 0.9rem; color: var(--text-muted); flex: 1; }
+.skill-tile-status { align-self: flex-start; }
+a.skill-tile:hover {
+  color: var(--text);
+  border-color: var(--accent);
+  transform: var(--lift);
+  box-shadow: var(--shadow-hover);
+}
+.skill-tile.active { border-color: var(--accent); border-width: var(--rule-thick); border-top-width: 0.75rem; padding: calc(var(--space-5) - 2px); }
+.skill-tile.active .skill-tile-status { border-color: var(--accent); background: var(--accent-tint); color: var(--accent-ink); }
+.skill-tile.completed { background: var(--accent-tint); }
+.skill-tile.locked { opacity: 0.55; cursor: not-allowed; }
+.skill-tile.locked .skill-tile-status { border-style: dashed; }
+.skill-tile .geo {
+  --geo-size: 7rem;
+  right: -2rem;
+  bottom: -2rem;
+  opacity: 0.12;
+}
+
+/* ---------------------------------------------------------------- results bar */
+
+/* Markup: <div class="results-bar" data-skill="…" style="--est: 62; --lo: 54; --hi: 70; --i: 0">
+   <span class="results-label">…</span>
+   <span class="results-track" aria-hidden="true"> <span class="results-fill"></span>
+   <span class="results-band"></span> <span class="results-marker"></span> </span>
+   <span class="results-value">62 <span class="results-range">54 to 70</span></span> </div>
+   Values are on a 0 to 100 display scale. The numbers are always printed; the band is a
+   hatched region bounded by --text caps and the estimate is a --text marker, so neither
+   depends on the accent's contrast against the track. */
+.results-list { display: grid; gap: var(--space-4); }
+.results-bar {
+  display: grid;
+  grid-template-columns: minmax(8rem, 12rem) 1fr 10rem;
+  align-items: center;
+  gap: var(--space-4);
+}
+.results-label {
+  font-size: 0.8rem;
+  font-weight: var(--weight-label);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.results-label::before {
+  content: '';
+  width: 0.65rem;
+  height: 0.65rem;
+  background: var(--accent);
+  flex: none;
+}
+.results-track {
+  position: relative;
+  display: block;
+  height: 1.5rem;
+  background: var(--bg-deep);
+}
+.results-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: calc(var(--est, 0) * 1%);
+  background: var(--accent);
+  transform-origin: left center;
+  animation: bar-grow var(--dur-bar) ease both;
+  animation-delay: calc(var(--i, 0) * var(--bar-stagger));
+}
+.results-band {
+  position: absolute;
+  top: -0.3rem;
+  bottom: -0.3rem;
+  left: calc(var(--lo, 0) * 1%);
+  width: calc((var(--hi, 0) - var(--lo, 0)) * 1%);
+  border-left: var(--rule) solid var(--text);
+  border-right: var(--rule) solid var(--text);
+  background: repeating-linear-gradient(135deg, rgba(42, 31, 24, 0.45) 0 2px, transparent 2px 6px);
+}
+.results-marker {
+  position: absolute;
+  top: -0.5rem;
+  bottom: -0.5rem;
+  left: calc(var(--est, 0) * 1%);
+  width: 4px;
+  margin-left: -2px;
+  background: var(--text);
+}
+.results-value {
+  font-size: 1.1rem;
+  font-weight: var(--weight-heading);
+  font-variant-numeric: tabular-nums;
+}
+.results-range {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: var(--weight-body);
+  color: var(--text-muted);
+}
+.results-bar.low-confidence .results-band { border-style: dashed; }
+.results-bar.no-data .results-track { background: repeating-linear-gradient(135deg, var(--bg-deep) 0 6px, var(--bg-card) 6px 12px); }
+.results-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.85rem;
+}
+.results-legend li { display: flex; align-items: center; gap: var(--space-2); }
+.legend-swatch { display: inline-block; width: 1.5rem; height: 0.9rem; background: var(--bg-deep); position: relative; }
+.legend-swatch.fill { background: var(--accent); }
+.legend-swatch.band { border-left: var(--rule) solid var(--text); border-right: var(--rule) solid var(--text); background: repeating-linear-gradient(135deg, rgba(42, 31, 24, 0.45) 0 2px, var(--bg-deep) 2px 6px); }
+.legend-swatch.marker { width: 4px; height: 1.2rem; background: var(--text); }
+
+@keyframes bar-grow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@media (max-width: 600px) {
+  .results-bar {
+    grid-template-columns: 1fr auto;
+    grid-template-areas: 'label value' 'track track';
+    row-gap: var(--space-2);
+  }
+  .results-label { grid-area: label; }
+  .results-value { grid-area: value; text-align: right; }
+  .results-track { grid-area: track; }
+}
+
+/* ---------------------------------------------------------------- colour-block banner */
+
+/* Full-width solid accent fill. All text inside is large (at least 18.66px bold), so
+   every accent fill, burnt orange included, meets AA for its on-colour. */
+.banner {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: var(--space-6) var(--space-5);
+  background: var(--accent);
+  color: var(--accent-on);
+  --focus: var(--accent-on);
+}
+.banner > :not(.geo) { position: relative; z-index: 1; }
+.banner > :last-child { margin-bottom: 0; }
+.banner-eyebrow {
+  margin: 0 0 var(--space-2);
+  font-size: 1.2rem;
+  font-weight: var(--weight-label);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+.banner-title {
+  margin: 0 0 var(--space-3);
+  color: inherit;
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.banner-text {
+  margin: 0;
+  max-width: var(--measure);
+  font-size: 1.2rem;
+  font-weight: var(--weight-label);
+  line-height: 1.4;
+}
+.banner .geo { background: var(--accent-on); }
+.banner .geo-ring { background: transparent; border-color: var(--accent-on); }
+
+/* ---------------------------------------------------------------- decorative geometry */
+
+/* Empty, aria-hidden elements behind content. The container takes .geo-field
+   (position: relative; overflow: hidden) so rotations clip cleanly. Colour comes from
+   --geo-color (default: the context accent), size from --geo-size, angle from --geo-rotate.
+   Background shapes: opacity 0.06 to 0.12 (.geo-faint 0.06, default 0.10, .geo-strong 0.12).
+   Foreground accents: .geo-fg at full opacity. */
+.geo-field {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.geo-field > :not(.geo) { position: relative; z-index: 1; }
+.geo {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  opacity: var(--geo-opacity);
+  background: var(--geo-color, var(--accent));
+}
+.geo-faint { opacity: 0.06; }
+.geo-strong { opacity: 0.12; }
+.geo-fg { opacity: 1; }
+.geo-square {
+  width: var(--geo-size, 12rem);
+  height: var(--geo-size, 12rem);
+  transform: rotate(var(--geo-rotate, 18deg));
+}
+.geo-circle {
+  width: var(--geo-size, 12rem);
+  height: var(--geo-size, 12rem);
+  border-radius: 50%;
+}
+.geo-ring {
+  width: var(--geo-size, 12rem);
+  height: var(--geo-size, 12rem);
+  border-radius: 50%;
+  background: transparent;
+  border: var(--geo-thickness, 1.25rem) solid var(--geo-color, var(--accent));
+}
+.geo-bar {
+  width: var(--geo-length, 140%);
+  height: var(--geo-thickness, 1rem);
+  transform: rotate(var(--geo-rotate, -4deg));
+}
+.geo-tri {
+  width: var(--geo-size, 10rem);
+  height: calc(var(--geo-size, 10rem) * 0.87);
+  clip-path: polygon(50% 0, 0 100%, 100% 100%);
+  transform: rotate(var(--geo-rotate, 12deg));
+}

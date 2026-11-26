@@ -44,6 +44,9 @@ audit/
   README.md                 Index of the audit and how to reproduce the evidence
   evidence/                 Scripts that reproduce every quantitative finding, and their recorded output
 docs/                       Specifications (see Files)
+styles/                     Design system: tokens.css, base.css, components.css
+assets/                     Hult logo (PNG extracted from the prototype) and favicon
+styleguide.html             Living specimen of every token and component, for visual review
 src/
   core/                     Platform modules: version, rng, ids, schema, migrate, store, timing, router
   skills/                   Skill registry, task runner, one directory per skill (_example is a developer stub)
@@ -52,7 +55,7 @@ dev/                        Developer harness for the platform (not student-faci
 tests/                      Node test and lint scripts (see Testing)
 ```
 
-Planned by later sessions (not yet present): `styles/`, `assets/` and `styleguide.html` (S4), `src/report/` (S11, S12), `cohort.html` (S13), `analysis/` (S15). The target layout is in `audit/AUDIT-REPORT.md` section 4.
+Planned by later sessions (not yet present): `src/report/` (S11, S12), `cohort.html` (S13), `analysis/` (S15). The target layout is in `audit/AUDIT-REPORT.md` section 4.
 
 ## Files
 
@@ -80,6 +83,12 @@ Planned by later sessions (not yet present): `styles/`, `assets/` and `styleguid
 - `docs/VALIDATION-PLAN.md` — Pilot protocol, analyses and change thresholds (written in S15)
 - `docs/DESIGN.md` — Pointer to the Visual style section of this file
 - `docs/CHANGELOG.md` — Changes by session, including every `scoringVersion` bump
+- `styles/tokens.css` — Design tokens: reference palette copied exactly, ink tones, feedback colours, skill tokens (`--skill-<id>`, `-ink`, `-on`, `-tint`), spacing, motion, focus
+- `styles/base.css` — Reset, system font stack, type scale, focus-visible outline, utilities, reduced motion, print base
+- `styles/components.css` — Accent context (`data-skill`, `data-accent`), eyebrow, lede, pip, tag, colour bars, brand lockup, buttons, cards, Likert radio group, choice cards, timer ring, progress dots, feedback, notices, skill tiles, results bar with uncertainty band, banners, decorative geometry
+- `styleguide.html` — Living specimen page of every token and component in every state, for visual review; hover and focus specimens are derived from the real rules at load time
+- `assets/hult-logo.png` — Hult logo, one copy extracted unchanged from the prototype's base64 PNG (640x737, transparent padding cropped in CSS). Replace with an official SVG when supplied
+- `assets/favicon.svg`, `assets/favicon.png` — Favicon (geometric, palette colours), SVG with a 32px PNG fallback
 - `src/core/version.js` — `SCHEMA_VERSION`, `APP_VERSION`, `SCORING_VERSION`
 - `src/core/rng.js` — Seeded generator (mulberry32), `seedFromString`, `randomSeed`, unbiased `int(n)` and Fisher-Yates `shuffle`
 - `src/core/ids.js` — Pseudonymous participant codes (`P-XXXX-XXXXC`, Crockford base 32 with a check character) and record IDs (`S-`, `A-`, `R-`)
@@ -99,7 +108,7 @@ Planned by later sessions (not yet present): `styles/`, `assets/` and `styleguid
 - `tests/rng.test.mjs`, `tests/ids.test.mjs`, `tests/schema.test.mjs`, `tests/store.test.mjs`, `tests/migrate.test.mjs`, `tests/timing.test.mjs`, `tests/router.test.mjs`, `tests/registry.test.mjs` — Unit tests for the platform core, registry, runner and stub skill
 - `tests/write-data-schema.mjs` — Writes `docs/data-schema.json` (`npm run schema`)
 - `tests/legacy-scoring.test.mjs` — Characterisation tests asserting the prototype's current scores, ported from `audit/evidence/`
-- `tests/lint.mjs` — Static checks across every `.html`, `.css` and `.js` file outside `audit/` and `legacy/`
+- `tests/lint.mjs` — Static checks across every `.html`, `.css` and `.js` file outside `audit/` and `legacy/`, plus the reference-palette and contrast checks on `styles/tokens.css`
 
 Keep this list current. Every session that adds, moves or removes a file updates it in the same commit.
 
@@ -128,7 +137,7 @@ These are non-negotiable.
 
 This tool follows the reference design system of `mxtdnl/slides` and `mxtdnl/third-places`. Where this section and the reference disagree, the reference (`slides/CLAUDE.md`, Visual style) wins, except for the 5C accent mapping below, which is specific to this repository. The tokens and rules below are copied from `slides/CLAUDE.md`; wording that referred to decks or to `SLIDES.md` has been adapted and is marked *(adapted)*.
 
-From S4 the tokens live in `styles/tokens.css`; until then they are defined inline on `:root` in each page.
+The tokens live in `styles/tokens.css` (S4). New pages link `styles/tokens.css`, `styles/base.css` and `styles/components.css` in that order; `index.html` and `dev/platform.html` still define a subset inline until S5 replaces them.
 
 A warm, hard-edged, playful Bauhaus visual language, closer to a Kandinsky painting or a Herbert Bayer poster than a corporate template. Pages should feel alive with colour and geometric energy: floating shapes, bold accent blocks, diagonal tension. The eight accent colours are the primary expressive tool; neutral surfaces exist to let them sing. Colours are CSS custom properties on `:root`. Use these values exactly.
 
@@ -187,9 +196,9 @@ From `audit/AUDIT-REPORT.md` section J-4. Each skill always appears in its accen
 | Curiosity | `--accent-4` | `#D4A020` gold | `--accent-4-ink` `#7A5410` |
 | Critical thinking | `--accent-1` | `#5C3A96` purple | `--accent-1` |
 | Creativity | `--accent-6` | `#B83068` magenta | `--accent-6` |
-| Communication | `--accent-3` | `#C85218` burnt orange | `--accent-3` |
+| Communication | `--accent-3` | `#C85218` burnt orange | `--accent-7-ink` `#9E4718` *(S4: burnt orange is 4.32:1 on `--bg-card`; owner decision pending)* |
 
-S4 adds semantic tokens `--skill-collaboration`, `--skill-curiosity`, `--skill-critical`, `--skill-creativity` and `--skill-communication` that point at these accents. Hult branding is kept through the logo and the header/footer lockup. Whether Hult's aubergine replaces `--accent-1` is an open decision pending Hult brand guidelines (audit section 7, item 2).
+`styles/tokens.css` defines semantic tokens `--skill-collaboration`, `--skill-curiosity`, `--skill-critical`, `--skill-creativity` and `--skill-communication` that point at these accents, each with `-ink` (text on `--bg-card` and the tint), `-on` (text on the fill) and `-tint` (10% over `--bg-card`). Skill ink sits on cards and tints, not on `--bg`. Burnt orange fills carry large text only. Components take their accent from `data-skill` or `data-accent` (see the header of `styles/components.css`). Hult branding is kept through the logo and the header/footer lockup. Whether Hult's aubergine replaces `--accent-1` is an open decision pending Hult brand guidelines (audit section 7, item 2).
 
 ### Accent colour usage
 
@@ -288,8 +297,9 @@ npm run lint    # node tests/lint.mjs
 - JavaScript (`.js`): no `http:` or `https:` URLs in `import` or `fetch()`; no `XMLHttpRequest`, `sendBeacon`, `WebSocket` or `EventSource`; no `innerHTML` or `outerHTML` assignment and no `insertAdjacentHTML` (audit K-5); no curly quotes
 - Files on the allowlist (currently only `legacy/skills-assessment-hult.html`) are exempt and printed as a warning
 - A count of `PLACEHOLDER:` strings per file, printed as a warning
+- `styles/tokens.css`: every reference token (`REFERENCE_TOKENS`) still has its `slides/CLAUDE.md` value, and every pair in `CONTRAST_PAIRS` meets its level: 4.5:1 for `text`, 3:1 for `large` (24px, or 18.66px bold) and `ui` (boundaries, focus, state marks). Values are resolved through `var()`, `rgb()` and `color-mix(in srgb, …)`. Add a row whenever a component puts a new colour on a new surface
 
-Later sessions extend this: a contrast check on `styles/tokens.css` (S4), Playwright end-to-end tests (S5, S11, S14) and axe-core accessibility checks (S14), added as development dependencies only.
+Later sessions extend this: Playwright end-to-end tests (S5, S11, S14) and axe-core accessibility checks (S14), added as development dependencies only.
 
 To reproduce the audit evidence, see `audit/README.md`.
 
@@ -299,4 +309,4 @@ To serve the repository locally:
 python3 -m http.server 8000
 ```
 
-Then open `http://localhost:8000/`. The platform developer harness is at `http://localhost:8000/dev/platform.html`.
+Then open `http://localhost:8000/`. The platform developer harness is at `http://localhost:8000/dev/platform.html`; the style guide is at `http://localhost:8000/styleguide.html`.
