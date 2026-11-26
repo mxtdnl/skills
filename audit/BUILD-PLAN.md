@@ -23,6 +23,7 @@ Finding IDs (e.g. `K-1`, `B-2`) refer to the audit report.
 | 2026-11-26 | Opening directly from a file is not required; the tool is served over HTTP (GitHub Pages, or a local server for previews) | S3 uses ES modules; the slides repo's `file://` rule does not apply to this repository |
 | 2026-11-26 | Consent wording drafted by Claude is acceptable | S5 writes final consent text; no placeholder. Programme-evaluation use may still need Hult data protection approval outside this repository. |
 | 2026-11-26 | Skill definitions drafted | `docs/CONSTRUCTS.md` exists; the S2 gate is pending owner sign-off |
+| 2026-11-26 | Owner answered the first round of construct questions (`docs/CONSTRUCTS.md`, revision 2) | S7: four tasks, not three: add CT-T4 (statistical and base-rate reasoning), a revision step in calibration, and perspective-taking items in argument evaluation. S8: passages are business and academic; automated originality scoring where the no-network rule allows. S9: information-seeking topics mainly business, psychology, economics and politics. S10: SJT scenarios mix Hult and generic settings; SJT keying rule still open. Results (S11): per-skill and per-facet, with a confidence flag per facet. The S2 gate still needs Hult sign-off |
 
 ## Global rules (repeated in CLAUDE.md, so they apply to every session)
 
