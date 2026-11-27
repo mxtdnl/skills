@@ -6,76 +6,40 @@
 <title>5C Skills Assessment</title>
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="assets/favicon.png" type="image/png" sizes="32x32">
-<!-- Temporary landing page (Session 0). Replaced by the skill hub in Session 5. -->
-<style>
-:root {
-  --bg: #F2DFBE; --bg-card: #FFFAF2; --bg-deep: #E8D2A8;
-  --text: #2A1F18; --text-muted: #6A5A48; --border: #D8C8A8;
-  --accent-1: #5C3A96; --accent-2: #B52838; --accent-3: #C85218; --accent-4: #D4A020; --accent-6: #B83068;
-  --ambiguous: #B98A10; --ambiguous-ink: #7A5410; --ambiguous-tint: #FFF3D6;
-}
-* { box-sizing: border-box; }
-html { font-size: 16px; }
-body {
-  margin: 0; min-height: 100vh; background: var(--bg); color: var(--text);
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  font-weight: 400; line-height: 1.5; position: relative; overflow-x: hidden;
-}
-.geo { position: absolute; pointer-events: none; z-index: 0; }
-.geo-square { width: 22rem; height: 22rem; background: var(--accent-1); opacity: 0.1; top: -6rem; right: -7rem; transform: rotate(18deg); }
-.geo-circle { width: 14rem; height: 14rem; border: 1.5rem solid var(--accent-4); border-radius: 50%; opacity: 0.12; bottom: -4rem; left: -4rem; }
-.geo-bar { width: 140%; height: 1.25rem; background: var(--accent-2); opacity: 0.08; bottom: 30%; left: -20%; transform: rotate(-4deg); }
-main { position: relative; z-index: 1; max-width: 44rem; margin: 0 auto; padding: 4rem 1rem; }
-.rail { display: flex; height: 6px; margin-bottom: 2rem; }
-.rail span { flex: 1; }
-.eyebrow { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: var(--accent-1); margin: 0 0 0.5rem; }
-h1 { font-weight: 800; font-size: clamp(2rem, 5vw, 3rem); line-height: 1.1; margin: 0 0 1rem; }
-.lede { font-size: 1.05rem; color: var(--text-muted); margin: 0 0 2rem; }
-.notice {
-  background: var(--ambiguous-tint); border-left: 6px solid var(--ambiguous);
-  padding: 1rem 1.25rem; margin: 0 0 2rem;
-}
-.notice strong { display: block; color: var(--ambiguous-ink); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.8rem; margin-bottom: 0.25rem; }
-.card { background: var(--bg-card); border: 2px solid var(--border); border-left: 6px solid var(--accent-1); padding: 1.5rem; }
-.card p { margin: 0 0 1rem; }
-.btn {
-  display: inline-block; background: var(--accent-1); color: #fff; text-decoration: none;
-  font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.85rem;
-  padding: 0.85rem 1.25rem; border: 0; border-radius: 0;
-  transition: background-color 0.2s ease, transform 0.15s ease;
-}
-.btn:hover { background: var(--accent-2); transform: translateY(-2px); }
-.btn:focus-visible { outline: 4px solid var(--accent-4); outline-offset: 3px; }
-.small { font-size: 0.9rem; color: var(--text-muted); }
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { transition-duration: 0.001ms !important; animation-duration: 0.001ms !important; }
-}
-</style>
+<link rel="stylesheet" href="styles/tokens.css">
+<link rel="stylesheet" href="styles/base.css">
+<link rel="stylesheet" href="styles/components.css">
+<script type="module" src="src/app/main.js"></script>
 </head>
 <body>
-<div class="geo geo-square" aria-hidden="true"></div>
-<div class="geo geo-circle" aria-hidden="true"></div>
-<div class="geo geo-bar" aria-hidden="true"></div>
-<main>
-  <div class="rail" aria-hidden="true">
-    <span style="background: var(--accent-2)"></span>
-    <span style="background: var(--accent-4)"></span>
-    <span style="background: var(--accent-1)"></span>
-    <span style="background: var(--accent-6)"></span>
-    <span style="background: var(--accent-3)"></span>
+<a class="skip-link" href="#app">Skip to content</a>
+<header class="site-header">
+  <div class="skill-rail" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+  <div class="wrap">
+    <a class="brand" href="#/hub">
+      <img class="brand-logo" src="assets/hult-logo.png" alt="Hult International Business School">
+      <span class="brand-name">5C Skills<br>Assessment</span>
+    </a>
+    <nav id="site-nav" class="site-nav" aria-label="Main" hidden>
+      <a href="#/hub" data-route="hub">Your skills</a>
+      <a href="#/settings" data-route="settings">Settings</a>
+    </nav>
   </div>
-  <p class="eyebrow">Hult 5C skills</p>
-  <h1>5C skills assessment</h1>
-  <p class="lede">A tool for self-reflection, coaching and programme evaluation of collaboration, curiosity, critical thinking, creativity and communication. It is being rebuilt.</p>
-  <div class="notice" role="note">
-    <strong>Legacy prototype</strong>
-    The only working version is the original prototype. An audit found that several of its scores are misleading, so they must not be used to judge any student or programme. See <code>audit/AUDIT-REPORT.md</code> in the repository.
-  </div>
-  <div class="card">
-    <p>The prototype is kept unchanged for reference while the rebuild is in progress.</p>
-    <a class="btn" href="legacy/skills-assessment-hult.html">Open the legacy prototype</a>
-  </div>
-  <p class="small">Temporary page. It will be replaced by the skill hub.</p>
+</header>
+<div id="notices" class="wrap notices"></div>
+<main id="app" tabindex="-1">
+  <section class="page wrap">
+    <h1>5C Skills Assessment</h1>
+    <noscript><p class="notice notice-warning">This tool needs JavaScript. Please turn it on in your browser settings and reload the page.</p></noscript>
+    <p class="quiet">Loading…</p>
+  </section>
 </main>
+<footer class="site-footer">
+  <div class="wrap">
+    <span class="small quiet">Prototype under development. <span id="app-version"></span></span>
+    <a class="small" href="legacy/skills-assessment-hult.html">Legacy prototype (reference only)</a>
+  </div>
+</footer>
+<div id="announcer" class="visually-hidden" aria-live="polite"></div>
 </body>
 </html>

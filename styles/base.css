@@ -99,7 +99,27 @@ td { border-bottom: var(--rule) solid var(--border); padding: var(--space-2) var
 }
 .measure { max-width: var(--measure); }
 
-/* Reduced motion: every duration becomes 0.001ms. */
+/* Reduced motion: every duration becomes 0.001ms. The same rules apply when the student
+   turns on "Reduce motion" in Settings (html[data-motion="reduce"], set by src/app/main.js). */
+:root[data-motion="reduce"] {
+  --dur-hover: 0.001ms;
+  --dur-colour: 0.001ms;
+  --dur-reveal: 0.001ms;
+  --dur-bar: 0.001ms;
+  --bar-stagger: 0ms;
+}
+:root[data-motion="reduce"] *,
+:root[data-motion="reduce"] *::before,
+:root[data-motion="reduce"] *::after {
+  transition-duration: 0.001ms !important;
+  animation-duration: 0.001ms !important;
+  animation-delay: 0ms !important;
+  transition-delay: 0ms !important;
+  scroll-behavior: auto !important;
+}
+:root[data-motion="reduce"] .btn:hover,
+:root[data-motion="reduce"] a.skill-tile:hover,
+:root[data-motion="reduce"] .card-link:hover { transform: none !important; }
 @media (prefers-reduced-motion: reduce) {
   :root {
     --dur-hover: 0.001ms;

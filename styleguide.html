@@ -97,6 +97,7 @@
         <li><a href="#results">Results</a></li>
         <li><a href="#banners">Banners</a></li>
         <li><a href="#geometry">Geometry</a></li>
+        <li><a href="#shell">Shell</a></li>
       </ul>
     </nav>
   </div>
@@ -511,6 +512,44 @@
       <div class="sg-geo-demo geo-field"><span class="geo geo-circle" style="--geo-color: var(--accent-4); left: -3rem; top: -3rem" aria-hidden="true"></span><span class="geo geo-ring geo-strong" style="--geo-color: var(--accent-6); --geo-size: 8rem; right: 1rem; bottom: -2rem" aria-hidden="true"></span><span class="micro">.geo-circle and .geo-ring</span></div>
       <div class="sg-geo-demo geo-field"><span class="geo geo-bar" style="--geo-color: var(--accent-2); top: 30%; left: -20%" aria-hidden="true"></span><span class="geo geo-bar geo-faint" style="--geo-color: var(--accent-3); --geo-rotate: 6deg; --geo-thickness: 2.5rem; top: 55%; left: -20%" aria-hidden="true"></span><span class="micro">.geo-bar and .geo-faint</span></div>
       <div class="sg-geo-demo geo-field"><span class="geo geo-tri geo-strong" style="--geo-color: var(--accent-1); right: 1rem; top: 1rem" aria-hidden="true"></span><span class="geo geo-tri geo-fg" style="--geo-color: var(--accent-4); --geo-size: 2rem; --geo-rotate: -10deg; left: 2rem; top: 2rem" aria-hidden="true"></span><span class="micro">.geo-tri</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="sg-section" id="shell">
+  <div class="wrap">
+    <span class="colour-bar" data-accent="2" aria-hidden="true"></span>
+    <p class="eyebrow">16 · Application shell</p>
+    <h2>Application shell components (S5)</h2>
+    <p class="sg-note">Form fields, checkboxes, danger and on-fill buttons, step list, battery list and dialog, as used by index.html.</p>
+    <div style="display: grid; gap: var(--space-5); max-width: var(--measure)">
+      <div class="card">
+        <label class="field-label" for="sg-code">Sitting code</label>
+        <p class="field-hint">Letters or numbers, a hyphen and one digit.</p>
+        <div class="inline-form"><input class="input input-code" id="sg-code" value="nope" aria-invalid="true"><button type="button" class="btn">Start</button></div>
+        <p class="field-error">That is not a sitting code.</p>
+        <div class="check"><input type="checkbox" id="sg-check" checked><label for="sg-check">A checked checkbox with a label.</label></div>
+        <div class="check"><input type="checkbox" id="sg-check2"><label for="sg-check2">An unchecked checkbox.</label></div>
+        <div class="btn-row"><button type="button" class="btn btn-danger">Delete all data</button><button type="button" class="btn btn-danger" disabled>Disabled</button></div>
+      </div>
+      <div class="card card-top" data-accent="1">
+        <ol class="step-list" aria-label="Example steps">
+          <li class="step completed"><span class="pip" aria-hidden="true"></span><span class="step-name">About you <span class="step-kind small quiet">Questionnaire · about 3 min</span></span><span class="tag correct">Complete</span></li>
+          <li class="step active"><span class="pip" aria-hidden="true"></span><span class="step-name">Task one <span class="step-kind small quiet">Task · about 4 min</span></span><span class="tag accent">In progress</span><a class="btn btn-small" href="#shell">Continue</a></li>
+          <li class="step"><span class="pip" aria-hidden="true"></span><span class="step-name">Task two <span class="step-kind small quiet">Task · about 4 min</span></span><span class="tag">Not started</span></li>
+        </ol>
+      </div>
+      <ol class="battery-list">
+        <li class="battery-item completed" data-skill="collaboration"><span class="battery-num" aria-hidden="true">1</span><span class="battery-name">Collaboration</span><span class="battery-time small quiet">About 9 min</span><span class="tag correct">Complete</span></li>
+        <li class="battery-item active" data-skill="curiosity"><span class="battery-num" aria-hidden="true">2</span><span class="battery-name">Curiosity</span><span class="battery-time small quiet">About 8 min</span><span class="tag accent">In progress</span></li>
+      </ol>
+      <section class="banner" data-skill="critical"><p class="banner-eyebrow">Sitting code SEP26-1</p><h3 class="banner-title">Next: Critical thinking</h3><a class="btn btn-on-fill" href="#shell">Continue</a></section>
+      <div class="dialog" role="group" aria-label="Dialog specimen" style="position: static; display: block">
+        <h3 class="dialog-title">Leave this step?</h3>
+        <p>Your answers so far are saved.</p>
+        <div class="btn-row"><button type="button" class="btn">Save and leave</button><button type="button" class="btn btn-ghost">Stay</button></div>
+      </div>
+      <p class="code-display" style="color: var(--text)">P-7K3M-Q9TX4</p>
     </div>
   </div>
 </section>

@@ -16,8 +16,9 @@ import { SCHEMA_VERSION } from './version.js';
 
 /**
  * @typedef {object} Consent
- * @property {string} noticeVersion        version of the privacy notice the participant saw
- * @property {string} givenAt              ISO 8601 date-time
+ * @property {string} noticeVersion        version of the consent wording the participant saw (src/app/consent.js)
+ * @property {string} givenAt              ISO 8601 date-time of the latest consent decision
+ * @property {true} toolUse                agreed to use the tool (required to use it at all)
  * @property {boolean} programmeEvaluation agreed to cohort-level programme evaluation use
  * @property {boolean} languageBackground  agreed to record language background (audit E-1)
  */
@@ -35,6 +36,21 @@ import { SCHEMA_VERSION } from './version.js';
  * @property {string} createdAt                ISO 8601 date-time
  * @property {Consent} consent
  * @property {LanguageBackground} [languageBackground] only if consent.languageBackground is true
+ * @property {Settings} [settings]
+ */
+
+/**
+ * @typedef {object} Settings
+ * @property {1 | 1.5 | 2} timeMultiplier     extended time for timed tasks (audit E-3)
+ * @property {boolean} reducedMotion          reduce motion even if the system setting does not
+ */
+
+/**
+ * @typedef {object} ProgrammeInfo
+ * @property {string} code                     coach-provided sitting code, normalised
+ * @property {number} window                   window number from the code (1 = start, 2 = end, ...)
+ * @property {string[]} skillOrder             the fixed skill order of the full battery
+ * @property {number} position                 this sitting's index in skillOrder
  */
 
 /**
@@ -43,7 +59,10 @@ import { SCHEMA_VERSION } from './version.js';
  * @property {number} schemaVersion
  * @property {string} id
  * @property {string} participantId
+ * @property {string} skillId                  the one skill this sitting covers
  * @property {'practice' | 'assessment'} mode
+ * @property {string | null} windowId          assessment: 'self' or 'programme:<code>'; practice: null
+ * @property {ProgrammeInfo | null} programme  set when the sitting is part of a programme battery
  * @property {string} formId                   'A' or 'B' for assessment; 'practice' for practice
  * @property {number} seed                     uint32; reproduces every random choice in the sitting
  * @property {string} appVersion
@@ -81,7 +100,12 @@ import { SCHEMA_VERSION } from './version.js';
  * @property {number | null} rawScore
  * @property {number | Object<string, number | null> | null} score  a number, or one value per facet
  * @property {string} scoringVersion
- * @property {TimingLog} [timing]
+ * @property {'in-progress' | 'complete'} status
+ * @property {string} startedAt
+ * @property {string} updatedAt                last autosave
+ * @property {string | null} completedAt
+ * @property {TimingLog} [timing]              set on completion of a timed task
+ * @property {object} [timerSnapshot]          timing.js snapshot while in progress, for resuming
  */
 
 /**
@@ -94,6 +118,10 @@ import { SCHEMA_VERSION } from './version.js';
  * @property {ItemResponse[]} responses
  * @property {number | Object<string, number | null> | null} score
  * @property {string} scoringVersion
+ * @property {'in-progress' | 'complete'} status
+ * @property {string} startedAt
+ * @property {string} updatedAt
+ * @property {string | null} completedAt
  */
 
 // ---------------------------------------------------------------------------
@@ -114,6 +142,30 @@ const SCHEMA_V = { type: 'integer', minimum: 1 };
 const SCORE = {
   type: ['number', 'object', 'null'],
   additionalProperties: { type: ['number', 'null'] },
+};
+const ISO_OR_NULL = { type: ['string', 'null'], format: 'date-time' };
+const PROGRESS = {
+  status: { type: 'string', enum: ['in-progress', 'complete'] },
+  startedAt: ISO,
+  updatedAt: ISO,
+  completedAt: ISO_OR_NULL,
+};
+const MS_OR_NULL = { type: ['number', 'null'] };
+const TIMER_SNAPSHOT = {
+  type: 'object',
+  optional: true,
+  description: 'State of the task timer while the attempt is in progress (src/core/timing.js snapshot()).',
+  properties: {
+    limitMs: { type: ['number', 'null'], minimum: 0 },
+    multiplier: { type: 'number', minimum: 1 },
+    state: { type: 'string', enum: ['idle', 'running', 'paused', 'expired', 'stopped'] },
+    endAt: MS_OR_NULL,
+    remainingMs: MS_OR_NULL,
+    extendedMs: { type: 'number', minimum: 0 },
+    pausedMs: { type: 'number', minimum: 0 },
+    pausedAt: MS_OR_NULL,
+    startedAt: MS_OR_NULL,
+  },
 };
 const ITEM_RESPONSE = {
   type: 'object',
@@ -138,6 +190,7 @@ export const RECORDS = {
         properties: {
           noticeVersion: { type: 'string' },
           givenAt: ISO,
+          toolUse: { type: 'boolean', const: true },
           programmeEvaluation: { type: 'boolean' },
           languageBackground: { type: 'boolean' },
         },
@@ -149,16 +202,35 @@ export const RECORDS = {
           englishFirstLanguage: { type: 'string', enum: ['yes', 'no', 'prefer-not-to-say'] },
         },
       },
+      settings: {
+        type: 'object',
+        optional: true,
+        properties: {
+          timeMultiplier: { type: 'number', enum: [1, 1.5, 2] },
+          reducedMotion: { type: 'boolean' },
+        },
+      },
     },
   },
   sitting: {
-    description: 'One occasion on which a participant works through tasks in one mode with one form.',
+    description: 'One occasion on which a participant works through one skill\'s steps in one mode with one form.',
     properties: {
       type: { type: 'string', const: 'sitting' },
       schemaVersion: SCHEMA_V,
       id: ID('S'),
       participantId: PARTICIPANT_ID,
+      skillId: SLUG,
       mode: { type: 'string', enum: ['practice', 'assessment'] },
+      windowId: { type: ['string', 'null'], pattern: '^(self|programme:[A-Z0-9]{2,12}-[1-9])$' },
+      programme: {
+        type: ['object', 'null'],
+        properties: {
+          code: { type: 'string', pattern: '^[A-Z0-9]{2,12}-[1-9]$' },
+          window: { type: 'integer', minimum: 1, maximum: 9 },
+          skillOrder: { type: 'array', items: SLUG },
+          position: { type: 'integer', minimum: 0 },
+        },
+      },
       formId: { type: 'string', pattern: '^(A|B|practice)$' },
       seed: { type: 'integer', minimum: 0, maximum: 4294967295 },
       appVersion: VERSION,
@@ -180,6 +252,8 @@ export const RECORDS = {
       rawScore: { type: ['number', 'null'] },
       score: SCORE,
       scoringVersion: VERSION,
+      ...PROGRESS,
+      timerSnapshot: TIMER_SNAPSHOT,
       timing: {
         type: 'object',
         optional: true,
@@ -204,6 +278,7 @@ export const RECORDS = {
       responses: { type: 'array', items: ITEM_RESPONSE },
       score: SCORE,
       scoringVersion: VERSION,
+      ...PROGRESS,
     },
   },
 };
@@ -270,7 +345,21 @@ function check(value, field, path, errors) {
 }
 
 // Rules that span fields. Listed in docs/DATA-SCHEMA.md; not expressible in data-schema.json.
+function progressRules(r, errors) {
+  if (r.status === 'complete' && r.completedAt === null) errors.push({ path: '$.completedAt', message: 'is required when status is complete' });
+  if (r.status === 'in-progress') {
+    if (r.completedAt !== null) errors.push({ path: '$.completedAt', message: 'must be null while in progress' });
+    if (r.score !== null) errors.push({ path: '$.score', message: 'must be null while in progress' });
+    if ('rawScore' in r && r.rawScore !== null) errors.push({ path: '$.rawScore', message: 'must be null while in progress' });
+  }
+  if (r.status === 'complete' && r.timerSnapshot !== undefined) errors.push({ path: '$.timerSnapshot', message: 'is kept only while in progress' });
+  if (typeof r.completedAt === 'string' && Date.parse(r.completedAt) < Date.parse(r.startedAt)) errors.push({ path: '$.completedAt', message: 'is before startedAt' });
+  if (Date.parse(r.updatedAt) < Date.parse(r.startedAt)) errors.push({ path: '$.updatedAt', message: 'is before startedAt' });
+}
+
 const CROSS_FIELD = {
+  taskAttempt: progressRules,
+  selfReport: progressRules,
   participant(r, errors) {
     if (r.languageBackground !== undefined && r.consent?.languageBackground !== true) {
       errors.push({ path: '$.languageBackground', message: 'may be recorded only with consent.languageBackground true' });
@@ -282,6 +371,13 @@ const CROSS_FIELD = {
     if (typeof r.completedAt === 'string' && typeof r.startedAt === 'string' && Date.parse(r.completedAt) < Date.parse(r.startedAt)) {
       errors.push({ path: '$.completedAt', message: 'is before startedAt' });
     }
+    if (r.mode === 'practice' && (r.windowId !== null || r.programme !== null)) errors.push({ path: '$.windowId', message: 'practice sittings have no window and no programme' });
+    if (r.mode === 'assessment' && r.windowId === null) errors.push({ path: '$.windowId', message: 'is required in assessment mode' });
+    if (r.programme) {
+      if (r.windowId !== `programme:${r.programme.code}`) errors.push({ path: '$.windowId', message: 'must be programme:<code> for a programme sitting' });
+      if (Number(r.programme.code.slice(-1)) !== r.programme.window) errors.push({ path: '$.programme.window', message: 'must match the last digit of the code' });
+      if (r.programme.skillOrder[r.programme.position] !== r.skillId) errors.push({ path: '$.programme.position', message: 'must point at this sitting\'s skill in skillOrder' });
+    } else if (r.windowId !== null && r.windowId !== 'self') errors.push({ path: '$.windowId', message: 'must be "self" outside a programme sitting' });
   },
 };
 

@@ -10,19 +10,25 @@ test('parses every route', () => {
   assert.deepEqual(parseHash('#/task/critical/ct-t1'), { name: 'task', params: { skillId: 'critical', taskId: 'ct-t1' } });
   assert.deepEqual(parseHash('#/results/_example'), { name: 'results', params: { skillId: '_example' } });
   assert.deepEqual(parseHash('#/profile/'), { name: 'profile', params: {} });
+  assert.deepEqual(parseHash('#/start'), { name: 'start', params: {} });
+  assert.deepEqual(parseHash('#/start/consent'), { name: 'start', params: { step: 'consent' } });
+  assert.deepEqual(parseHash('#/run/S-0123456789ABCDEF/self-report'), { name: 'run', params: { sittingId: 'S-0123456789ABCDEF', stepId: 'self-report' } });
+  assert.deepEqual(parseHash('#/settings'), { name: 'settings', params: {} });
 });
 
 test('unknown or malformed hashes are not found', () => {
-  for (const h of ['#/nope', '#/skill/', '#/skill/A B', '#/task/x', '#/skill/<img>', '#/skill/../x']) {
+  for (const h of ['#/nope', '#/skill/', '#/skill/A B', '#/task/x', '#/skill/<img>', '#/skill/../x', '#/run/S-123/pick', '#/run/s-0123456789abcdef/pick', '#/app']) {
     assert.equal(parseHash(h).name, 'notFound', h);
   }
 });
 
 test('toHash round-trips and rejects bad ids', () => {
-  const routes = [['hub', {}], ['skill', { skillId: 'creativity' }], ['task', { skillId: 'creativity', taskId: 'aut' }], ['results', { skillId: 'creativity' }], ['profile', {}]];
+  const routes = [['hub', {}], ['skill', { skillId: 'creativity' }], ['task', { skillId: 'creativity', taskId: 'aut' }], ['results', { skillId: 'creativity' }], ['profile', {}], ['start', { step: 'code' }], ['run', { sittingId: 'S-0123456789ABCDEF', stepId: 'pick' }], ['settings', {}]];
   for (const [name, params] of routes) assert.deepEqual(parseHash(toHash(name, params)), { name, params });
   assert.deepEqual(ROUTE_NAMES, routes.map(([n]) => n));
   assert.throws(() => toHash('skill', { skillId: 'Bad Id' }), RangeError);
+  assert.throws(() => toHash('run', { sittingId: 'nope', stepId: 'pick' }), RangeError);
+  assert.equal(toHash('start'), '#/start');
   assert.throws(() => toHash('nowhere'), RangeError);
 });
 

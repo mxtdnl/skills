@@ -7,6 +7,7 @@
 //   save(type, record)        -> record           validates first; throws on an invalid record
 //   list(type)                -> record[]          sorted by id
 //   remove(type, id)          -> boolean           true if something was removed
+//   clear()                   -> number            removes every record in the current namespace
 //   exportAll()               -> ExportBundle
 //   importAll(bundle, opts)   -> ImportResult      migrates, validates, then writes
 //
@@ -124,6 +125,13 @@ class KeyValueAdapter {
     return had;
   }
 
+  /** Remove every record in this namespace (reset all data). Keys outside it are untouched. */
+  async clear() {
+    const ks = this.keys();
+    for (const k of ks) this.storage.removeItem(k);
+    return ks.length;
+  }
+
   async exportAll() {
     const records = {};
     for (const t of RECORD_TYPES) records[t] = await this.list(t);
@@ -202,7 +210,7 @@ export class LocalStorageAdapter extends KeyValueAdapter {
         this.migrationLog = [`migration failed: ${e.message}`];
       }
     }
-    for (const m of ['load', 'list', 'remove', 'save', 'importAll']) {
+    for (const m of ['load', 'list', 'remove', 'save', 'clear', 'importAll']) {
       const inner = this[m].bind(this);
       this[m] = (...args) => this.guard(inner, args);
     }

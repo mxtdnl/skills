@@ -2,8 +2,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { migrate, MIGRATIONS } from '../src/core/migrate.js';
 import { SCHEMA_VERSION } from '../src/core/version.js';
+import { validate } from '../src/core/schema.js';
 
-// Test-only chain 1 -> 2 -> 3. The real chain (MIGRATIONS) is empty while version 1 is current.
+// Test-only chain 1 -> 2 -> 3, separate from the real chain (MIGRATIONS).
 const chain = [
   {
     from: 1, to: 2, describe: 'rename sitting.form to formId',
@@ -56,4 +57,36 @@ test('the real chain reaches the current schema version from every earlier versi
     assert.equal(migrate({ schemaVersion: v, records: {} }).bundle.schemaVersion, SCHEMA_VERSION);
   }
   assert.equal(MIGRATIONS.length, SCHEMA_VERSION - 1);
+});
+
+// A bundle exactly as the S3 developer harness (schema version 1) stored it.
+const realV1 = () => ({
+  schemaVersion: 1,
+  records: {
+    participant: [{ type: 'participant', schemaVersion: 1, id: 'P-0000-00000', createdAt: '2026-11-26T09:00:00.000Z', consent: { noticeVersion: 'dev-harness', givenAt: '2026-11-26T09:00:00.000Z', programmeEvaluation: false, languageBackground: false } }],
+    sitting: [
+      { type: 'sitting', schemaVersion: 1, id: 'S-0123456789ABCDEF', participantId: 'P-0000-00000', mode: 'assessment', formId: 'B', seed: 7, appVersion: '0.2.0', scoringVersion: '0.2.0', startedAt: '2026-11-26T09:00:00.000Z', completedAt: null },
+      { type: 'sitting', schemaVersion: 1, id: 'S-1111111111111111', participantId: 'P-0000-00000', mode: 'practice', formId: 'practice', seed: 8, appVersion: '0.2.0', scoringVersion: '0.2.0', startedAt: '2026-11-26T10:00:00.000Z', completedAt: null },
+    ],
+    taskAttempt: [{ type: 'taskAttempt', schemaVersion: 1, id: 'A-0123456789ABCDEF', sittingId: 'S-0123456789ABCDEF', skillId: '_example', taskId: 'pick', itemResponses: [{ itemId: 'EX-PICK-B01', response: { choice: 2, position: 0 }, rtMs: 900, shownAt: '2026-11-26T09:00:05.000Z' }], rawScore: 1, score: { EX1: 0.5 }, scoringVersion: '0.2.0' }],
+    selfReport: [],
+  },
+});
+
+test('the real 1 -> 2 migration produces valid version 2 records and keeps every raw response', () => {
+  const { bundle, applied } = migrate(realV1(), { target: 2 });
+  assert.equal(applied.length, 1);
+  for (const [type, list] of Object.entries(bundle.records)) {
+    for (const r of list) assert.deepEqual(validate(type, r).errors, [], `${type} ${r.id}`);
+  }
+  const [assessment, practice] = bundle.records.sitting;
+  assert.equal(assessment.skillId, '_example');
+  assert.equal(assessment.windowId, 'self');
+  assert.equal(practice.skillId, '_unknown', 'a sitting with no attempts has no known skill');
+  assert.equal(practice.windowId, null);
+  assert.equal(bundle.records.participant[0].consent.toolUse, true);
+  const a = bundle.records.taskAttempt[0];
+  assert.equal(a.status, 'complete');
+  assert.equal(a.startedAt, '2026-11-26T09:00:05.000Z');
+  assert.deepEqual(a.itemResponses, realV1().records.taskAttempt[0].itemResponses);
 });

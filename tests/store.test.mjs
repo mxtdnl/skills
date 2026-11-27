@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { MemoryAdapter, LocalStorageAdapter, MemoryStorage, NOT_SAVED_NOTICE, keyPrefix, migrateStoredNamespaces } from '../src/core/store.js';
 import * as fx from './fixtures.mjs';
+import { SCHEMA_VERSION } from '../src/core/version.js';
 
 const adapters = {
   MemoryAdapter: () => new MemoryAdapter(),
@@ -37,7 +38,7 @@ for (const [name, make] of Object.entries(adapters)) {
     await a.save('selfReport', fx.selfReport());
     const bundle = await a.exportAll();
     assert.equal(bundle.format, 'skills5c-export');
-    assert.equal(bundle.schemaVersion, 1);
+    assert.equal(bundle.schemaVersion, SCHEMA_VERSION);
     assert.match(bundle.exportedAt, /^\d{4}-/);
     const b = make();
     const result = await b.importAll(JSON.parse(JSON.stringify(bundle)));
@@ -47,7 +48,7 @@ for (const [name, make] of Object.entries(adapters)) {
 
   test(`${name}: importAll rejects invalid records and keeps the valid ones`, async () => {
     const s = make();
-    const bundle = { format: 'skills5c-export', schemaVersion: 1, records: { sitting: [fx.sitting(), { ...fx.sitting({ id: 'S-1111111111111111' }), seed: 'x' }], spam: [{}] } };
+    const bundle = { format: 'skills5c-export', schemaVersion: SCHEMA_VERSION, records: { sitting: [fx.sitting(), { ...fx.sitting({ id: 'S-1111111111111111' }), seed: 'x' }], spam: [{}] } };
     const r = await s.importAll(bundle);
     assert.equal(r.imported, 1);
     assert.equal(r.rejected.length, 2);
@@ -56,21 +57,30 @@ for (const [name, make] of Object.entries(adapters)) {
     await assert.rejects(s.importAll({ format: 'skills5c-export', schemaVersion: 99, records: {} }), /newer than this build/);
   });
 
+  test(`${name}: clear removes every record in the namespace and nothing else`, async () => {
+    const s = make();
+    await s.save('participant', fx.participant());
+    await s.save('sitting', fx.sitting());
+    assert.equal(await s.clear(), 2);
+    assert.deepEqual(await s.list('participant'), []);
+    assert.deepEqual(await s.list('sitting'), []);
+  });
+
   test(`${name}: importAll replace mode clears existing records`, async () => {
     const s = make();
     await s.save('sitting', fx.sitting({ id: 'S-1111111111111111' }));
-    await s.importAll({ format: 'skills5c-export', schemaVersion: 1, records: { sitting: [fx.sitting()] } }, { mode: 'replace' });
+    await s.importAll({ format: 'skills5c-export', schemaVersion: SCHEMA_VERSION, records: { sitting: [fx.sitting()] } }, { mode: 'replace' });
     assert.deepEqual((await s.list('sitting')).map((r) => r.id), ['S-0123456789ABCDEF']);
   });
 }
 
-test('LocalStorageAdapter namespaces keys as skills5c:v1:<type>:<id>', async () => {
+test('LocalStorageAdapter namespaces keys as skills5c:v<SCHEMA_VERSION>:<type>:<id>', async () => {
   const storage = new MemoryStorage();
   storage.setItem('other-app', 'x');
   const s = new LocalStorageAdapter({ storage });
   await s.save('sitting', fx.sitting());
-  assert.equal(keyPrefix(), 'skills5c:v1:');
-  assert.ok(storage.getItem('skills5c:v1:sitting:S-0123456789ABCDEF'));
+  assert.equal(keyPrefix(), `skills5c:v${SCHEMA_VERSION}:`);
+  assert.ok(storage.getItem(`skills5c:v${SCHEMA_VERSION}:sitting:S-0123456789ABCDEF`));
   assert.equal(s.persistent, true);
   assert.equal(s.notice, null);
   assert.equal(storage.getItem('other-app'), 'x', 'other keys are left alone');
@@ -109,9 +119,19 @@ test('LocalStorageAdapter switches to memory when a write fails later (quota) an
   assert.equal((await s.list('taskAttempt')).length, 1, 'failed write retried in memory');
 });
 
+test('LocalStorageAdapter clear leaves keys outside the namespace alone', async () => {
+  const storage = new MemoryStorage();
+  storage.setItem('other-app', 'x');
+  storage.setItem('skills5c:v1:sitting:S-0123456789ABCDEF', 'old namespace left for migration');
+  const s = new LocalStorageAdapter({ storage, migrations: [] });
+  await s.save('sitting', fx.sitting({ id: 'S-1111111111111111' }));
+  assert.equal(await s.clear(), 1);
+  assert.equal(storage.getItem('other-app'), 'x');
+});
+
 test('a corrupt stored entry reads as missing rather than crashing', async () => {
   const storage = new MemoryStorage();
-  storage.setItem('skills5c:v1:sitting:S-0123456789ABCDEF', '{not json');
+  storage.setItem(`skills5c:v${SCHEMA_VERSION}:sitting:S-0123456789ABCDEF`, '{not json');
   const s = new LocalStorageAdapter({ storage });
   assert.equal(await s.load('sitting', 'S-0123456789ABCDEF'), null);
   assert.deepEqual(await s.list('sitting'), []);
