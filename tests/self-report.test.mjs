@@ -9,6 +9,7 @@ import {
 } from '../src/skills/common/self-report-score.js';
 import { MemoryAdapter } from '../src/core/store.js';
 import { validate } from '../src/core/schema.js';
+import { SCORING_VERSION } from '../src/core/version.js';
 import * as fx from './fixtures.mjs';
 
 const content = Object.fromEntries(await Promise.all(SKILL_CATALOGUE.map(async (s) => [s.id, await import(`../content/${s.id}/self-report.js`)])));
@@ -356,9 +357,9 @@ test('retrospective items are shown and scored only in an end-of-programme sitti
   assert.equal(self.shown.some((it) => it.retrospective), false, 'self-directed sittings have no retrospective items');
 });
 
-test('a completed self-report stores score, quality and scoringVersion 1.0.0-draft, and validates', async () => {
+test('a completed self-report stores score, quality and the current scoringVersion, and validates', async () => {
   const { record } = await runSelfReport('collaboration', fx.sitting({ skillId: 'collaboration' }), () => 4);
-  assert.equal(record.scoringVersion, '1.0.0-draft');
+  assert.equal(record.scoringVersion, SCORING_VERSION);
   assert.equal(record.quality.straightLining, true);
   assert.equal(record.score.skill, 28 / 9);
   assert.deepEqual(validate('selfReport', record).errors, []);

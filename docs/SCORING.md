@@ -10,8 +10,98 @@
 | 0.2.0 | [Platform skeleton](#platform-skeleton-scoringversion-020) | Rebuilt platform; no skill measures yet |
 | 0.3.0 | [Application shell](#application-shell-scoringversion-030) | Adds the developer stub's self-report score; no skill measures yet |
 | 1.0.0-draft | [Self-report](#self-report-scoringversion-100-draft) | Self-reports of the five skills (S6). Draft: items not yet reviewed, no pilot data |
+| 1.1.0-draft | [Critical thinking tasks](#critical-thinking-tasks-scoringversion-110-draft) | Adds the four critical thinking tasks (S7). Self-report scoring unchanged. Draft: items not yet reviewed, no pilot data |
 
-The rebuilt measures add their own sections from Session 6 onwards.
+The rebuilt measures add their own sections from Session 6 onwards, newest first.
+
+---
+
+## Critical thinking tasks, scoringVersion 1.1.0-draft
+
+Introduced in Session 7 for the four critical thinking tasks (CT-T1 to CT-T4 in `docs/CONSTRUCTS.md` section 3). Everything in 1.0.0-draft is unchanged: self-reports of every skill are scored exactly as before, and a self-report stored under 1.0.0-draft would score the same under 1.1.0-draft. Code: `src/skills/critical/`. Items: `content/critical/ct-t1.js` to `ct-t4.js`, listed in `docs/ITEM-BANK.md`.
+
+The scope follows the owner's decision of 26 November 2026 (four tasks, a revision step in CT-T3, perspective-taking items in CT-T2), confirmed for this session on 27 November 2026; the S7 prompt in `audit/BUILD-PLAN.md` lists three tasks.
+
+### Common rules
+
+- **Pure and re-scorable.** Each `score(attempt, form)` uses only the attempt's `itemResponses` and the items of the form taken; responses to other item IDs are ignored. The latest response to an item counts (CT-T3: the latest of each phase).
+- **Option and card order** is shuffled per item with `ctx.rngFor(itemId)` (seeded from the sitting seed, skill, task and item), so a resumed item keeps its order and any fixed screen position scores at chance. Responses store original indices, never screen positions alone.
+- **No time limit** on any task; response times are stored (`rtMs`) but never enter a score.
+- **No feedback in assessment mode.** Practice mode shows the key and a worked explanation after each item; it never changes a score, and practice items are never in a form.
+- **Proportions** are on 0 to 1, stored unrounded.
+- **No composite.** The four task scores and the self-report are not combined into one critical thinking score. How results are shown per facet, with a confidence flag, is for S11 (`docs/CONSTRUCTS.md`, Decisions across all skills).
+
+### CT-T1 Conditional reasoning (selection task), facet CT1
+
+Eight items per form: four abstract and four deontic (a rule people may break). Each kind has each negation pattern of the rule "if [not] P then [not] Q" once, so the cards to turn are P and not-Q, P and Q, not-P and not-Q, or not-P and Q, depending on the item. Each card's visible side is recorded in the item as `P`, `notP`, `Q` or `notQ`, and the key is derived from that and the negations: a card must be turned when its visible side is the "if" part holding or the "then" part failing (`deriveKey`, `src/skills/critical/selection.js`; `tests/critical.test.mjs` checks every key).
+
+- Response: `{ selected, order }`: the original indices of the chosen cards, ascending, and the screen order. Choosing no card is allowed after a second confirmation.
+- Item score: **all-or-nothing.** 1 if `selected` is exactly the key, otherwise 0. There is no partial credit (audit B-4): choosing all four cards, no card, one of the two, or the two plus another, all score 0. A malformed response (repeated or out-of-range indices) scores 0. An unanswered item scores 0.
+
+```
+rawScore  = number of items scored 1
+CT1       = rawScore / items on the form
+abstract  = items scored 1 among the abstract items / abstract items on the form
+deontic   = items scored 1 among the deontic items / deontic items on the form
+```
+
+`score` = `{ CT1, abstract, deontic }`; each is null if the form has no such items. Abstract and deontic items differ strongly in difficulty (Griggs & Cox, 1982; Cosmides, 1989), so the two sub-scores are reported separately and should not be read as interchangeable (audit A-4). Because the negation patterns vary, any fixed choice of card types (for example, always P and not-Q, or always the two cases named in the rule) scores at most 2 of 8.
+
+### CT-T2 Argument and evidence evaluation, facet CT2
+
+Eight items per form, each a short scenario (at most 80 words) with four options and one key: two "main weakness" (flaw), two "assumption", one "strongest evidence", one "most weakens the claim", one "fairest summary of a view" and one "strongest objection" (the last two are the perspective-taking items, `docs/CONSTRUCTS.md` CT2). Every item stores a written rationale for its key.
+
+- Response: `{ choice, position, order }`: the original index of the chosen option, its screen position, and the screen order.
+
+```
+rawScore = number of items where choice equals key
+CT2      = rawScore / items on the form
+```
+
+`score` = `{ CT2 }`. Unanswered items count as incorrect. The evidence items turn on how a sample is drawn and are also tagged CT4 in the item bank; they count towards CT2 only (`docs/OPEN-DECISIONS.md` D-14). Keys sit at each original option position twice per form, and options are shuffled on screen, so always choosing one position scores 0.25 on average.
+
+### CT-T3 Calibration and revision, facet CT3
+
+Ten two-choice items per form (seven comparisons and three estimations), each answered with a confidence rating: 50% (a guess), 60, 70, 80, 90 or 100% (certain). On three items per form the student then sees new evidence and may keep or change both the answer and the confidence. The evidence is true, from the same sources as the answer, and points to the correct answer.
+
+- Responses: `{ phase, choice, position, confidence }` with `phase` `"initial"` or `"revised"` and `confidence` one of 50, 60, 70, 80, 90, 100. A response with any other confidence, or a choice other than 0 or 1, is invalid and ignored.
+- Let `c` be the confidence as a proportion (0.5 to 1) and `o` be 1 if the chosen answer is correct, else 0. Over the items with a valid initial response (`n`):
+
+```
+accuracy        = mean(o)
+meanConfidence  = mean(c)
+overconfidence  = meanConfidence - accuracy          positive: more sure than right
+brier           = mean((c - o)^2)                    0 is best; answering every item at 50% gives 0.25
+CT3             = 1 - brier                          PROVISIONAL headline (D-12)
+answered        = n
+```
+
+These are null when `n` is less than half the items on the form (fewer than 5 of 10). The Brier score here is the single-event form, the squared difference between the confidence in the chosen answer and its outcome. It is half the two-category form that sums over both options.
+
+- Revision, over the revision items with valid initial and revised responses (null if none). With `p` the probability a response gives to the correct answer (`c` if the chosen answer is correct, else `1 - c`):
+
+```
+revisionAccuracy = proportion of revision items whose revised answer is correct
+revisionGain     = mean(p after the evidence - p before it)
+```
+
+Following the evidence raises `revisionGain`; ignoring it gives 0; moving away from it gives a negative value. Revised answers never change `accuracy`, `meanConfidence`, `overconfidence` or `brier`, which use the initial answers only.
+
+- `rawScore` = number of correct initial answers. `score` = `{ CT3, accuracy, meanConfidence, overconfidence, brier, answered, revisionAccuracy, revisionGain }`.
+
+Always answering at 100% gives `overconfidence = brier = 1 - accuracy`: worse than the 0.25 of answering everything at 50% unless accuracy is above 75%. Always choosing the first option on screen gives accuracy 0.5 on average. Ten items give a very imprecise estimate of an individual's calibration; these indices are mainly meaningful for groups until the pilot reports their reliability.
+
+Practice mode ends with a short summary of accuracy and mean confidence, worded as a description, not a judgement. Practice is not stored as a result.
+
+### CT-T4 Statistical and base-rate reasoning, facet CT4
+
+Six items per form, each a short scenario with plain numbers, four options and one key: two base-rate items, two sample-size items, one proportion item and one item on independent chance events. Every number is stated in the item; each item stores the numbers its key follows from (`check`), and `tests/critical.test.mjs` recomputes every key (for example, the probability of the condition given a positive flag, `base * hit / (base * hit + (1 - base) * falseAlarm)`, must fall in the key's range and in no other option's).
+
+- Response and scoring as CT-T2: `{ choice, position, order }`; `rawScore` = correct answers; `score` = `{ CT4: rawScore / items on the form }`. Unanswered items count as incorrect.
+
+### Records from earlier versions
+
+No critical thinking task attempt exists under an earlier version. Self-reports stored under 1.0.0-draft are unaffected.
 
 ---
 

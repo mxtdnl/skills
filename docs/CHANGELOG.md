@@ -10,6 +10,7 @@
 | 0.2.0 | Rebuilt platform skeleton (S3). Only the developer stub task is scored | No skill measures; nothing to compare |
 | 0.3.0 | Application shell (S5). Adds the developer stub's self-report score | No skill measures; nothing to compare |
 | 1.0.0-draft | Self-reports of the five skills (S6): reverse keying, facet and skill means on 1 to 5, retrospective means, response-quality indicators | Draft: items unreviewed, no pilot data. Not comparable with 0.1.0 (different items, scale and formula) |
+| 1.1.0-draft | Adds the four critical thinking tasks (S7): all-or-nothing selection task with abstract and deontic sub-scores, proportion correct for argument evaluation and statistical reasoning, calibration indices and revision indices. Self-report scoring unchanged | Draft: items unreviewed, no pilot data. Self-report scores comparable with 1.0.0-draft; the CT tasks have no earlier version. Not comparable with the legacy Wason score (0.1.0, partial credit) |
 
 ## Release checklist for scoringVersion 1.0.0
 
@@ -86,3 +87,14 @@ To be written in Session 15.
 - Added `docs/OPEN-DECISIONS.md`: every open decision for the owner or Hult (D-1 to D-11) and every outstanding piece of human review work (R-1 to R-6), gathered from the audit, the build plan, `docs/CONSTRUCTS.md`, `docs/CONSENT.md`, `docs/DATA-SCHEMA.md`, `docs/DESIGN.md`, `docs/ITEM-BANK.md` and `docs/VALIDATION-PLAN.md`, with resolved decisions to date.
 - `CLAUDE.md`: Workflow step 6 requires every session to maintain it; the report step cites its IDs; added to Files.
 - No change to code, scoring or data.
+
+### S7. Critical thinking (2026-11-27)
+
+- Scope: four tasks, as decided by the owner on 2026-11-26 and confirmed for this session (the S7 prompt lists three). Recorded in the decisions log of `audit/BUILD-PLAN.md` and as resolved in `docs/OPEN-DECISIONS.md`.
+- Added the tasks to `src/skills/critical/index.js`: `ct-t1` Conditional reasoning (`selection.js`: rule and four cards, multi-select, all-or-nothing; card-by-card worked explanation in practice), `ct-t2` Arguments and evidence and `ct-t4` Numbers and chance (`choice.js`: scenario, four options, select then Next; rationale in practice), `ct-t3` How sure are you? (`calibration.js`: two options and a 50 to 100% confidence rating; new evidence and a chance to revise on three items per form; summary at the end of practice). Shared helpers in `ui.js`. No task is timed. No feedback in assessment mode.
+- Added content, all draft and new: `content/critical/ct-t1.js` (20 items: 4 abstract and 4 deontic per form, each negation pattern once per kind), `ct-t2.js` (19: flaw, assumption, evidence, weaken, fairest summary, strongest objection; scenarios of at most 80 words; a rationale per item), `ct-t3.js` (24: each with source URLs, checked 2026-11-27 through web search; see R-8), `ct-t4.js` (15: base rate, sample size, proportion, chance; numbers stated in the item and recomputed by the tests).
+- **scoringVersion 1.0.0-draft to 1.1.0-draft.** New section in `docs/SCORING.md`. Self-report scoring unchanged.
+- appVersion 0.4.0 to 0.5.0. No schema change (task scores are flat objects of numbers, already allowed); `docs/data-schema.json` unchanged.
+- `styles/components.css`: task material (rule and scenario cards, the two-by-two card grid, reasons list, evidence notice, confidence scale using the Likert group with six points); specimen added to `styleguide.html`.
+- `docs/ITEM-BANK.md`: task item fields, sources and the generated item table. `docs/VALIDATION-PLAN.md`: provisional rules for the tasks. `docs/OPEN-DECISIONS.md`: D-12 to D-17, R-7 and R-8; D-3, D-10, R-3 and R-6 updated. `docs/ARCHITECTURE.md`, `README.md` and `CLAUDE.md` updated.
+- Tests: `tests/critical.test.mjs` (pool rules, keys derived from each item's own data, all-or-nothing scoring, select-all and select-none score 0, no fixed card choice above 2 of 8, always-first at chance, always-100% confidence worse than always 50%, revision indices, missing data). `tests/self-report.test.mjs` and `tests/e2e/hub.e2e.mjs` now read the current scoring version; the e2e self-report test uses Creativity (Critical thinking now has practice tasks); the programme battery answers the new tasks; new e2e test of the critical thinking practice and assessment flow.

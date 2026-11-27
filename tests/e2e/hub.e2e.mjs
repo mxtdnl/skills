@@ -18,6 +18,7 @@ import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { execSync } from 'node:child_process';
 import { firstForm } from '../../src/skills/runner.js';
+import { SCORING_VERSION } from '../../src/core/version.js';
 
 const ROOT = fileURLToPath(new URL('../../', import.meta.url));
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.json': 'application/json' };
@@ -322,7 +323,7 @@ test('a programme sitting code switches the hub to the full battery in a fixed, 
   // Work through the battery in order, answering every screen
   await page.goto(`${base}index.html?example#/hub`);
   await page.getByRole('link', { name: 'Continue' }).click();
-  for (let guard = 0; guard < 60; guard++) {
+  for (let guard = 0; guard < 200; guard++) {
     await page.locator('.task, .step-complete').first().waitFor();
     const complete = page.locator('.step-complete');
     if (await complete.count()) {
@@ -333,16 +334,22 @@ test('a programme sitting code switches the hub to the full battery in a fixed, 
       await page.locator('.task').first().waitFor();
       continue;
     }
-    if (await page.locator('.likert').count()) {
+    // A screen is identified by its progress text and whether it shows new evidence (CT-T3).
+    const screen = () => page.evaluate(() => `${document.querySelector('.progress-count')?.textContent}|${Boolean(document.querySelector('.task-evidence'))}`);
+    const before = await screen();
+    if (await page.locator('.task-self-report, .task-rate').count()) {
       for (const fs of await page.locator('.likert').all()) await fs.locator('.likert-option').nth(3).click();
-      const part = await page.locator('.progress-count').textContent();
       await page.locator('.task button[type="submit"]').click();
-      await page.waitForFunction((p) => { const n = document.querySelector('.progress-count'); return !n || n.textContent !== p || document.querySelector('.step-complete'); }, part);
     } else {
-      const q = await page.locator('.progress-count').textContent();
       await page.locator('.choice-card').first().click();
-      await page.waitForFunction((p) => { const n = document.querySelector('.progress-count'); return !n || n.textContent !== p || document.querySelector('.step-complete'); }, q);
+      if (await page.locator('.task-confidence').count()) await page.locator('.task-confidence .likert-option').nth(3).click();
+      const submit = page.locator('.task .btn-row .btn');
+      if (await submit.count()) await submit.first().click();
     }
+    await page.waitForFunction((b) => {
+      const now = `${document.querySelector('.progress-count')?.textContent}|${Boolean(document.querySelector('.task-evidence'))}`;
+      return now !== b || document.querySelector('.step-complete');
+    }, before);
   }
   await page.locator('.step-complete', { hasText: 'finished every skill' }).waitFor();
   r = await records(page);
@@ -352,6 +359,13 @@ test('a programme sitting code switches the hub to the full battery in a fixed, 
     assert.ok(x.retrospective, `${x.skillId}: window 2 is the end of the programme, so retrospective items are asked`);
     assert.ok(Object.values(x.retrospective).every((v) => v === 4));
   }
+  const ct = r.taskAttempt.filter((a) => a.skillId === 'critical');
+  assert.deepEqual(ct.map((a) => a.taskId).sort(), ['ct-t1', 'ct-t2', 'ct-t3', 'ct-t4']);
+  for (const a of ct) {
+    assert.equal(a.status, 'complete', a.taskId);
+    assert.ok(a.itemResponses.every((x) => /^CT-T\d-[AB]\d\d$/.test(x.itemId)), `${a.taskId}: assessment items only`);
+  }
+  assert.equal(typeof ct.find((a) => a.taskId === 'ct-t3').score.brier, 'number');
   await page.getByRole('link', { name: 'Back to your skills' }).click();
   await page.locator('.skill-grid').waitFor();
   await page.locator('.programme-entry', { hasText: 'Completed: SEP26-2' }).waitFor();
@@ -413,7 +427,7 @@ test('returning students can enter their code, which is checked', async (t) => {
 test('a real skill\'s self-report: one facet per screen, every point labelled, resumes after a reload, no quality notice to the student', async (t) => {
   const page = await openApp(t);
   await onboard(page);
-  await page.locator('a.skill-tile[data-skill-id="critical"]').click();
+  await page.locator('a.skill-tile[data-skill-id="creativity"]').click();
   await page.locator('.mode-card[data-mode="practice"]', { hasText: 'not available for this skill yet' }).waitFor();
   await page.getByRole('button', { name: 'Start assessment' }).click();
   await page.locator('dialog').getByRole('button', { name: 'Start assessment' }).click();
@@ -455,10 +469,81 @@ test('a real skill\'s self-report: one facet per screen, every point labelled, r
   for (const word of ['straight', 'consisten', 'quality', 'too fast', 'implausible']) assert.ok(!text.includes(word), `no "${word}" shown to the student`);
 
   const r = await records(page);
-  const sr = r.selfReport.find((x) => x.skillId === 'critical');
+  const sr = r.selfReport.find((x) => x.skillId === 'creativity');
   assert.equal(sr.status, 'complete');
-  assert.equal(sr.scoringVersion, '1.0.0-draft');
+  assert.equal(sr.scoringVersion, SCORING_VERSION);
   assert.equal(sr.retrospective, undefined, 'no retrospective items outside an end-of-programme sitting');
   assert.equal(typeof sr.quality.straightLining, 'boolean');
-  for (const k of ['CT1', 'CT2', 'CT3', 'CT4', 'skill']) assert.ok(sr.score[k] >= 1 && sr.score[k] <= 5, k);
+  for (const k of ['CR1', 'CR2', 'CR3', 'CR4', 'skill']) assert.ok(sr.score[k] >= 1 && sr.score[k] <= 5, k);
+});
+
+test('critical thinking: practice explains the logic; calibration evidence survives a reload; assessment keeps card order and gives no feedback', async (t) => {
+  const page = await openApp(t);
+  await onboard(page);
+  await page.locator('a.skill-tile[data-skill-id="critical"]').click();
+  await page.getByRole('button', { name: 'Start practice' }).click();
+
+  // CT-T1 practice: choosing every card is wrong, and every card is explained
+  await page.locator('.progress-count', { hasText: 'Problem 1 of 4' }).waitFor();
+  for (const card of await page.locator('.choice-card').all()) await card.click();
+  await page.getByRole('button', { name: 'Check' }).click();
+  await page.locator('.feedback.incorrect').waitFor();
+  assert.equal(await page.locator('.task-reasons li').count(), 4);
+  assert.deepEqual((await page.locator('.choice-flag').allTextContents()).sort(), ['Leave', 'Leave', 'Turn', 'Turn']);
+  await page.getByRole('button', { name: 'Next problem' }).click();
+  await page.locator('.progress-count', { hasText: 'Problem 2 of 4' }).waitFor();
+  await page.getByRole('button', { name: 'Check' }).click();
+  await page.locator('.field-error', { hasText: 'not chosen any card' }).waitFor();
+  assert.equal(await page.locator('.feedback').count(), 0, 'nothing is recorded until confirmed');
+
+  await page.getByRole('button', { name: 'Save and exit' }).click();
+  await page.locator('dialog').getByRole('button', { name: 'Save and leave' }).click();
+  await page.getByRole('link', { name: 'Start: How sure are you?' }).click();
+
+  // CT-T3 practice: answer and confidence are both required; the evidence screen resumes
+  await page.locator('.progress-count', { hasText: 'Question 1 of 4' }).waitFor();
+  await page.getByRole('button', { name: 'Next' }).click();
+  await page.locator('.field-error', { hasText: 'Please choose an answer and how sure you are.' }).waitFor();
+  await page.locator('.choice-card').first().click();
+  await page.locator('.task-confidence .likert-option').nth(5).click();
+  await page.getByRole('button', { name: 'Next' }).click();
+  await page.locator('.task-evidence').waitFor();
+  await page.reload();
+  await page.locator('.task-evidence').waitFor();
+  await page.locator('.lede', { hasText: 'with 100% confidence' }).waitFor();
+  assert.equal(await page.locator('.choice-card[aria-pressed="true"]').count(), 1, 'the first answer is preselected');
+  await page.getByRole('button', { name: 'Check' }).click();
+  await page.locator('.feedback').waitFor();
+  let r = await records(page);
+  const cal = r.taskAttempt.find((a) => a.taskId === 'ct-t3');
+  assert.deepEqual(cal.itemResponses.map((x) => [x.itemId, x.response.phase]), [['CT-T3-P01', 'initial'], ['CT-T3-P01', 'revised']]);
+
+  // Assessment: the self-report first, then CT-T1 with no feedback and a stable card order
+  await page.getByRole('button', { name: 'Save and exit' }).click();
+  await page.locator('dialog').getByRole('button', { name: 'Save and leave' }).click();
+  await page.getByRole('button', { name: 'Start assessment' }).click();
+  await page.locator('dialog').getByRole('button', { name: 'Start assessment' }).click();
+  for (let part = 1; part <= 4; part++) {
+    await page.locator('.progress-count', { hasText: `Part ${part} of 4` }).waitFor();
+    for (const fs of await page.locator('.likert').all()) await fs.locator('.likert-option').nth(2).click();
+    await page.getByRole('button', { name: part === 4 ? 'Finish' : 'Next' }).click();
+  }
+  await page.locator('.step-complete').waitFor();
+  await page.locator('.step-complete a.btn').first().click();
+  await page.locator('.progress-count', { hasText: 'Problem 1 of 8' }).waitFor();
+  const order = await page.locator('.choice-card .choice-text').allTextContents();
+  await page.reload();
+  await page.locator('.progress-count', { hasText: 'Problem 1 of 8' }).waitFor();
+  assert.deepEqual(await page.locator('.choice-card .choice-text').allTextContents(), order, 'card order kept after a reload');
+  await page.locator('.choice-card').nth(0).click();
+  await page.locator('.choice-card').nth(1).click();
+  await page.getByRole('button', { name: 'Next' }).click();
+  await page.locator('.progress-count', { hasText: 'Problem 2 of 8' }).waitFor();
+  assert.equal(await page.locator('.feedback').count(), 0, 'no feedback in assessment mode');
+  r = await records(page);
+  const sel = r.taskAttempt.find((a) => a.taskId === 'ct-t1' && a.itemResponses.some((x) => !x.itemId.includes('-P')));
+  const resp = sel.itemResponses[0].response;
+  assert.equal(resp.selected.length, 2);
+  assert.deepEqual([...resp.order].sort(), [0, 1, 2, 3]);
+  assert.equal(r.sitting.find((s) => s.id === sel.sittingId).mode, 'assessment');
 });

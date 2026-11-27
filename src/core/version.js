@@ -6,5 +6,5 @@
 // SCORING_VERSION bumped on every change to any scoring function; documented in docs/SCORING.md.
 
 export const SCHEMA_VERSION = 3;
-export const APP_VERSION = '0.4.0';
-export const SCORING_VERSION = '1.0.0-draft';
+export const APP_VERSION = '0.5.0';
+export const SCORING_VERSION = '1.1.0-draft';

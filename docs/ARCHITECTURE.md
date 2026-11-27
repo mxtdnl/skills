@@ -28,6 +28,7 @@ src/skills/
   _example/      developer stub skill proving the contract
   common/        shared by the five skills (S6): self-report component, its scoring, manifest builder
   <skill>/       one directory per skill, from S6 (index.js: the manifest)
+  critical/      S7: selection.js (CT-T1), choice.js (CT-T2, CT-T4), calibration.js (CT-T3), ui.js
 src/app/
   main.js        application shell entry (loaded by index.html): store, registry, router, render
   progress.js    pure rules: step and sitting state, windows, forms, programme batteries
@@ -37,7 +38,7 @@ src/app/
   views/         start (first run), hub, skill, run, results, settings
 content/
   _example/      example content for the stub
-  <skill>/       item banks, from S6 (self-report.js; one file per task from S7)
+  <skill>/       item banks, from S6 (self-report.js; one file per task from S7, for example critical/ct-t1.js)
 ```
 
 Design system (S4): `styles/` (tokens, base, components), `assets/` and `styleguide.html`; see `docs/DESIGN.md`. Planned: `src/report/` (S11, S12), `cohort.html` (S13).
@@ -102,6 +103,8 @@ S6 allows `tasks: []` for a skill that has a self-report, so the five skills can
 `validateManifest()` checks every rule above that can be checked without running a task. `createRegistry()` also refuses two skills with the same `id` or the same `accentToken`.
 
 **Steps.** `stepsFor(skill, mode)` gives a skill's ordered steps: the self-report first, then the tasks in manifest order. Practice has no self-report (a self-report has no practice pool), so a practice sitting is the tasks only.
+
+**Critical thinking (S7).** The first skill with tasks: `ct-t1` (type `selection`), `ct-t2` and `ct-t4` (type `choice`, both built by `choiceTask({ facet })`), `ct-t3` (type `calibration`). Each task resumes at the first item without a response; CT-T3 records two responses on a revision item (`phase` `initial`, then `revised`) and resumes at the evidence screen when only the first exists. Response shapes and scoring: `docs/SCORING.md`, Critical thinking tasks.
 
 **Skill catalogue.** `SKILL_CATALOGUE` in `src/skills/registry.js` lists the five skills in canonical order with their accent tokens and their facets from `docs/CONSTRUCTS.md` (signed off by the owner, 2026-11-27). The hub shows a skill whose module is not yet registered as "in preparation" from this entry. Since S6 all five modules are registered in `SKILL_MODULES`; their manifests are built from this entry, and `tests/registry.test.mjs` checks that they agree. A skill with no tasks yet shows Practice as "in preparation" on its skill page.
 

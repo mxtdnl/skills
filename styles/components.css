@@ -1256,6 +1256,25 @@ fieldset.consent-choices {
 .task-feedback:not(:empty) { margin-top: var(--space-4); }
 .task-feedback .btn { margin-top: var(--space-3); }
 
+/* Task material (S7): the rule or scenario sits in a railed card above the question; the
+   selection task's four cards form a two-by-two grid on wider screens. */
+.task-setting { margin: 0 0 var(--space-3); }
+.task-rule,
+.task-scenario { margin: 0 0 var(--space-5); }
+.task-rule .eyebrow { margin: 0 0 var(--space-2); }
+.task-rule-text { margin: 0; font-size: 1.15rem; font-weight: var(--weight-label); line-height: 1.45; }
+.task-scenario p { margin: 0; line-height: 1.55; }
+@media (min-width: 601px) {
+  .choice-list.choice-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.choice-card-face .choice-text { font-size: 1.15rem; font-weight: var(--weight-label); }
+.task-reasons { margin: 0; padding-left: 1.25rem; }
+.task-reasons li { margin-bottom: var(--space-2); }
+.task-evidence,
+.task-confidence { margin-top: var(--space-5); }
+.task-form > .btn-row { margin-top: var(--space-4); }
+.task-summary h2 { margin-top: 0; font-size: 1.35rem; }
+
 /* ---------------------------------------------------------------- dialog */
 
 .dialog {
