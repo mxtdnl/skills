@@ -196,7 +196,7 @@ From `audit/AUDIT-REPORT.md` section J-4. Each skill always appears in its accen
 | Curiosity | `--accent-4` | `#D4A020` gold | `--accent-4-ink` `#7A5410` |
 | Critical thinking | `--accent-1` | `#5C3A96` purple | `--accent-1` |
 | Creativity | `--accent-6` | `#B83068` magenta | `--accent-6` |
-| Communication | `--accent-3` | `#C85218` burnt orange | `--accent-7-ink` `#9E4718` *(S4: burnt orange is 4.32:1 on `--bg-card`; owner decision pending)* |
+| Communication | `--accent-3` | `#C85218` burnt orange | `--accent-7-ink` `#9E4718` *(burnt orange is 4.32:1 on `--bg-card`; owner decision 2026-11-27)* |
 
 `styles/tokens.css` defines semantic tokens `--skill-collaboration`, `--skill-curiosity`, `--skill-critical`, `--skill-creativity` and `--skill-communication` that point at these accents, each with `-ink` (text on `--bg-card` and the tint), `-on` (text on the fill) and `-tint` (10% over `--bg-card`). Skill ink sits on cards and tints, not on `--bg`. Burnt orange fills carry large text only. Components take their accent from `data-skill` or `data-accent` (see the header of `styles/components.css`). Hult branding is kept through the logo and the header/footer lockup. Whether Hult's aubergine replaces `--accent-1` is an open decision pending Hult brand guidelines (audit section 7, item 2).
 

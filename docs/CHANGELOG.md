@@ -47,5 +47,5 @@ To be written in Session 15.
 - Added `assets/hult-logo.png` (one copy of the prototype's base64 PNG, extracted unchanged; all nine embedded copies were identical) and `assets/favicon.svg` with `assets/favicon.png`. Favicon links added to `index.html` and `dev/platform.html`.
 - Added `styleguide.html`, a living specimen of every token and component in every state.
 - Extended `tests/lint.mjs` with a reference-palette check and a contrast check over a `CONTRAST_PAIRS` table (70 pairs).
-- Communication text uses `--accent-7-ink`, because `--accent-3` fails AA as body text; recorded as an open decision in `docs/DESIGN.md` and in the 5C mapping table in `CLAUDE.md`.
+- Communication text uses `--accent-7-ink`, because `--accent-3` fails AA as body text. Confirmed by the owner on 2026-11-27 and recorded in `docs/DESIGN.md`, the 5C mapping table in `CLAUDE.md` and the decisions log in `audit/BUILD-PLAN.md`.
 - No change to scoring, data or `scoringVersion`.

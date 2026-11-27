@@ -79,7 +79,7 @@
 
   --skill-communication: var(--accent-3);
   /* Burnt orange is 4.32:1 on --bg-card, so it fails as body-size text. Text uses the
-     reference orange ink tone instead (6.00:1). Pending owner decision (S4 report). */
+     reference orange ink tone instead (6.00:1). Owner decision, 2026-11-27. */
   --skill-communication-ink: var(--accent-7-ink);
   --skill-communication-on: var(--on-accent); /* 4.49:1: large text only on this fill */
   --skill-communication-tint: color-mix(in srgb, var(--accent-3) 10%, var(--bg-card));

@@ -25,8 +25,10 @@ Contrast rules encoded in the components:
 - States never depend on an accent's contrast alone: the checked Likert mark is solid `--text`, pressed choice cards add a thicker border and a visible "Selected" label, results bars mark the estimate and band edges in `--text`, and the timer always prints the time.
 - Likert radios are square (zero-radius rule); the group is a `fieldset` with a `legend` and every point has a visible label.
 
-## Open decisions
+## Decisions
 
-- Communication text colour: burnt orange (`--accent-3`) is 4.32:1 on `--bg-card`, below AA for body text. S4 uses the reference orange ink `--accent-7-ink` (6.00:1) for Communication text. Alternatives: a new `--accent-3-ink` derived in the reference, or Communication labels in `--text` with a burnt orange pip.
+- Communication text colour (owner, 2026-11-27): Communication text uses the reference orange ink `--accent-7-ink` (6.00:1 on `--bg-card`), because burnt orange (`--accent-3`) is 4.32:1 and fails AA for body text. The Communication fill and rails stay `--accent-3`.
+
+## Open decisions
 
 - Hult brand assets (official SVG logo, any mandatory colour) and whether Hult's aubergine replaces `--accent-1`: see `audit/AUDIT-REPORT.md` section 7, item 2.
