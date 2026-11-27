@@ -98,7 +98,22 @@ test('the real 2 -> 3 migration leaves version 2 records unchanged apart from sc
   for (const [type, list] of Object.entries(bundle.records)) {
     list.forEach((r, i) => {
       assert.deepEqual({ ...r, schemaVersion: 2 }, v2.records[type][i], `${type} ${r.id}`);
-      assert.deepEqual(validate(type, r).errors, [], `${type} ${r.id}`);
+      // Shape check against the current schema (later migrations change no field of these records).
+      assert.deepEqual(validate(type, { ...r, schemaVersion: SCHEMA_VERSION }).errors, [], `${type} ${r.id}`);
+    });
+  }
+});
+
+test('the real 3 -> 4 migration leaves version 3 records unchanged apart from schemaVersion', () => {
+  const v3 = migrate(realV1(), { target: 3 }).bundle;
+  const { bundle, applied } = migrate(v3, { target: 4 });
+  assert.deepEqual(applied, ['3->4: optional coachScorable on task attempts; no change to existing records']);
+  for (const [type, list] of Object.entries(bundle.records)) {
+    list.forEach((r, i) => {
+      assert.deepEqual({ ...r, schemaVersion: 3 }, v3.records[type][i], `${type} ${r.id}`);
+      assert.equal(r.coachScorable, undefined, `${type} ${r.id}: no flag added`);
+      // Shape check against the current schema (later migrations change no field of these records).
+      assert.deepEqual(validate(type, { ...r, schemaVersion: SCHEMA_VERSION }).errors, [], `${type} ${r.id}`);
     });
   }
 });

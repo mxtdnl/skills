@@ -50,6 +50,10 @@ Rules fixed before any data exists. Each must be reviewed against the pilot and 
 | Creativity originality: minimum valid ideas | 3 (PROVISIONAL) | `MIN_FLUENCY_FOR_ORIGINALITY`, `src/skills/creativity/ideas-score.js` |
 | Creativity unscorable rules | at least 2 meaningful words; non-words if under half the content words are known; duplicate if core-word overlap at least 0.6 or a subset; typing errors accepted from 5 letters (PROVISIONAL) | same file and `text.js` |
 | Creativity form matching (familiarity) | author's judgement | `content/creativity/cr-t1.js`, `cr-t2.js` |
+| Communication task time estimates (untimed tasks) | CM-T1 6, CM-T2 6, CM-T3 8 minutes (PROVISIONAL) | `src/skills/communication/index.js` |
+| Communication CM-T1 and CM-T2 scoring | two independent all-or-nothing parts per item, facet score = proportion of points (D-26) | `src/skills/communication/score.js` |
+| Communication form matching (difficulty) | author's judgement: same dimension, facet and genre in the same position | `content/communication/cm-t1.js`, `cm-t2.js` |
+| Communication rewrite draft save | 1.5 s after the last change | `DRAFT_DELAY_MS`, `src/skills/communication/rewrite.js` |
 
 The response-quality flags are for the coach view only. Before any flag is used to exclude data from a cohort analysis, the pilot should check how flagged response patterns affect the scale's reliability estimates.
 

@@ -85,12 +85,24 @@ function v2to3(b) {
 }
 
 /**
+ * Version 3 to 4 (S9): task attempts may carry `coachScorable`, optional and set only on
+ * completion of a task with no automated score (the communication rewrite, scoringVersion
+ * 1.3.0-draft). Version 3 records have no such task and need no change.
+ * @param {Bundle} b
+ * @returns {Bundle}
+ */
+function v3to4(b) {
+  return { ...b, schemaVersion: 4, records: { ...(b.records || {}) } };
+}
+
+/**
  * The real migration chain.
  * @type {Migration[]}
  */
 export const MIGRATIONS = [
   { from: 1, to: 2, describe: 'consent.toolUse; sitting skillId, windowId, programme; attempt status and timestamps', migrate: v1to2 },
   { from: 2, to: 3, describe: 'optional retrospective and quality on self-reports; no change to existing records', migrate: v2to3 },
+  { from: 3, to: 4, describe: 'optional coachScorable on task attempts; no change to existing records', migrate: v3to4 },
 ];
 
 /**

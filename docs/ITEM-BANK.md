@@ -2,7 +2,7 @@
 
 **Purpose.** Records every item used by the tool: what it measures, which pool and form it belongs to, where it came from, and whether it has been reviewed. It is the provenance record required by audit finding M-1 and the global rule that item content is draft until reviewed by Hult staff.
 
-Session 6 added the self-report items for all five skills (all draft). Session 7 added the items of the four critical thinking tasks (all draft). Session 8 added the creativity task items, their category lists and their provisional frequency tables (all draft). The legacy prototype's items are not part of this bank and must not be ported without review (see `audit/AUDIT-REPORT.md` sections A and B).
+Session 6 added the self-report items for all five skills (all draft). Session 7 added the items of the four critical thinking tasks (all draft). Session 8 added the creativity task items, their category lists and their provisional frequency tables (all draft). Session 9 added the communication task items, the rewrite checklist and its example rewrites (all draft). The legacy prototype's items are not part of this bank and must not be ported without review (see `audit/AUDIT-REPORT.md` sections A and B).
 
 ## Conventions
 
@@ -80,6 +80,28 @@ Frequency-table entry fields: `id` (stable), `category`, `freq` (`common`, `occa
 
 Construction rules (checked in `tests/creativity.test.mjs`): forms A and B have the same number of categories (12) and tables whose sizes and band counts differ by at most 3; no alternative repeats across the groups of one entry; every category has at least 5 keywords. Forms A and B were chosen to be similar in familiarity (two everyday household containers; two common situations of student life). This is the author's judgement, to be checked in the pilot (R-10).
 
+## Communication task item fields
+
+Defined in S9 (`content/communication/cm-t1.js`, `cm-t2.js`, `cm-t3.js`; scoring in `docs/SCORING.md`, Communication tasks). Every item has `genre` (`business` or `academic`).
+
+| Task | Field | Meaning |
+|---|---|---|
+| CM-T1 | `dimension` | The one clarity dimension on which the two versions differ: `ambiguity`, `buried`, `structure` (CM1), `jargon`, `register` (CM2), `reasoning` (CM3) |
+| CM-T1 | `facet` | Derived from the dimension |
+| CM-T1 | `context` | Who is writing to whom; the reader decides what counts as clear |
+| CM-T1 | `versions`, `key` | The two versions, shown in this order as Version 1 and Version 2; `key` is the index of the clearer |
+| CM-T1 | `reasons`, `reasonKey` | Four reason codes (`REASONS`), one of which is the item's dimension; `"shorter"` is a distractor only, used only where the clearer version is the longer |
+| CM-T1 | `rationale` | Why the key is right and the other reasons do not apply; shown in practice |
+| CM-T2 | `problem`, `facet` | The kind of problem (`ambiguity`, `buried`, `jargon`, `register`, `reasoning`) and its facet |
+| CM-T2 | `context`, `sentences`, `key` | Who is writing to whom; the five sentences of the passage, in order; the index of the sentence with the problem (for a buried main point, the sentence that holds the main point) |
+| CM-T2 | `rationale` | Why that sentence and that problem, and why the other sentences are fine; shown in practice |
+| CM-T3 | `reader`, `goal`, `passage` | Who will read the rewrite, what it must achieve, and the text to rewrite (at most 80 words, with all five checklist problems) |
+| CM-T3 | `model`, `notes` | One example rewrite (not a key) and one note per checklist point; shown in practice, available to coaches |
+
+The checklist itself (`RUBRIC`: `mainPoint`, `words`, `reasons`, `references`, `register`) and its answers (`SELF_CHECK`: yes, partly, not yet) are exported by `cm-t3.js`.
+
+Writing rules applied (checked where possible in `tests/communication.test.mjs`): plain UK English for readers of English as a second language; straight quotes; each CM-T1 pair differs on one dimension only, so the other three reasons are false of it; CM-T2 passages are unmarked and have exactly one problem sentence; forms A and B parallel in dimension or problem, facet and genre, in the same order; business and academic passages in equal numbers on each form of CM-T1 and CM-T2 (one CM-T3 passage per form cannot cover both; D-27); keys spread across positions. Names in the passages are chosen from several languages and are fictional.
+
 ## Item status and review
 
 Every item is `status: "draft"` until a Hult subject expert reviews it; only a reviewer changes it to `"reviewed"`. A materially changed item gets a new ID. Review should check, for each item: that it matches its facet definition in `docs/CONSTRUCTS.md` and nothing outside it; that its keying is right; that it reads clearly for a student writing in a second language; and that it fits the cultural-neutrality checks in `docs/REVIEW-CHECKLIST.md`. Self-report items are also candidates for cognitive interviews in the pilot (`docs/VALIDATION-PLAN.md`).
@@ -93,6 +115,7 @@ For task items, review should also check that the key is the single defensible a
 - **Critical thinking task items (S7)** were written for this tool. No item is copied or adapted from a published or proprietary test (for example, Watson-Glaser, HCTA or CART). The paradigms are standard and named in the literature: the selection task (Wason, 1968), base-rate and sample-size reasoning and independent chance events (Stanovich, West & Toplak, 2016, review such tasks). The widely circulated versions are avoided: no letter-and-number (vowel / even number) or drinking-age selection item, no Cognitive Reflection Test item, and no taxicab, Linda, hospital or medical-screening problem. Two CT-T4 sample-size items (CT-T4-A03, CT-T4-B03) use the same logic as the well-known hospital problem with different content; a reviewer should decide whether they are too close.
 - **CT-T3 facts.** Every answer and every piece of evidence was checked on 27 November 2026 against the pages listed in the item's `source.urls`. The check was made through web searches whose results quoted those pages; the pages could not be opened directly from the build environment (its network policy refused them). A person must open each source and confirm it before the items are used (`docs/OPEN-DECISIONS.md` R-8). Items whose facts could not be confirmed were not written (for example, a comparison of Antarctica with Europe, because no source for Europe's area was found). Every item is decided by a margin larger than the differences between sources. CT-T3-B05 (Nigeria and Brazil, by population) depends on current estimates and must be rechecked before each use.
 - **Creativity task items (S8)** were written for this tool. The alternate uses paradigm (Guilford, 1967) and problem-finding prompts are standard and not proprietary; no item, category list or norm table was copied from a published test or scoring guide (for example, the Torrance Tests). The objects of the legacy prototype (brick, paperclip, shoe, newspaper, plastic bottle, rubber band, wooden spoon) are not reused. The frequency bands are the author's estimates, not data.
+- **Communication task items (S9)** were written for this tool. No item is copied or adapted from a published test, style guide or the legacy prototype's Message Editing passages, which are not reused. The clarity dimensions follow the facet definitions in `docs/CONSTRUCTS.md`. The example rewrites are the author's; the reason in CM-T3-P02's example is invented for the example and says so on screen.
 - **Word list.** `content/creativity/wordlist.js` is generated (`tests/write-wordlist.mjs`) from SCOWL (Spell Checker Oriented Word Lists) by Kevin Atkinson, as packaged in the npm package `wordlist-english` 1.2.1 (MIT): sizes 10, 20 and 35 of the English, British and American lists, lower case a to z only. SCOWL permits use, copying, modification, distribution and sale provided its copyright and permission notice appear in all copies and in supporting documentation; the notice is in the file header and in full in `content/creativity/SCOWL-COPYRIGHT.txt` (R-11).
 - **Why few IPIP items.** IPIP scales measure broad traits (openness, intellect, VIA character strengths). Most of the facets here are specific behaviours (for example, CO2 coordination, CM3 explicit reasoning, CT4 base-rate reasoning) with no close IPIP match. IPIP items were used only where an item matches a facet definition directly; three did. Candidates considered and not used, because they match a facet only loosely, include VIA Originality/Creativity V5 ("Am able to come up with new and different ideas.") and V71 ("Like to think of new ways to do things."), and NEO O4 H2021 ("Am interested in many things.").
 
@@ -324,3 +347,67 @@ All `status: "draft"`. Categories and frequency tables written for this tool; ba
 | CR-T2-B01 | CR-T2 | Form B | they start a part-time job while studying full time | 12: Time and balance; Studies and grades; Health, sleep and stress; Pay and money; Contracts, rights and rules; Managers and colleagues; Customers and the work itself; Travel and getting there; Friends, family and social life; Shifts and rotas; Safety at work; Career and the future | 34 (5 / 15 / 14) |
 | CR-T2-P01 | CR-T2 | Practice | they organise a weekend trip with friends on a small budget | 10: Money and costs; Getting there; Somewhere to stay; Dates and plans; Group decisions; Food; Weather and the unexpected; Safety and belongings; Health and insurance; Documents and borders | 14 (5 / 4 / 5) |
 
+### Communication task items (S9)
+
+All `status: "draft"`, written for this tool.
+
+#### CM-T1 Which is clearer?
+
+| ID | Pool | Dimension | Facet | Genre | Situation | Clearer | Reason options (key in bold) |
+|---|---|---|---|---|---|---|---|
+| CM-T1-A01 | Form A | Ambiguity | CM1 | business | A message from a team leader to the team. | Version 2 | **ambiguity**, buried, jargon, register |
+| CM-T1-A02 | Form A | Ambiguity | CM1 | academic | A sentence from a student's summary of a study. | Version 1 | register, **ambiguity**, reasoning, structure |
+| CM-T1-A03 | Form A | Buried main point | CM1 | business | An email from a manager to the team. | Version 2 | jargon, ambiguity, **buried**, register |
+| CM-T1-A04 | Form A | Structure | CM1 | academic | Instructions from a lecturer to students about handing in coursework. | Version 2 | ambiguity, register, jargon, **structure** |
+| CM-T1-A05 | Form A | Jargon | CM2 | business | A message from the IT team to all staff. Most staff are not IT specialists. | Version 1 | **jargon**, buried, register, reasoning |
+| CM-T1-A06 | Form A | Jargon | CM2 | academic | A summary of a study, written for first-year students who have not studied statistics. | Version 2 | ambiguity, structure, **jargon**, register |
+| CM-T1-A07 | Form A | Register | CM2 | business | An email from a graduate applicant to a company's head of recruitment, whom the applicant has never met. | Version 1 | jargon, **register**, ambiguity, reasoning |
+| CM-T1-A08 | Form A | Missing reasoning | CM3 | business | A note from a shop manager to the owner. | Version 1 | register, shorter, **reasoning**, jargon |
+| CM-T1-A09 | Form A | Missing reasoning | CM3 | academic | A paragraph from a student's essay. | Version 2 | shorter, ambiguity, structure, **reasoning** |
+| CM-T1-A10 | Form A | Missing reasoning | CM3 | academic | A student's conclusion from a small survey, written for a class report. | Version 1 | jargon, register, ambiguity, **reasoning** |
+| CM-T1-B01 | Form B | Ambiguity | CM1 | business | A message from a project leader to a colleague. | Version 2 | **ambiguity**, register, buried, jargon |
+| CM-T1-B02 | Form B | Ambiguity | CM1 | academic | A sentence from a student's summary of a study. | Version 2 | structure, **ambiguity**, register, reasoning |
+| CM-T1-B03 | Form B | Buried main point | CM1 | business | An email from a supplier to a customer. | Version 1 | jargon, ambiguity, **buried**, register |
+| CM-T1-B04 | Form B | Structure | CM1 | academic | Information from a university office about how to apply for a study-abroad place. | Version 2 | ambiguity, register, jargon, **structure** |
+| CM-T1-B05 | Form B | Jargon | CM2 | business | A message from the finance team to new project managers who have no finance training. | Version 2 | **jargon**, buried, register, reasoning |
+| CM-T1-B06 | Form B | Jargon | CM2 | academic | A summary of a research article, written for students in their first week at university. | Version 1 | ambiguity, structure, **jargon**, register |
+| CM-T1-B07 | Form B | Register | CM2 | business | An email from a new employee to the company's chief executive, asking for a meeting. | Version 1 | jargon, **register**, ambiguity, reasoning |
+| CM-T1-B08 | Form B | Missing reasoning | CM3 | business | A note from a team member to a manager about choosing a supplier. | Version 2 | register, shorter, **reasoning**, jargon |
+| CM-T1-B09 | Form B | Missing reasoning | CM3 | academic | Part of a student's essay about recorded lectures. | Version 1 | shorter, ambiguity, structure, **reasoning** |
+| CM-T1-B10 | Form B | Missing reasoning | CM3 | academic | A student's conclusion from a class experiment. | Version 1 | jargon, register, ambiguity, **reasoning** |
+| CM-T1-P01 | Practice | Buried main point | CM1 | academic | A message from a student to a partner in a group project. | Version 2 | **buried**, jargon, ambiguity, register |
+| CM-T1-P02 | Practice | Jargon | CM2 | academic | A note for students on a first-year psychology course. | Version 2 | register, **jargon**, structure, ambiguity |
+| CM-T1-P03 | Practice | Register | CM2 | business | A message in a team chat to a close colleague. | Version 1 | jargon, reasoning, **register**, buried |
+| CM-T1-P04 | Practice | Missing reasoning | CM3 | academic | From a student's essay about city transport. | Version 2 | shorter, **reasoning**, ambiguity, register |
+| CM-T1-P05 | Practice | Ambiguity | CM1 | business | A note left for a colleague. | Version 1 | **ambiguity**, buried, jargon, register |
+
+#### CM-T2 Spot the problem
+
+| ID | Pool | Problem | Facet | Genre | Situation | Key sentence |
+|---|---|---|---|---|---|---|
+| CM-T2-A01 | Form A | ambiguity | CM1 | business | An email from the office manager to all staff. | 2: "When the cleaners meet the team leaders on Monday, they will explain the new rules for the kitchens." |
+| CM-T2-A02 | Form A | buried | CM1 | business | An email from a project leader to a client. | 5: "The website will be ready on 30 June, two weeks later than we agreed, and we need you to approve this new date by Friday." |
+| CM-T2-A03 | Form A | jargon | CM2 | academic | Part of a study summary written for first-year students on a general business course. | 3: "Using a difference-in-differences estimator with fixed effects, they found a negligible treatment effect on independent retailer revenue." |
+| CM-T2-A04 | Form A | register | CM2 | business | An email from a student to a company's head of human resources, whom the student has never met. | 1: "Hey there, hope ur good!!" |
+| CM-T2-A05 | Form A | reasoning | CM3 | academic | A paragraph from a student's essay. | 4: "Therefore, home exams are fairer than exams in a hall." |
+| CM-T2-A06 | Form A | reasoning | CM3 | academic | From a student's report on a survey. | 4: "This means that the university should start morning lectures later." |
+| CM-T2-B01 | Form B | ambiguity | CM1 | academic | From a student's summary of a research article. | 1: "The article compares nurses who work night shifts with doctors who work day shifts, and it says that they report more stress." |
+| CM-T2-B02 | Form B | buried | CM1 | academic | A message from a tutor to a class. | 5: "The presentations will now take place on 12 May instead of 5 May, and each group will have 15 minutes instead of 10." |
+| CM-T2-B03 | Form B | jargon | CM2 | business | A message from a bank to its customers. | 2: "The AER will move from a fixed to a tracker basis, with a margin of 0.5% over base." |
+| CM-T2-B04 | Form B | register | CM2 | academic | An email from a student to a lecturer whom the student has not met before. | 4: "Can u explain that bit to me sometime this week? thx" |
+| CM-T2-B05 | Form B | reasoning | CM3 | business | A note from a manager to the team. | 3: "So we will stop answering emails on Fridays." |
+| CM-T2-B06 | Form B | reasoning | CM3 | business | From a report to a company's board. | 4: "As a result, we recommend opening two more shops in Lisbon next year." |
+| CM-T2-P01 | Practice | ambiguity | CM1 | business | A message from a team leader to the team. | 3: "Chen will sit next to Daniel until his desk is ready." |
+| CM-T2-P02 | Practice | buried | CM1 | academic | An email from the library to students. | 5: "From next Monday, the second floor will be a silent study area, open 24 hours a day." |
+| CM-T2-P03 | Practice | jargon | CM2 | business | A message from the IT team to all staff. | 1: "Please enable MFA on your SSO account before Friday." |
+| CM-T2-P04 | Practice | register | CM2 | academic | An email from a student to a classmate the student knows well. | 2: "I would be most grateful if you would kindly inform me at your earliest convenience whether the library would be a suitable venue." |
+| CM-T2-P05 | Practice | reasoning | CM3 | business | A note from a café owner to the staff. | 4: "So we will stop selling sandwiches from next week." |
+
+#### CM-T3 Rewrite
+
+| ID | Pool | Genre | Reader | Goal |
+|---|---|---|---|---|
+| CM-T3-A01 | Form A | academic | Ms Patel, the programme administrator. You have never met. | Ask Ms Patel to move you to a different group for the strategy project, so that Ms Patel can decide quickly. |
+| CM-T3-B01 | Form B | business | The head of sales. They are not a technical specialist, and they must decide by Friday. | Ask the head of sales to approve a delay to the app update, so that they can decide by Friday. |
+| CM-T3-P01 | Practice | academic | A lecturer you have not met. They teach your Monday marketing class. | Ask the lecturer whether your essay can be longer than the word limit. |
+| CM-T3-P02 | Practice | business | Customers of an online shop, reading a notice on the shop's website. | Tell customers whether their order may be late, and why. |

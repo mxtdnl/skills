@@ -16,7 +16,7 @@ Three versions are recorded, all defined in `src/core/version.js`:
 | `appVersion` | semver string | The release of the tool. Matches `package.json` | Every release |
 | `scoringVersion` | semver string | The scoring rules in force | Any change to any scoring function. Documented in `docs/SCORING.md` |
 
-Current values: `schemaVersion` 3, `appVersion` 0.4.0, `scoringVersion` 1.0.0-draft.
+Current values: `schemaVersion` 4, `appVersion` 0.7.0, `scoringVersion` 1.3.0-draft.
 
 Every record carries `schemaVersion`. A sitting carries all three plus `formId` and `seed`. Task attempts and self-reports carry `scoringVersion` and every raw response with its timing, so any score can be recomputed under a later scoring version (audit D-6). Results with different `scoringVersion` values are never compared without re-scoring.
 
@@ -139,6 +139,7 @@ One attempt at one task within a sitting.
 | `completedAt` | date-time or null | yes | Null while in progress |
 | `timerSnapshot` | object | no | The timer state (`snapshot()` in `src/core/timing.js`) while a timed task is in progress, so it resumes with the same time left. A snapshot saved while running is resumed paused at `updatedAt`, so time away is counted as paused (S8). Removed on completion |
 | `timing` | timing log | no | Present for completed timed tasks |
+| `coachScorable` | boolean | no | Set on completion of a task with no automated score (CM-T3 Rewrite): true when the attempt holds a finished, non-empty response for a coach to score. Never set while in progress. Added in schema version 4 |
 
 Item response:
 
@@ -254,6 +255,7 @@ To add a version, follow the steps at the top of `src/core/migrate.js`.
 | (none) | 1 | First schema | S3 |
 | 1 | 2 | Adds `consent.toolUse`, `participant.settings` (optional), `sitting.skillId`, `windowId` and `programme`, and `status`, `startedAt`, `updatedAt`, `completedAt` and `timerSnapshot` (optional) on task attempts and self-reports. Defaults: `toolUse` true; `skillId` from the sitting's records, else `"_unknown"`; `windowId` `"self"` for assessment, null for practice; `programme` null; attempts `"complete"`, with all three times set to the first response's `shownAt` (else the sitting's `startedAt`, else the Unix epoch). Version 1 data could be made only by the S3 developer harness | S5 |
 | 2 | 3 | Adds `retrospective` and `quality` (both optional, set only on completion) to self-reports. No existing record changes; version 2 self-reports keep their stub scores (scoringVersion 0.3.0) and can be re-scored from their raw responses | S6 |
+| 3 | 4 | Adds `coachScorable` (optional, set only on completion) to task attempts. No existing record changes: no version 3 record holds a communication task | S9 |
 
 ## Export formats
 

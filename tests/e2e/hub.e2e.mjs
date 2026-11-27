@@ -343,12 +343,25 @@ test('a programme sitting code switches the hub to the full battery in a fixed, 
       await page.locator('.step-complete').waitFor();
       continue;
     }
+    // Communication rewrite (S9): copy the original, then answer the self-check and finish.
+    if (await page.locator('.task-rewrite').count()) {
+      await page.getByRole('button', { name: 'Copy the original into the box' }).click();
+      await page.getByRole('button', { name: 'Next: check your rewrite' }).click();
+      for (const fs of await page.locator('.task-self-check .likert').all()) await fs.locator('.likert-option').first().click();
+      await page.getByRole('button', { name: 'Finish', exact: true }).click();
+      await page.locator('.step-complete').waitFor();
+      continue;
+    }
     // A screen is identified by its progress text and whether it shows new evidence (CT-T3).
     const screen = () => page.evaluate(() => `${document.querySelector('.progress-count')?.textContent}|${Boolean(document.querySelector('.task-evidence'))}`);
     const before = await screen();
     if (await page.locator('.task-self-report, .task-rate').count()) {
       for (const fs of await page.locator('.likert').all()) await fs.locator('.likert-option').nth(3).click();
       await page.locator('.task button[type="submit"]').click();
+    } else if (await page.locator('.task-part').count()) {
+      // Communication (S9): two questions per screen; answer both.
+      for (const part of await page.locator('.task-part').all()) await part.locator('.choice-card').first().click();
+      await page.locator('.task .btn-row .btn').first().click();
     } else {
       await page.locator('.choice-card').first().click();
       if (await page.locator('.task-confidence').count()) await page.locator('.task-confidence .likert-option').nth(3).click();
@@ -382,6 +395,17 @@ test('a programme sitting code switches the hub to the full battery in a fixed, 
     assert.match(a.itemResponses.at(-1).itemId, /^CR-T\d-[AB]01$/);
     assert.equal(a.timing.limitMs, 180_000);
   }
+  const cm = r.taskAttempt.filter((a) => a.skillId === 'communication');
+  assert.deepEqual(cm.map((a) => a.taskId).sort(), ['cm-t1', 'cm-t2', 'cm-t3']);
+  for (const a of cm) {
+    assert.equal(a.status, 'complete', a.taskId);
+    assert.ok(a.itemResponses.every((x) => /^CM-T\d-[AB]\d\d$/.test(x.itemId)), `${a.taskId}: assessment items only`);
+  }
+  assert.equal(cm.find((a) => a.taskId === 'cm-t1').itemResponses.length, 10);
+  assert.equal(cm.find((a) => a.taskId === 'cm-t2').itemResponses.length, 6);
+  const rw = cm.find((a) => a.taskId === 'cm-t3');
+  assert.equal(rw.score, null);
+  assert.equal(rw.coachScorable, true);
   await page.getByRole('link', { name: 'Back to your skills' }).click();
   await page.locator('.skill-grid').waitFor();
   await page.locator('.programme-entry', { hasText: 'Completed: SEP26-2' }).waitFor();
@@ -686,4 +710,137 @@ test('creativity assessment: extended time applies, time can be added near the e
   assert.equal(a.rawScore, 3);
   assert.equal(typeof a.score.originality, 'number');
   assert.equal(a.scoringVersion, SCORING_VERSION);
+});
+
+test('communication: practice explains each key; the passage is unmarked; the rewrite resumes after a reload; assessment stores the text with no score', async (t) => {
+  const page = await openApp(t);
+  await onboard(page);
+  await page.locator('a.skill-tile[data-skill-id="communication"]').click();
+  await page.getByRole('button', { name: 'Start practice' }).click();
+
+  // CM-T1 practice: both questions are required; the key and its rationale are shown
+  await page.locator('.progress-count', { hasText: 'Pair 1 of 5' }).waitFor();
+  await page.getByRole('button', { name: 'Check' }).click();
+  await page.locator('.field-error', { hasText: 'Please choose the clearer version.' }).waitFor();
+  const parts = page.locator('.task-part');
+  assert.equal(await parts.count(), 2);
+  assert.deepEqual(await parts.nth(0).locator('.choice-key').allTextContents(), ['1', '2']);
+  await parts.nth(0).locator('.choice-card').nth(0).click(); // CM-T1-P01: Version 2 is the clearer
+  await page.getByRole('button', { name: 'Check' }).click();
+  await page.locator('.field-error', { hasText: 'what mainly makes it clearer' }).waitFor();
+  await parts.nth(1).locator('.choice-card', { hasText: 'puts the main point first' }).click();
+  await page.getByRole('button', { name: 'Check' }).click();
+  const fb = page.locator('.feedback.incorrect');
+  await fb.waitFor();
+  await fb.locator('p', { hasText: 'The clearer version is Version 2.' }).waitFor();
+  await fb.locator('p', { hasText: 'says it first' }).waitFor();
+  assert.equal(await parts.nth(0).locator('.choice-card.correct').count(), 1);
+  assert.equal(await parts.nth(1).locator('.choice-card.correct').count(), 1);
+  await page.getByRole('button', { name: 'Next pair' }).click();
+  await page.locator('.progress-count', { hasText: 'Pair 2 of 5' }).waitFor();
+
+  // CM-T2 practice: nothing in the passage is marked; a right answer explains why
+  await page.getByRole('button', { name: 'Save and exit' }).click();
+  await page.locator('dialog').getByRole('button', { name: 'Save and leave' }).click();
+  await page.getByRole('link', { name: 'Start: Spot the problem' }).click();
+  await page.locator('.progress-count', { hasText: 'Passage 1 of 5' }).waitFor();
+  assert.equal(await page.locator('.task-passage u, .task-passage mark, .task-passage strong, .task-passage em').count(), 0, 'the passage is unmarked');
+  const spot = page.locator('.task-part');
+  assert.equal(await spot.nth(0).locator('.choice-card').count(), 5);
+  assert.equal(await spot.nth(1).locator('.choice-card').count(), 5);
+  await spot.nth(0).locator('.choice-card').nth(2).click(); // CM-T2-P01: sentence 3
+  await spot.nth(1).locator('.choice-card', { hasText: 'Unclear meaning' }).click();
+  await page.getByRole('button', { name: 'Check' }).click();
+  await page.locator('.feedback.correct', { hasText: 'could mean Chen\'s desk' }).waitFor();
+
+  // CM-T3 practice: a text is required; copying the original keeps the production load low;
+  // the text and the self-check survive a reload; practice shows an example and a note per point
+  await page.getByRole('button', { name: 'Save and exit' }).click();
+  await page.locator('dialog').getByRole('button', { name: 'Save and leave' }).click();
+  await page.getByRole('link', { name: 'Start: Rewrite' }).click();
+  await page.locator('.task-rewrite').waitFor();
+  await page.getByRole('button', { name: 'Next: check your rewrite' }).click();
+  await page.locator('.field-error', { hasText: 'Please write your rewrite' }).waitFor();
+  const original = await page.locator('.task-passage p:not(.eyebrow)').first().textContent();
+  await page.getByRole('button', { name: 'Copy the original into the box' }).click();
+  assert.equal(await page.locator('textarea').inputValue(), original);
+  await page.locator('textarea').fill('A shorter, clearer message. Thank you.');
+  await page.waitForFunction(() => {
+    for (let i = 0; i < localStorage.length; i++) {
+      const v = localStorage.getItem(localStorage.key(i));
+      if (v.includes('"cm-t3"') && v.includes('A shorter, clearer message.')) return true;
+    }
+    return false;
+  });
+  await page.reload();
+  await page.locator('textarea').waitFor();
+  assert.equal(await page.locator('textarea').inputValue(), 'A shorter, clearer message. Thank you.');
+  await page.getByRole('button', { name: 'Next: check your rewrite' }).click();
+  await page.locator('.task-self-check').waitFor();
+  assert.equal(await page.locator('.task-self-check .likert').count(), 5);
+  await page.getByRole('button', { name: 'Finish', exact: true }).click();
+  await page.locator('.field-error', { hasText: 'Please answer every point.' }).waitFor();
+  const checks = page.locator('.task-self-check .likert');
+  await checks.nth(0).locator('.likert-option').nth(0).click();
+  await checks.nth(1).locator('.likert-option').nth(1).click();
+  await page.reload();
+  await page.locator('.task-self-check').waitFor();
+  assert.equal(await checks.nth(1).locator('input[value="partly"]').isChecked(), true, 'self-check answers survive a reload');
+  for (let i = 2; i < 5; i++) await checks.nth(i).locator('.likert-option').nth(2).click();
+  await page.getByRole('button', { name: 'Finish', exact: true }).click();
+  await page.locator('.task-rewrite-feedback h2', { hasText: 'An example rewrite' }).waitFor();
+  assert.equal(await page.locator('.task-rubric-notes li').count(), 5);
+  await page.locator('.task-rubric-notes .tag', { hasText: 'You said: Partly' }).waitFor();
+  await page.getByRole('button', { name: 'Finish', exact: true }).click();
+  await page.locator('.step-complete').waitFor();
+
+  // Assessment: the self-report, then the three tasks with no feedback
+  await page.goto(`${base}index.html?example#/skill/communication`);
+  await page.getByRole('button', { name: 'Start assessment' }).click();
+  await page.locator('dialog').getByRole('button', { name: 'Start assessment' }).click();
+  for (let part = 1; part <= 3; part++) {
+    await page.locator('.progress-count', { hasText: `Part ${part} of 3` }).waitFor();
+    for (const fs of await page.locator('.likert').all()) await fs.locator('.likert-option').nth(2).click();
+    await page.getByRole('button', { name: part === 3 ? 'Finish' : 'Next' }).click();
+  }
+  await page.locator('.step-complete').waitFor();
+  await page.locator('.step-complete a.btn').first().click();
+  for (const [noun, n] of [['Pair', 10], ['Passage', 6]]) {
+    for (let i = 1; i <= n; i++) {
+      await page.locator('.progress-count', { hasText: `${noun} ${i} of ${n}` }).waitFor();
+      for (const part of await page.locator('.task-part').all()) await part.locator('.choice-card').first().click();
+      await page.getByRole('button', { name: i === n ? 'Finish' : 'Next', exact: true }).click();
+      if (i === 1) assert.equal(await page.locator('.feedback').count(), 0, 'no feedback in assessment mode');
+    }
+    await page.locator('.step-complete').waitFor();
+    await page.locator('.step-complete a.btn').first().click();
+  }
+  await page.locator('.task-rewrite').waitFor();
+  await page.locator('textarea').fill('Could you approve a short delay to the app update by Friday?');
+  await page.getByRole('button', { name: 'Next: check your rewrite' }).click();
+  for (const fs of await page.locator('.task-self-check .likert').all()) await fs.locator('.likert-option').first().click();
+  await page.getByRole('button', { name: 'Finish', exact: true }).click();
+  await page.locator('.step-complete').waitFor();
+  assert.equal(await page.locator('.task-rewrite-feedback').count(), 0, 'no example rewrite in assessment mode');
+
+  const r = await records(page);
+  const sitting = r.sitting.find((s) => s.skillId === 'communication' && s.mode === 'assessment');
+  const mine = r.taskAttempt.filter((a) => a.sittingId === sitting.id);
+  assert.deepEqual(mine.map((a) => a.taskId).sort(), ['cm-t1', 'cm-t2', 'cm-t3']);
+  const t1 = mine.find((a) => a.taskId === 'cm-t1');
+  for (const k of ['CM1', 'CM2', 'CM3', 'version', 'reason']) assert.equal(typeof t1.score[k], 'number', k);
+  const t2 = mine.find((a) => a.taskId === 'cm-t2');
+  assert.equal(t2.itemResponses[0].response.sentence, 0);
+  assert.equal(t2.itemResponses[0].response.problemOrder.length, 5);
+  const rw = mine.find((a) => a.taskId === 'cm-t3');
+  assert.equal(rw.status, 'complete');
+  assert.equal(rw.score, null);
+  assert.equal(rw.rawScore, null);
+  assert.equal(rw.coachScorable, true);
+  const last = rw.itemResponses.at(-1);
+  assert.match(last.itemId, /^CM-T3-[AB]01$/);
+  assert.equal(last.response.text, 'Could you approve a short delay to the app update by Friday?');
+  assert.equal(last.response.final, true);
+  assert.deepEqual(Object.values(last.response.selfCheck), ['yes', 'yes', 'yes', 'yes', 'yes']);
+  assert.equal(sitting.scoringVersion, SCORING_VERSION);
 });

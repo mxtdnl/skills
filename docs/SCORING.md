@@ -11,9 +11,60 @@
 | 0.3.0 | [Application shell](#application-shell-scoringversion-030) | Adds the developer stub's self-report score; no skill measures yet |
 | 1.0.0-draft | [Self-report](#self-report-scoringversion-100-draft) | Self-reports of the five skills (S6). Draft: items not yet reviewed, no pilot data |
 | 1.1.0-draft | [Critical thinking tasks](#critical-thinking-tasks-scoringversion-110-draft) | Adds the four critical thinking tasks (S7). Self-report scoring unchanged. Draft: items not yet reviewed, no pilot data |
+| 1.3.0-draft | [Communication tasks](#communication-tasks-scoringversion-130-draft) | Adds the three communication tasks (S9): two selection tasks scored by proportion of points per facet; the rewrite stored with no automated score and a coach-scorable flag. Earlier scoring unchanged. Draft: items not yet reviewed, no pilot data |
 | 1.2.0-draft | [Creativity tasks](#creativity-tasks-scoringversion-120-draft) | Adds the two creativity tasks (S8). Self-report and critical thinking scoring unchanged. Draft: items and frequency tables not yet reviewed, frequency bands author-estimated, no pilot data |
 
 The rebuilt measures add their own sections from Session 6 onwards, newest first.
+
+---
+
+## Communication tasks, scoringVersion 1.3.0-draft
+
+Introduced in Session 9 for CM-T1 "Which is clearer?", CM-T2 "Spot the problem" and CM-T3 Rewrite (`docs/CONSTRUCTS.md` section 5). Everything in 1.2.0-draft is unchanged: self-reports, the critical thinking tasks and the creativity tasks score exactly as before. Code: `src/skills/communication/` (`score.js` scoring; `two-part.js`, `clearer.js`, `spot.js`, `rewrite.js` task screens; `llm-scorer.js` disabled interface). Items: `content/communication/cm-t1.js`, `cm-t2.js`, `cm-t3.js`, listed in `docs/ITEM-BANK.md`.
+
+This replaces the legacy Message Editing score (scoringVersion 0.1.0, below). **None of its formulas is used or ported**: no keyword matching, no "concision", no "specificity", no "novelty" (audit A-7, B-1, E-1; `tests/communication.test.mjs` checks the communication code for them). The two receptive tasks are scored only from which options were chosen, so English spelling, grammar and vocabulary never enter a score; they carry the whole automated communication score, in line with `docs/CONSTRUCTS.md` ("the receptive tasks carry most of the score"). No task is timed.
+
+### Common rules (CM-T1, CM-T2)
+
+- One item per screen; both questions on a screen must be answered before Next. Each answer is recorded at once, so a reload resumes at the first unanswered item. The **latest** response to an item counts; unanswered items count as wrong (the denominator is the number of items on the form). Responses that are not objects, or whose fields are of the wrong type (for example the string `"0"` for an index), score nothing.
+- Each item has two parts, each scored right (1 point) or wrong (0), **all or nothing**: no partial credit within a part. The two parts are independent: one can be right when the other is wrong.
+- **Facet scores** `CM1`, `CM2`, `CM3`: points gained on that facet's items divided by twice the number of those items, from 0 to 1 (null if the form has no item of that facet). Each part's proportion correct over the whole form is reported beside them. `rawScore` is the total of points. Nothing is weighted.
+- Options are stored by their original index (or code), never by screen position; the screen order is stored with the response.
+- No feedback in assessment mode. Practice marks the right option in each part and shows the item's stored rationale, which explains the key and why the other options do not apply.
+
+### CM-T1 Which is clearer? (facets CM1, CM2, CM3)
+
+- 10 pairs per form. Each pair shows two versions of one short message (Version 1 and Version 2), which differ on **one** clarity dimension only: ambiguity, buried main point, structure (CM1); jargon, register (CM2); missing reasoning (CM3). Per form: 4 CM1, 3 CM2, 3 CM3 pairs, 5 business and 5 academic.
+- **Response**: `{ version, reason, reasonPosition, reasonOrder }`. `version` is 0 or 1; `reason` is an index into the item's four `reasons`.
+- Part 1, `version`: right if `version` equals the item's `key`. The versions keep their stored order on screen (D-28); the clearer version is Version 1 on exactly five pairs per form, so always choosing Version 1 scores exactly 0.5.
+- Part 2, `reason`: "What mainly makes it clearer?", four reasons, one of which names the dimension on which the versions differ; right if `reason` equals `reasonKey`. Reason order is shuffled per item (`ctx.rngFor`). Where the clearer version is the longer one, one distractor is "It is shorter", so shortening is never rewarded as such (audit A-7).
+- **Chance**: version 0.5, reason 0.25, facet scores 0.375. Independent parts are a choice (D-26).
+- `score`: `{ CM1, CM2, CM3, version, reason }`.
+
+### CM-T2 Spot the problem (facets CM1, CM2, CM3)
+
+- 6 unmarked passages of five sentences per form, each with exactly one sentence with a problem: ambiguity, buried main point (CM1); jargon, wrong register (CM2); missing reasoning (CM3, two items). Per form: two items per facet, 3 business and 3 academic. Nothing in the passage is underlined or highlighted (audit A-7).
+- **Response**: `{ sentence, problem, problemPosition, problemOrder }`. `sentence` is the index of the chosen sentence (passage order, never shuffled); `problem` is the code of the chosen kind of problem (`ambiguity`, `buried`, `jargon`, `register`, `reasoning`); all five kinds are offered on every item, in an order shuffled per item.
+- Part 1, `sentence`: right only if it is exactly the key sentence. For a buried main point, the key is the sentence that holds the main point; the instructions say so on every screen. Part 2, `problem`: right if the code matches the item's `problem`, whether or not the sentence is right.
+- The key sentence is at every one of the five positions at least once per form and at no position more than twice, so always choosing the same sentence scores between 1 and 2 of 6 (chance is 1 in 5).
+- **Chance**: sentence 0.2, problem 0.2, facet scores 0.2.
+- `score`: `{ CM1, CM2, CM3, sentence, problem }`.
+
+### CM-T3 Rewrite (stored, not scored)
+
+- One passage per form (form A academic, form B business; D-27); practice shows one of two practice passages, chosen with the sitting's seed. Each passage contains all five problems the checklist names. Untimed.
+- The student rewrites it in a text box, optionally starting from a copy of the original ("Copy the original into the box", to keep the production load low; D-29), then answers a five-point self-check (`RUBRIC` in `content/communication/cm-t3.js`): main point first; words suit the reader; reasons given; references unambiguous; tone suits the reader and situation. Each point is answered `yes`, `partly` or `no` (shown as "Not yet").
+- **Response**: `{ text, final, stage, selfCheck, copiedOriginal }`. Drafts (`final: false`) are recorded 1.5 seconds after the last change to the text, at every self-check answer and when moving between the two screens; the latest response counts.
+- **No automated quality score** (audit/BUILD-PLAN.md S9). `rawScore` and `score` are null. The self-check is the student's own judgement and is not a score. The attempt records **`coachScorable`**: true when its latest response is final and its text is not empty, false otherwise. How a coach records ratings, and whether they enter any communication score, is open (D-30; S13).
+- Practice shows one example rewrite (described as one of many good answers) and a note on each checklist point.
+
+### Language-model rubric scoring (disabled)
+
+`src/skills/communication/llm-scorer.js` defines the interface a future rater of the five checklist points would implement. It is disabled: `isEnabled()` is false, `score()` resolves `{ status: "disabled" }` without any request, and `configure()` throws. Switching it on needs a backend proxy, Hult data protection sign-off and a pilot comparison with coach ratings, including a check for bias against students writing in a second language (D-8).
+
+### Records from earlier versions
+
+No earlier record contains a communication task. Self-reports, critical thinking and creativity attempts scored under 1.0.0-draft to 1.2.0-draft are unchanged by this version. The legacy Message Editing score (0.1.0) is not comparable with any of these scores.
 
 ---
 
@@ -433,6 +484,8 @@ cognitive = 0.35 * flexNorm + 0.35 * origNorm + 0.20 * fluNorm + 0.10 * elabNorm
 Defects: audit A-6, B-2, E-1, E-3.
 
 ### Communication: Message Editing (`scoreME`, `:1118-1148`)
+
+Documented here only as a record of the legacy prototype. None of these formulas is used by the rebuilt tool (scoringVersion 1.3.0-draft, Communication tasks).
 
 5 passages (`mePassages`, `:669`), each with a plain-text original and a keyword list (8 to 12 keywords). Passage order is shuffled with the biased sort (`:1095`). The problem in each passage is underlined in the display. `HF_WORDS` (`:383`) is a list of 157 high-frequency words.
 

@@ -5,6 +5,6 @@
 // APP_VERSION     the application release; matches package.json "version".
 // SCORING_VERSION bumped on every change to any scoring function; documented in docs/SCORING.md.
 
-export const SCHEMA_VERSION = 3;
-export const APP_VERSION = '0.6.0';
-export const SCORING_VERSION = '1.2.0-draft';
+export const SCHEMA_VERSION = 4;
+export const APP_VERSION = '0.7.0';
+export const SCORING_VERSION = '1.3.0-draft';

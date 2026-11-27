@@ -13,7 +13,7 @@
 // and, from the revision items, the final accuracy and the mean change in the probability given
 // to the correct answer.
 
-import { maker, firstOpen, choiceCard, setPressed, lockAll, mark, feedbackBox, nextButton, KEYS } from './ui.js';
+import { maker, firstOpen, choiceCard, setPressed, lockAll, mark, feedbackBox, nextButton, KEYS } from '../common/ui.js';
 
 export const CONFIDENCE = Object.freeze([50, 60, 70, 80, 90, 100]);
 const LABEL = (c) => (c === 50 ? '50% (a guess)' : c === 100 ? '100% (certain)' : `${c}%`);

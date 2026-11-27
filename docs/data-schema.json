@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "skills5c-data-schema-v3",
+  "$id": "skills5c-data-schema-v4",
   "title": "5C Skills Assessment data model",
-  "description": "Records stored under skills5c:v3:* and in JSON exports. Generated from src/core/schema.js; do not edit by hand. Cross-field rules are listed in docs/DATA-SCHEMA.md.",
+  "description": "Records stored under skills5c:v4:* and in JSON exports. Generated from src/core/schema.js; do not edit by hand. Cross-field rules are listed in docs/DATA-SCHEMA.md.",
   "$defs": {
     "participant": {
       "description": "One student, identified only by a random pseudonymous code.",
@@ -398,6 +398,10 @@
             "startedAt"
           ],
           "additionalProperties": false
+        },
+        "coachScorable": {
+          "description": "Set on completion of a task that has no automated score (CM-T3 Rewrite): true when the attempt holds a finished response for a coach to score. Added in schema version 4.",
+          "type": "boolean"
         },
         "timing": {
           "type": "object",

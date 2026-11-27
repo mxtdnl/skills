@@ -8,7 +8,7 @@
 // answering the same screen position every time scores at chance. Assessment mode gives no
 // feedback; practice mode marks the key and shows the item's rationale.
 
-import { maker, firstOpen, choiceCard, setPressed, lockAll, mark, feedbackBox, nextButton, KEYS } from './ui.js';
+import { maker, firstOpen, choiceCard, setPressed, lockAll, mark, feedbackBox, nextButton, KEYS } from '../common/ui.js';
 
 /**
  * Build a task module scoring one facet as the proportion correct.

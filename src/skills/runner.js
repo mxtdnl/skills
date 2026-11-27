@@ -229,6 +229,9 @@ export function runStep({ skill, step, sitting, store, el, existing = null, mult
     // indicators, kept for the coach view and never shown to the student.
     if (!isTask && result.retrospective !== undefined) record.retrospective = result.retrospective;
     if (!isTask && result.quality !== undefined) record.quality = result.quality;
+    // Tasks with no automated score (scoringVersion 1.3.0-draft: the communication rewrite) say
+    // whether the attempt holds work for a coach to score.
+    if (isTask && typeof result.coachScorable === 'boolean') record.coachScorable = result.coachScorable;
     record.scoringVersion = SCORING_VERSION;
     record.status = 'complete';
     record.updatedAt = iso();
