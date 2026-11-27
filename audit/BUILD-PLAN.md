@@ -27,6 +27,7 @@ Finding IDs (e.g. `K-1`, `B-2`) refer to the audit report.
 | 2026-11-27 | Owner signed off `docs/CONSTRUCTS.md` for all five skills, approved as drafted (owner sign-off, not Hult staff review) | S2 gate passed; S6 to S10 may proceed. Every item stays draft until reviewed by Hult staff |
 | 2026-11-27 | S6: self-report forms A and B use different items (validateContent keeps forms disjoint, audit D-2); retrospective items are asked at even programme windows (the same parity as form assignment); the five skills are registered with self-reports only until their tasks exist | S7 to S10 add tasks to the existing manifests in `src/skills/<skill>/index.js` |
 | 2026-11-27 | Communication text uses `--accent-7-ink`; burnt orange `--accent-3` stays for fills and rails | S4 tokens and components as built; later sessions use `--skill-communication-ink` for Communication text |
+| 2026-11-27 | S7 builds the full decided scope for Critical thinking: four tasks (CT-T1 conditional reasoning, CT-T2 argument and evidence evaluation with perspective-taking items, CT-T3 calibration with a revision step, CT-T4 statistical and base-rate reasoning), confirmed by the owner when the S7 prompt (three tasks) was run | S7 as built; `docs/SCORING.md` Critical thinking tasks. scoringVersion 1.1.0-draft |
 
 ## Global rules (repeated in CLAUDE.md, so they apply to every session)
 

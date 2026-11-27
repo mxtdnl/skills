@@ -2,7 +2,7 @@
 
 **Purpose.** Records every item used by the tool: what it measures, which pool and form it belongs to, where it came from, and whether it has been reviewed. It is the provenance record required by audit finding M-1 and the global rule that item content is draft until reviewed by Hult staff.
 
-Session 6 added the self-report items for all five skills (all draft). The legacy prototype's items are not part of this bank and must not be ported without review (see `audit/AUDIT-REPORT.md` sections A and B).
+Session 6 added the self-report items for all five skills (all draft). Session 7 added the items of the four critical thinking tasks (all draft). The legacy prototype's items are not part of this bank and must not be ported without review (see `audit/AUDIT-REPORT.md` sections A and B).
 
 ## Conventions
 
@@ -37,17 +37,50 @@ Defined in S6 (`content/<skill>/self-report.js`):
 
 Writing rules applied (and checked where possible in `tests/self-report.test.mjs`): plain UK English for readers of English as a second language; one idea per statement; one sentence; no idioms; no double negatives (at most one negation per statement); about half the items on each form negatively keyed, with both keyings in every facet; no forced-choice items and no faking ("I have never...") items (audit A-8, A-9).
 
+## Critical thinking task item fields
+
+Defined in S7 (`content/critical/ct-t1.js` to `ct-t4.js`; scoring in `docs/SCORING.md`, Critical thinking tasks). Every file's header comment repeats its fields.
+
+| Task | Field | Meaning |
+|---|---|---|
+| CT-T1 | `kind` | `abstract` or `deontic`; reported as separate sub-scores |
+| CT-T1 | `negation` | `{ antecedent, consequent }`: which parts of the rule "if P then Q" are negated. Each form has each of the four patterns once per kind |
+| CT-T1 | `setting`, `rule` | What the cards show, and the rule to test |
+| CT-T1 | `cards` | Four `{ face, shows }`; `shows` is `P`, `notP`, `Q` or `notQ` (which case the visible side is) |
+| CT-T1 | `key` | Indices of the cards to turn; must equal the key derived from `negation` and `cards` (checked by `tests/critical.test.mjs`) |
+| CT-T1 | `explanation` | Shown in practice mode, after a card-by-card explanation generated from `shows` |
+| CT-T2 | `type` | `flaw`, `assumption`, `evidence`, `weaken`, `fairest` or `objection` |
+| CT-T2 | `facets` | `["CT2"]`, or `["CT2", "CT4"]` for the evidence items (scored as CT2 only) |
+| CT-T2 | `scenario`, `question`, `options`, `key` | Scenario of at most 80 words; four options; the index of the single defensible answer |
+| CT-T2 | `rationale` | Why the key is right and the other options are not; shown in practice mode |
+| CT-T3 | `kind`, `difficulty` | `comparison` or `estimation`; intended difficulty `easier` or `harder` (author's judgement, to be replaced by pilot facility values) |
+| CT-T3 | `prompt`, `options`, `key` | Two options; the index of the correct one |
+| CT-T3 | `facts` | The figures that decide the answer, as given by the sources |
+| CT-T3 | `source` | `{ urls, checked, method }`: the pages that support the answer, the date checked and how |
+| CT-T3 | `revision` | `null`, or `{ evidence }`: true evidence, from the same sources, shown after the first answer |
+| CT-T4 | `type` | `base-rate`, `sample-size`, `proportion` or `chance` |
+| CT-T4 | `scenario`, `question`, `options`, `key`, `rationale` | As CT-T2; the rationale is a worked solution |
+| CT-T4 | `check` | The numbers the key follows from, recomputed by `tests/critical.test.mjs` |
+
+Writing rules applied (checked where possible in `tests/critical.test.mjs`): plain UK English for readers of English as a second language; straight quotes; culturally neutral content (speeds in km/h, no ages, no alcohol, no country-specific law); forms A and B parallel in item types, kinds and negation patterns, in the same order; keys spread across option positions; option and card order shuffled on screen.
+
 ## Item status and review
 
 Every item is `status: "draft"` until a Hult subject expert reviews it; only a reviewer changes it to `"reviewed"`. A materially changed item gets a new ID. Review should check, for each item: that it matches its facet definition in `docs/CONSTRUCTS.md` and nothing outside it; that its keying is right; that it reads clearly for a student writing in a second language; and that it fits the cultural-neutrality checks in `docs/REVIEW-CHECKLIST.md`. Self-report items are also candidates for cognitive interviews in the pilot (`docs/VALIDATION-PLAN.md`).
+
+For task items, review should also check that the key is the single defensible answer and that the rationale or explanation shown in practice is correct and clear. For CT-T3, the reviewer opens every source URL and confirms the fact (`docs/OPEN-DECISIONS.md` R-8).
 
 ## Sources and licences
 
 - **New items** were written for this tool in S6 against the facet definitions and behaviours in `docs/CONSTRUCTS.md`. They are not adapted from any published or proprietary scale.
 - **IPIP items.** The International Personality Item Pool (ipip.ori.org) is in the public domain: its permission page states that permission is granted automatically for any use, commercial or non-commercial. Each IPIP item records its IPIP item code (from the site's alphabetical list of the 3,320 IPIP items), the IPIP scale it is keyed on and the page of that scale's key, and its original wording. The text here adds only the subject "I" and the matching verb form ("Am an original thinker." becomes "I am an original thinker."). Codes, wording and keying were checked against ipip.ori.org on 27 November 2026. General citation, as printed on the site's citation page: Goldberg, L. R., Johnson, J. A., Eber, H. W., Hogan, R., Ashton, M. C., Cloninger, C. R., & Gough, H. C. (2006). The International Personality Item Pool and the future of public-domain personality measures. *Journal of Research in Personality, 40*, 84-96.
+- **Critical thinking task items (S7)** were written for this tool. No item is copied or adapted from a published or proprietary test (for example, Watson-Glaser, HCTA or CART). The paradigms are standard and named in the literature: the selection task (Wason, 1968), base-rate and sample-size reasoning and independent chance events (Stanovich, West & Toplak, 2016, review such tasks). The widely circulated versions are avoided: no letter-and-number (vowel / even number) or drinking-age selection item, no Cognitive Reflection Test item, and no taxicab, Linda, hospital or medical-screening problem. Two CT-T4 sample-size items (CT-T4-A03, CT-T4-B03) use the same logic as the well-known hospital problem with different content; a reviewer should decide whether they are too close.
+- **CT-T3 facts.** Every answer and every piece of evidence was checked on 27 November 2026 against the pages listed in the item's `source.urls`. The check was made through web searches whose results quoted those pages; the pages could not be opened directly from the build environment (its network policy refused them). A person must open each source and confirm it before the items are used (`docs/OPEN-DECISIONS.md` R-8). Items whose facts could not be confirmed were not written (for example, a comparison of Antarctica with Europe, because no source for Europe's area was found). Every item is decided by a margin larger than the differences between sources. CT-T3-B05 (Nigeria and Brazil, by population) depends on current estimates and must be rechecked before each use.
 - **Why few IPIP items.** IPIP scales measure broad traits (openness, intellect, VIA character strengths). Most of the facets here are specific behaviours (for example, CO2 coordination, CM3 explicit reasoning, CT4 base-rate reasoning) with no close IPIP match. IPIP items were used only where an item matches a facet definition directly; three did. Candidates considered and not used, because they match a facet only loosely, include VIA Originality/Creativity V5 ("Am able to come up with new and different ideas.") and V71 ("Like to think of new ways to do things."), and NEO O4 H2021 ("Am interested in many things.").
 
 ## Item table
+
+### Self-report items (S6)
 
 Self-report items (S6). 86 form items (43 per form) and 17 retrospective items; 3 from the IPIP, 100 new. All draft.
 
@@ -157,3 +190,104 @@ Self-report items (S6). 86 form items (43 per form) and 17 retrospective items; 
 | CM-SR-R02 | CM-SR | CM2 | Retrospective | + | Looking back, at the start of the programme I would have rated myself as good at adapting my writing to the reader. | New (written for this tool) | draft |
 | CM-SR-R03 | CM-SR | CM3 | Retrospective | + | Looking back, at the start of the programme I would have rated myself as good at explaining the reasons behind my conclusions in writing. | New (written for this tool) | draft |
 
+### Critical thinking task items (S7)
+
+78 items, all new, all draft: CT-T1 20 (8 per form, 4 practice), CT-T2 19 (8 per form, 3 practice), CT-T3 24 (10 per form, 4 practice), CT-T4 15 (6 per form, 3 practice). Full wording, options, rationales and sources are in `content/critical/`; this table was generated from those files.
+
+#### CT-T1 Conditional reasoning
+
+| ID | Facet | Pool | Kind | Pattern | Rule | Cards to turn (key) | Source | Status |
+|---|---|---|---|---|---|---|---|---|
+| CT-T1-A01 | CT1 | A | abstract | P → Q | If the shape is a circle, then the colour is red. | Circle, Green | New (written for this tool) | draft |
+| CT-T1-A02 | CT1 | A | abstract | P → not-Q | If the number is 3, then the letter is not M. | 3, M | New (written for this tool) | draft |
+| CT-T1-A03 | CT1 | A | abstract | not-P → Q | If the word is not "stone", then the number is 5. | water, 9 | New (written for this tool) | draft |
+| CT-T1-A04 | CT1 | A | abstract | not-P → not-Q | If the colour is not blue, then the number is not 4. | Yellow, 4 | New (written for this tool) | draft |
+| CT-T1-A05 | CT1 | A | deontic | P → Q | A delivery company has this rule: If a van is on the motorway, its speed must be 90 km/h or less. | Motorway, 110 km/h | New (written for this tool) | draft |
+| CT-T1-A06 | CT1 | A | deontic | P → not-Q | A laboratory has this rule: If a person is carrying food, they must not enter the laboratory. | Carrying food, Entered the laboratory | New (written for this tool) | draft |
+| CT-T1-A07 | CT1 | A | deontic | not-P → Q | A library has this rule: If a student has not returned their borrowed books, they must pay a fee. | Books not returned, Did not pay a fee | New (written for this tool) | draft |
+| CT-T1-A08 | CT1 | A | deontic | not-P → not-Q | A factory has this rule: If a worker has not completed safety training, they must not use the cutting machine. | Training not completed, Used the machine | New (written for this tool) | draft |
+| CT-T1-B01 | CT1 | B | abstract | P → Q | If the letter is R, then the shape is a triangle. | R, Star | New (written for this tool) | draft |
+| CT-T1-B02 | CT1 | B | abstract | P → not-Q | If the number is 6, then the colour is not white. | 6, White | New (written for this tool) | draft |
+| CT-T1-B03 | CT1 | B | abstract | not-P → Q | If the shape is not a square, then the letter is D. | Circle, K | New (written for this tool) | draft |
+| CT-T1-B04 | CT1 | B | abstract | not-P → not-Q | If the word is not "river", then the colour is not orange. | cloud, Orange | New (written for this tool) | draft |
+| CT-T1-B05 | CT1 | B | deontic | P → Q | A bus company has this rule: If a bus is carrying passengers, its speed must be 60 km/h or less. | Carrying passengers, 75 km/h | New (written for this tool) | draft |
+| CT-T1-B06 | CT1 | B | deontic | P → not-Q | A museum has this rule: If a visitor has a large bag, they must not enter the gallery. | Large bag, Entered the gallery | New (written for this tool) | draft |
+| CT-T1-B07 | CT1 | B | deontic | not-P → Q | A sports centre has this rule: If a member has not booked a court, they must wait in the reception area. | No court booked, Went to the courts | New (written for this tool) | draft |
+| CT-T1-B08 | CT1 | B | deontic | not-P → not-Q | A hospital has this rule: If a visitor has not washed their hands, they must not enter the ward. | Hands not washed, Entered the ward | New (written for this tool) | draft |
+| CT-T1-P01 | CT1 | Practice | abstract | P → Q | If the number is 5, then the shape is a heart. | 5, Diamond | New (written for this tool) | draft |
+| CT-T1-P02 | CT1 | Practice | abstract | not-P → Q | If the colour is not grey, then the letter is S. | Pink, B | New (written for this tool) | draft |
+| CT-T1-P03 | CT1 | Practice | deontic | P → Q | An office has this rule: If a document is marked "Confidential", it must be kept in a locked drawer. | Confidential, On an open shelf | New (written for this tool) | draft |
+| CT-T1-P04 | CT1 | Practice | deontic | P → not-Q | A swimming pool has this rule: If a person is wearing outdoor shoes, they must not walk beside the pool. | Outdoor shoes, Walked beside the pool | New (written for this tool) | draft |
+
+#### CT-T2 Argument and evidence evaluation
+
+| ID | Facets | Pool | Type | Scenario (opening words) | Key | Source | Status |
+|---|---|---|---|---|---|---|---|
+| CT-T2-A01 | CT2 | A | flaw | Maya runs a small café near a university. Last month she put ... | She ignores another possible cause of the rise: the start of the university term. | New (written for this tool) | draft |
+| CT-T2-A02 | CT2 | A | flaw | A manager says: "Either our team works in the office every day, ... | The manager offers only two possibilities, when others exist, such as working in the office on some days. | New (written for this tool) | draft |
+| CT-T2-A03 | CT2 | A | assumption | A city council plans to make bus travel free. A councillor argues: ... | Many people who now drive would take the bus if it were free. | New (written for this tool) | draft |
+| CT-T2-A04 | CT2 | A | assumption | An online shop finds that customers who read product reviews spend more ... | Reading reviews makes customers spend more, rather than customers who already plan to spend more choosing to read reviews. | New (written for this tool) | draft |
+| CT-T2-A05 | CT2, CT4 | A | evidence | A company with 2,000 staff wants to know how many of them ... | A survey of 300 staff chosen at random from every department. | New (written for this tool) | draft |
+| CT-T2-A06 | CT2 | A | weaken | A school claims that its new reading app improves students' reading. Students ... | Students who did not use the app improved by the same amount over the same term. | New (written for this tool) | draft |
+| CT-T2-A07 | CT2 | A | fairest | Two students discuss whether exams should be replaced by coursework. Sam prefers ... | Sam thinks exams are fairer, because conditions are the same for everyone and outside help is harder to get. | New (written for this tool) | draft |
+| CT-T2-A08 | CT2 | A | objection | Lena argues: "Our university should stop printing course handbooks and publish them ... | Students without reliable internet access or a suitable device could not use the handbook. | New (written for this tool) | draft |
+| CT-T2-B01 | CT2 | B | flaw | A gym owner offered free personal training sessions in January. Membership rose ... | She ignores another possible cause of the rise: the new office building next door. | New (written for this tool) | draft |
+| CT-T2-B02 | CT2 | B | flaw | A team leader says: "Either we finish the report by Friday, or ... | The team leader offers only two possibilities, when others exist, such as agreeing a short delay with the client. | New (written for this tool) | draft |
+| CT-T2-B03 | CT2 | B | assumption | A supermarket plans to put fruit next to the checkouts instead of ... | Many customers buy what is next to the checkout, and will not simply buy sweets from another shelf instead. | New (written for this tool) | draft |
+| CT-T2-B04 | CT2 | B | assumption | A university finds that students who go to more lectures get higher ... | Going to lectures causes higher marks, rather than more motivated students choosing to go to more lectures. | New (written for this tool) | draft |
+| CT-T2-B05 | CT2, CT4 | B | evidence | A city wants to know how its residents travel to work. ... | A survey of 1,000 residents chosen at random from all parts of the city. | New (written for this tool) | draft |
+| CT-T2-B06 | CT2 | B | weaken | A company claims that its new training course makes sales staff more ... | Staff who did not take the course also sold more over the same months, by the same amount. | New (written for this tool) | draft |
+| CT-T2-B07 | CT2 | B | fairest | Priya and Tom discuss whether their city should build more cycle lanes. ... | Tom thinks the lanes would take road space from buses and vans, and would be used by few people in his area. | New (written for this tool) | draft |
+| CT-T2-B08 | CT2 | B | objection | Omar argues: "Our company should replace all meetings with written updates. Writing ... | Some decisions need a quick discussion between several people, which written updates do not allow. | New (written for this tool) | draft |
+| CT-T2-P01 | CT2 | Practice | flaw | A friend says: "I read three online reviews of this phone, and ... | She draws a conclusion about every phone on the market from three reviews of one phone. | New (written for this tool) | draft |
+| CT-T2-P02 | CT2 | Practice | assumption | A restaurant owner says: "If we open on Mondays, we will earn ... | Enough customers will come on Mondays to cover the extra costs of opening, such as staff wages. | New (written for this tool) | draft |
+| CT-T2-P03 | CT2 | Practice | fairest | Ana wants her company to let staff choose their own working hours. ... | Ana thinks choosing their own hours would help staff work better and help the company keep its staff. | New (written for this tool) | draft |
+
+#### CT-T3 Calibration and revision
+
+| ID | Facet | Pool | Kind | Difficulty (intended) | Question | Options (key in bold) | Revision | Source (checked 2026-11-27) | Status |
+|---|---|---|---|---|---|---|---|---|---|
+| CT-T3-A01 | CT3 | A | comparison | harder | Which moon has the larger diameter? | **Ganymede, a moon of Jupiter** / Titan, a moon of Saturn | No | <https://science.nasa.gov/jupiter/jupiter-moons/ganymede/facts/> | draft |
+| CT-T3-A02 | CT3 | A | comparison | harder | On Venus, which takes longer? | **Spinning once on its axis** / Going once around the Sun | Yes | <https://spaceplace.nasa.gov/all-about-venus/> <https://www.britannica.com/place/Venus-planet> | draft |
+| CT-T3-A03 | CT3 | A | comparison | harder | Which is larger in area? | Greenland / **The Democratic Republic of the Congo** | Yes | <https://www.cia.gov/the-world-factbook/field/area/country-comparison> <https://npr.org/2026/01/07/nx-s1-5668482/greenland-mercator-map-size-distortion> | draft |
+| CT-T3-A04 | CT3 | A | comparison | harder | Which city is further north? | **Rome** / New York | Yes | <https://en.wikipedia.org/wiki/Rome> <https://en.wikipedia.org/wiki/New_York_City> | draft |
+| CT-T3-A05 | CT3 | A | comparison | harder | Which element makes up a larger share of the Earth's crust, by mass? | Iron / **Aluminium** | No | <https://en.wikipedia.org/wiki/Abundance_of_elements_in_Earth%27s_crust> <https://www.open.edu/openlearn/science-maths-technology/an-introduction-minerals-and-rocks-under-the-microscope/content-section-3.1> | draft |
+| CT-T3-A06 | CT3 | A | comparison | easier | Which has more mass? | **One litre of water** / One litre of olive oil | No | <https://cameochemicals.noaa.gov/chemical/18013> | draft |
+| CT-T3-A07 | CT3 | A | comparison | easier | Which mountain is higher? | Mont Blanc / **Kilimanjaro** | No | <https://www.britannica.com/science/mountain-landform/Selected-world-mountains> | draft |
+| CT-T3-A08 | CT3 | A | estimation | easier | Light from the Sun takes how long to reach the Earth? | **More than 5 minutes** / Less than 5 minutes | No | <https://howthingsfly.si.edu/ask-an-explainer/how-long-does-it-take-light-sun-get-earth> | draft |
+| CT-T3-A09 | CT3 | A | estimation | harder | Compared with the Earth's diameter, the Moon's diameter is... | less than a quarter of it / **more than a quarter of it** | No | <https://starchild.gsfc.nasa.gov/docs/StarChild/solar_system_level1/earth_satellites.html> <https://www.esa.int/ESA_Multimedia/Images/2021/09/Moon_facts_Size> | draft |
+| CT-T3-A10 | CT3 | A | estimation | easier | The height of Mount Everest is... | more than 9,000 m / **less than 9,000 m** | No | <https://www.aljazeera.com/news/2020/12/8/mt-everest-nepal-china-announce-revised-height-at-8848-metres> | draft |
+| CT-T3-B01 | CT3 | B | comparison | harder | Which planet has the larger diameter? | **Uranus** / Neptune | No | <https://science.nasa.gov/uranus/facts/> <https://www.britannica.com/place/Neptune-planet/Basic-astronomical-data> | draft |
+| CT-T3-B02 | CT3 | B | comparison | harder | Which gas makes up a larger share of the air? | Carbon dioxide / **Argon** | Yes | <https://glossary.ametsoc.org/wiki/Argon> | draft |
+| CT-T3-B03 | CT3 | B | comparison | harder | Which is larger in area? | **The Sahara desert** / Australia | Yes | <https://en.wikipedia.org/wiki/List_of_deserts_by_area> <https://www.cia.gov/the-world-factbook/field/area/country-comparison> | draft |
+| CT-T3-B04 | CT3 | B | comparison | harder | Which lake is deeper? | Lake Tanganyika / **Lake Baikal** | Yes | <https://www.guinnessworldrecords.com/world-records/deepest-lake> <https://www.worldatlas.com/lakes/the-10-deepest-lakes-in-the-world.html> | draft |
+| CT-T3-B05 | CT3 | B | comparison | harder | Which country has more people? | Brazil / **Nigeria** | No | <https://www.un.org/development/desa/pd/world-population-prospects-2024> <https://www.populationpyramid.net/nigeria/2024/> | draft |
+| CT-T3-B06 | CT3 | B | comparison | easier | At sea level, which boils at a lower temperature? | **Pure ethanol** / Pure water | No | <https://www.engineeringtoolbox.com/ethanol-ethyl-alcohol-properties-C2H6O-d_2027.html> | draft |
+| CT-T3-B07 | CT3 | B | comparison | easier | Which planet has the higher average surface temperature? | Mercury / **Venus** | No | <https://www.livescience.com/space/venus/why-is-venus-hotter-than-mercury-when-mercury-is-closer-to-the-sun> | draft |
+| CT-T3-B08 | CT3 | B | estimation | easier | The distance around the Earth at the equator is... | **less than 50,000 km** / more than 50,000 km | No | <https://www.space.com/17638-how-big-is-earth.html> | draft |
+| CT-T3-B09 | CT3 | B | estimation | easier | The deepest point of the ocean, in the Mariana Trench, is... | **more than 10,000 m deep** / less than 10,000 m deep | No | <https://www.guinnessworldrecords.com/world-records/deepest-point-in-the-sea> <https://www.livescience.com/how-deep-is-the-mariana-trench> | draft |
+| CT-T3-B10 | CT3 | B | estimation | harder | Jupiter spins once on its axis in... | more than 12 hours / **less than 12 hours** | No | <https://science.nasa.gov/jupiter/facts/> | draft |
+| CT-T3-P01 | CT3 | Practice | comparison | harder | Which has more bones? | **One human hand, with its wrist** / One human foot, with its ankle | Yes | <https://www.britannica.com/science/human-skeleton/Hands-and-feet> <https://www.informedhealth.org/how-do-hands-work.html> | draft |
+| CT-T3-P02 | CT3 | Practice | comparison | easier | Which country is larger in area? | Australia / **Brazil** | No | <https://www.cia.gov/the-world-factbook/field/area/country-comparison> | draft |
+| CT-T3-P03 | CT3 | Practice | comparison | harder | Which metal melts at a higher temperature? | **Iron** / Copper | No | <https://www.engineeringtoolbox.com/melting-temperature-metals-d_860.html> | draft |
+| CT-T3-P04 | CT3 | Practice | estimation | easier | The average distance from the Earth to the Moon is... | less than 300,000 km / **more than 300,000 km** | No | <https://starchild.gsfc.nasa.gov/docs/StarChild/solar_system_level1/earth_satellites.html> | draft |
+
+#### CT-T4 Statistical and base-rate reasoning
+
+| ID | Facet | Pool | Type | Question | Key | Source | Status |
+|---|---|---|---|---|---|---|---|
+| CT-T4-A01 | CT4 | A | base-rate | An application is marked "experienced". How likely is it that the applicant really has worked in the industry before? | Less than 10% | New (written for this tool); numbers invented and stated in the item | draft |
+| CT-T4-A02 | CT4 | A | base-rate | Is the student more likely to study business or engineering? | Business, because there are so many more business students. | New (written for this tool); numbers invented and stated in the item | draft |
+| CT-T4-A03 | CT4 | A | sample-size | In which shop is a day with an average rating below 3 more likely? | Shop X, which asks 10 customers a day. | New (written for this tool); numbers invented and stated in the item | draft |
+| CT-T4-A04 | CT4 | A | sample-size | Which of these is a sound reason to doubt the company's claim? | 8 students is a very small group, and a different 8 people could give a very different result. | New (written for this tool); numbers invented and stated in the item | draft |
+| CT-T4-A05 | CT4 | A | proportion | Which team has the higher proportion of French speakers? | Team B. | New (written for this tool); numbers invented and stated in the item | draft |
+| CT-T4-A06 | CT4 | A | chance | What is the chance that it stops on red next time? | Exactly 1 in 4. | New (written for this tool); numbers invented and stated in the item | draft |
+| CT-T4-B01 | CT4 | B | base-rate | An email is marked "suspicious". How likely is it that it really is a fraud? | Less than 10% | New (written for this tool); numbers invented and stated in the item | draft |
+| CT-T4-B02 | CT4 | B | base-rate | Is the student more likely to study finance or marketing? | Finance, because there are so many more finance students. | New (written for this tool); numbers invented and stated in the item | draft |
+| CT-T4-B03 | CT4 | B | sample-size | In which restaurant is a day when more than half of the customers order a dessert more likely? | Restaurant X, which serves 20 customers a day. | New (written for this tool); numbers invented and stated in the item | draft |
+| CT-T4-B04 | CT4 | B | sample-size | Which of these is a sound reason to doubt the company's claim? | 5 employees is a very small group, and a different 5 people could give a very different result. | New (written for this tool); numbers invented and stated in the item | draft |
+| CT-T4-B05 | CT4 | B | proportion | Which class has the higher pass rate? | Class A. | New (written for this tool); numbers invented and stated in the item | draft |
+| CT-T4-B06 | CT4 | B | chance | What is the chance that the next roll shows a 6? | Exactly 1 in 6. | New (written for this tool); numbers invented and stated in the item | draft |
+| CT-T4-P01 | CT4 | Practice | base-rate | A parcel is marked "damaged". How likely is it that it really is damaged? | About 30% | New (written for this tool); numbers invented and stated in the item | draft |
+| CT-T4-P02 | CT4 | Practice | sample-size | Which rating tells you more about what most buyers think of the product? | Product Y's rating, because it comes from many more buyers. | New (written for this tool); numbers invented and stated in the item | draft |
+| CT-T4-P03 | CT4 | Practice | proportion | Which club has the higher proportion of members who joined this year? | Club B. | New (written for this tool); numbers invented and stated in the item | draft |

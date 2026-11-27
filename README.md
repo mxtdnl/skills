@@ -15,7 +15,7 @@ It is static and client-side. Nothing is sent to a server; data stays in the stu
 - The only working version is the original prototype, `legacy/skills-assessment-hult.html`. An audit found that it is not fit for programme evaluation and that several of its scores can mislead students. Do not use its scores to judge any student or programme.
 - The audit, the rebuild plan and the reproducible evidence are in [`audit/`](audit/): start with [`audit/AUDIT-REPORT.md`](audit/AUDIT-REPORT.md) and [`audit/BUILD-PLAN.md`](audit/BUILD-PLAN.md).
 - Draft skill definitions, awaiting sign-off, are in [`docs/CONSTRUCTS.md`](docs/CONSTRUCTS.md).
-- The rebuilt tool's application shell is `index.html` (since S5): first-run flow with consent, skill hub, Practice and Assessment modes, programme sittings, autosave and resume, and settings. Since S6 the five skills have their self-reports (draft items, not yet reviewed by Hult staff); their tasks are still being built. Open `index.html?example` to try the flow with a developer stub skill. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+- The rebuilt tool's application shell is `index.html` (since S5): first-run flow with consent, skill hub, Practice and Assessment modes, programme sittings, autosave and resume, and settings. Since S6 the five skills have their self-reports (draft items, not yet reviewed by Hult staff). Since S7 Critical thinking also has its four tasks (draft items); the other skills' tasks are still being built. Open `index.html?example` to try the flow with a developer stub skill. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 - Repository rules, conventions and the visual system are in [`CLAUDE.md`](CLAUDE.md).
 
 ## Running locally
