@@ -430,6 +430,26 @@ stir paint</textarea>
         <p class="tag-row"><span class="tag accent">Writing and drawing</span><span class="tag accent">A small tool</span></p>
       </div>
     </div>
+    <p class="sg-note">Communication tasks (S9): the situation in a railed card, an unmarked passage, two questions on one screen (the selected key shows its letter in the accent ink, because burnt orange fills carry large text only), the rewrite box and the three-point self-check.</p>
+    <div class="task task-spot" data-skill="communication">
+      <div class="card card-rail task-scenario task-context"><p class="eyebrow">The situation</p><p>A message from a team leader to the team.</p></div>
+      <div class="card task-passage"><p>Our team has two new members, Chen and Daniel. Chen will sit next to Daniel until his desk is ready.</p></div>
+      <fieldset class="task-item task-part">
+        <legend class="task-prompt">Which sentence most needs to change?</legend>
+        <div class="choice-list">
+          <button type="button" class="choice-card" aria-pressed="false"><span class="choice-key">1</span><span class="choice-text">Our team has two new members, Chen and Daniel.</span><span class="choice-flag">Selected</span></button>
+          <button type="button" class="choice-card" aria-pressed="true"><span class="choice-key">2</span><span class="choice-text">Chen will sit next to Daniel until his desk is ready.</span><span class="choice-flag">Selected</span></button>
+        </div>
+      </fieldset>
+      <div class="task-rewrite-field">
+        <label class="field-label" for="sg-rewrite">Your rewrite</label>
+        <textarea id="sg-rewrite" class="input task-rewrite-input" rows="4">Chen will sit next to Daniel until Chen's desk is ready.</textarea>
+        <button type="button" class="btn btn-ghost btn-small">Copy the original into the box</button>
+      </div>
+      <form class="task-form task-self-check">
+        <fieldset class="likert likert-compact"><legend class="likert-prompt">The main point comes first.</legend><div class="likert-scale"><label class="likert-option"><input type="radio" name="sg-check" value="yes" checked><span class="likert-label">Yes</span></label><label class="likert-option"><input type="radio" name="sg-check" value="partly"><span class="likert-label">Partly</span></label><label class="likert-option"><input type="radio" name="sg-check" value="no"><span class="likert-label">Not yet</span></label></div></fieldset>
+      </form>
+    </div>
   </div>
 </section>
 

@@ -26,9 +26,10 @@ src/skills/
   registry.js    the list of skill modules; manifest and content validation
   runner.js      runs one task in a sitting and stores the attempt
   _example/      developer stub skill proving the contract
-  common/        shared by the five skills (S6): self-report component, its scoring, manifest builder
+  common/        shared by the five skills (S6): self-report component, its scoring, manifest builder; ui.js task DOM helpers (S9, from critical/)
   <skill>/       one directory per skill, from S6 (index.js: the manifest)
-  critical/      S7: selection.js (CT-T1), choice.js (CT-T2, CT-T4), calibration.js (CT-T3), ui.js
+  critical/      S7: selection.js (CT-T1), choice.js (CT-T2, CT-T4), calibration.js (CT-T3)
+  communication/ S9: two-part.js, clearer.js (CM-T1), spot.js (CM-T2), rewrite.js (CM-T3), score.js, llm-scorer.js (disabled)
   creativity/    S8: ideas.js (idea-list task UI), ideas-score.js, text.js, summary.js, llm-scorer.js (disabled)
 src/app/
   main.js        application shell entry (loaded by index.html): store, registry, router, render
@@ -134,7 +135,7 @@ Renders the task into `el` and returns an optional cleanup function. It builds D
 
 ### `score(attempt, form)`
 
-A pure function: given the attempt (with its `itemResponses`) and the items of the form it was taken on, returns `{ rawScore, score }`. It uses nothing else, so any stored attempt can be re-scored. `score` is a number, null, or one value per facet code. Each task's scoring is specified in `docs/SCORING.md`.
+A pure function: given the attempt (with its `itemResponses`) and the items of the form it was taken on, returns `{ rawScore, score }`. It uses nothing else, so any stored attempt can be re-scored. `score` is a number, null, or one value per facet code. A task with no automated score (CM-T3 Rewrite, S9) returns null `rawScore` and `score` and a boolean `coachScorable`, which the runner stores on the attempt. Each task's scoring is specified in `docs/SCORING.md`.
 
 ## Content convention
 

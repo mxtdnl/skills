@@ -10,7 +10,7 @@
 // if the cards chosen are exactly the key, so choosing every card, or none, is never correct
 // (audit B-4). Abstract and deontic items are reported as separate sub-scores (audit A-4).
 
-import { maker, firstOpen, choiceCard, setPressed, lockAll, mark, feedbackBox, nextButton, KEYS } from './ui.js';
+import { maker, firstOpen, choiceCard, setPressed, lockAll, mark, feedbackBox, nextButton, KEYS } from '../common/ui.js';
 
 /**
  * The cards that must be turned, derived from the rule's negations and what each card shows.

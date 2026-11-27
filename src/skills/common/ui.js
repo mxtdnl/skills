@@ -1,4 +1,4 @@
-// Small DOM helpers shared by the critical thinking tasks. Every node is built with
+// Small DOM helpers shared by the task components (critical thinking, S7; communication, S9). Every node is built with
 // createElement and textContent (audit K-5); nothing is parsed from a string.
 
 export const KEYS = 'ABCDEFGH';

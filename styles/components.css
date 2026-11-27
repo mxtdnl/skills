@@ -499,6 +499,16 @@
   color: var(--accent-on);
 }
 .choice-card[aria-pressed="true"] .choice-flag { visibility: visible; color: var(--accent-ink); }
+/* Burnt orange (Communication) and orange fills carry large text only, so the selected key's
+   small letter sits on the card in the accent ink, inside a thick accent border (S9). */
+[data-accent="3"] .choice-card[aria-pressed="true"] .choice-key,
+[data-skill="communication"] .choice-card[aria-pressed="true"] .choice-key,
+[data-accent="7"] .choice-card[aria-pressed="true"] .choice-key {
+  background: var(--bg-card);
+  border-color: var(--accent);
+  border-width: var(--rule-thick);
+  color: var(--accent-ink);
+}
 .choice-card:disabled { opacity: 0.4; cursor: not-allowed; }
 .choice-card.locked { cursor: default; }
 .choice-card.correct,
@@ -1318,6 +1328,36 @@ fieldset.consent-choices {
 .idea-reason { display: block; color: var(--text-muted); }
 .tag-row { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; }
 .task-ideas-feedback + .btn { margin-top: var(--space-4); }
+
+/* Communication tasks (S9): the situation card, the passage (unmarked, continuous text), two
+   questions per screen, the rewrite box and the self-check. */
+.task-instruction { margin: 0 0 var(--space-4); }
+.task-context .eyebrow { margin: 0 0 var(--space-2); }
+.task-context p + p { margin-top: var(--space-2); }
+.task-goal { font-weight: var(--weight-label); }
+.task-passage { margin: 0 0 var(--space-5); }
+.task-passage .eyebrow { margin: 0 0 var(--space-2); }
+.task-passage p { margin: 0; line-height: 1.6; white-space: pre-line; }
+.task-part + .task-part { margin-top: var(--space-6); }
+.task-clearer > .btn-row,
+.task-spot > .btn-row { margin-top: var(--space-4); }
+.task-rewrite-field { margin: 0 0 var(--space-3); }
+.task-rewrite-field .btn { margin-top: var(--space-2); }
+.task-rewrite-field .btn[hidden] { display: none; }
+.input.task-rewrite-input {
+  display: block;
+  max-width: none;
+  min-height: 12rem;
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.6;
+}
+.task-self-check .likert + .likert { margin-top: var(--space-4); }
+.task-rubric-notes li strong { display: block; }
+.task-rubric-notes li .tag { margin-top: var(--space-1); }
+.task-rubric-notes li p { margin: var(--space-1) 0 0; }
+.task-rewrite-feedback .notice { margin-top: var(--space-4); }
+.task-rewrite-feedback + .btn { margin-top: var(--space-4); }
 
 /* ---------------------------------------------------------------- dialog */
 

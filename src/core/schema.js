@@ -106,6 +106,7 @@ import { SCHEMA_VERSION } from './version.js';
  * @property {string | null} completedAt
  * @property {TimingLog} [timing]              set on completion of a timed task
  * @property {object} [timerSnapshot]          timing.js snapshot while in progress, for resuming
+ * @property {boolean} [coachScorable]        set on completion of a task with no automated score (CM-T3): true when the attempt holds work for a coach to score (schema 4)
  */
 
 /**
@@ -268,6 +269,11 @@ export const RECORDS = {
       scoringVersion: VERSION,
       ...PROGRESS,
       timerSnapshot: TIMER_SNAPSHOT,
+      coachScorable: {
+        type: 'boolean',
+        optional: true,
+        description: 'Set on completion of a task that has no automated score (CM-T3 Rewrite): true when the attempt holds a finished response for a coach to score. Added in schema version 4.',
+      },
       timing: {
         type: 'object',
         optional: true,
@@ -386,7 +392,7 @@ function progressRules(r, errors) {
     if (r.completedAt !== null) errors.push({ path: '$.completedAt', message: 'must be null while in progress' });
     if (r.score !== null) errors.push({ path: '$.score', message: 'must be null while in progress' });
     if ('rawScore' in r && r.rawScore !== null) errors.push({ path: '$.rawScore', message: 'must be null while in progress' });
-    for (const k of ['quality', 'retrospective']) if (r[k] !== undefined) errors.push({ path: `$.${k}`, message: 'is set only on completion' });
+    for (const k of ['quality', 'retrospective', 'coachScorable']) if (r[k] !== undefined) errors.push({ path: `$.${k}`, message: 'is set only on completion' });
   }
   if (r.status === 'complete' && r.timerSnapshot !== undefined) errors.push({ path: '$.timerSnapshot', message: 'is kept only while in progress' });
   if (typeof r.completedAt === 'string' && Date.parse(r.completedAt) < Date.parse(r.startedAt)) errors.push({ path: '$.completedAt', message: 'is before startedAt' });

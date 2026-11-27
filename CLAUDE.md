@@ -8,7 +8,7 @@ A browser-based tool for Hult's five core skills: Collaboration, Curiosity, Crit
 
 Programme evaluation sets the validity bar for every measure (see `audit/AUDIT-REPORT.md` section 0.2). The tool is static and client-side: no build step, no server, no network calls. It is served over HTTP (GitHub Pages, or a local server for previews).
 
-**Status.** The only version with skill measures is the legacy prototype in `legacy/`. An audit (`audit/AUDIT-REPORT.md`) found it unfit for programme evaluation. The rebuild follows `audit/BUILD-PLAN.md`, session by session (S0 to S15). Since S5, `index.html` is the rebuilt application shell (first run, consent, hub, modes, programme sittings, settings). Since S6 the five skills are registered with their self-reports (draft items); since S7 Critical thinking has its four tasks (draft items); since S8 Creativity has its two timed idea-list tasks (draft items, provisional author-estimated frequency tables, scoringVersion 1.2.0-draft); the other skills' tasks follow in S9 and S10 (`index.html?example` adds the developer stub skill). The S2 gate was passed by the owner's sign-off on 2026-11-27. The legacy prototype is kept unchanged for reference and characterisation tests; it is not edited unless a session prompt says so.
+**Status.** The only version with skill measures is the legacy prototype in `legacy/`. An audit (`audit/AUDIT-REPORT.md`) found it unfit for programme evaluation. The rebuild follows `audit/BUILD-PLAN.md`, session by session (S0 to S15). Since S5, `index.html` is the rebuilt application shell (first run, consent, hub, modes, programme sittings, settings). Since S6 the five skills are registered with their self-reports (draft items); since S7 Critical thinking has its four tasks (draft items); since S8 Creativity has its two timed idea-list tasks (draft items, provisional author-estimated frequency tables); since S9 Communication has its three tasks (draft items; the rewrite is stored with a coach-scorable flag and no automated score; scoringVersion 1.3.0-draft, schemaVersion 4); Curiosity and Collaboration tasks follow in S10 (`index.html?example` adds the developer stub skill). The S2 gate was passed by the owner's sign-off on 2026-11-27. The legacy prototype is kept unchanged for reference and characterisation tests; it is not edited unless a session prompt says so.
 
 Read this file first in every session. Then read the session prompt in `audit/BUILD-PLAN.md`, and the documents it names. Construct definitions are in `docs/CONSTRUCTS.md`. Open decisions and outstanding human review work are listed in `docs/OPEN-DECISIONS.md`.
 
@@ -62,7 +62,7 @@ Planned by later sessions (not yet present): `src/report/` (S11, S12), `cohort.h
 - `CLAUDE.md` — Repository rules, technical conventions, visual system, workflow and testing
 - `README.md` — What the tool is, its status, how to run it locally and how to run the tests
 - `LICENSE` — `PLACEHOLDER: licence to be chosen by the owner`
-- `package.json` — `"type": "module"`; version 0.6.0 (= `APP_VERSION`); scripts `test`, `lint`, `schema` and `e2e`; no dependencies
+- `package.json` — `"type": "module"`; version 0.7.0 (= `APP_VERSION`); scripts `test`, `lint`, `schema` and `e2e`; no dependencies
 - `index.html` — The application shell page: header lockup and navigation, storage notice area, `main#app`, footer with version and a link to the legacy prototype, live region. Loads `src/app/main.js`
 - `legacy/skills-assessment-hult.html` — The original single-file prototype (scoringVersion 0.1.0), moved here unchanged from the repository root in S0. Line references in the audit and in `docs/SCORING.md` refer to this file. Exempt from lint through the allowlist in `tests/lint.mjs`
 - `audit/AUDIT-REPORT.md` — Audit of the prototype against the brief: parameters, findings with severity and line references, premise challenges, target architecture, recommended measures, validation roadmap
@@ -75,8 +75,8 @@ Planned by later sessions (not yet present): `src/report/` (S11, S12), `cohort.h
 - `audit/evidence/results.txt` — Recorded output of the three scripts above
 - `docs/CONSTRUCTS.md` — Operational definitions, facets, planned measures, coverage tables and open questions for each skill; sign-off table in the header (S2 gate, signed off by the owner 2026-11-27)
 - `docs/REVIEW-CHECKLIST.md` — Checklist Hult reviewers use to approve each skill in `docs/CONSTRUCTS.md`
-- `docs/SCORING.md` — Scoring specification: legacy formulas (scoringVersion 0.1.0), the platform skeleton (0.2.0), the shell (0.3.0), the self-report (1.0.0-draft), the critical thinking tasks (1.1.0-draft) and the creativity tasks (1.2.0-draft); new measures add sections as they are built
-- `docs/ITEM-BANK.md` — Item bank conventions, pools, self-report and critical thinking task item fields, review, sources and licences, and the item table with sources (self-report items from S6, critical thinking task items from S7, creativity task items and frequency tables from S8)
+- `docs/SCORING.md` — Scoring specification: legacy formulas (scoringVersion 0.1.0), the platform skeleton (0.2.0), the shell (0.3.0), the self-report (1.0.0-draft), the critical thinking tasks (1.1.0-draft), the creativity tasks (1.2.0-draft) and the communication tasks (1.3.0-draft); new measures add sections as they are built
+- `docs/ITEM-BANK.md` — Item bank conventions, pools, self-report and critical thinking task item fields, review, sources and licences, and the item table with sources (self-report items from S6, critical thinking task items from S7, creativity task items and frequency tables from S8, communication task items from S9)
 - `docs/ARCHITECTURE.md` — Module layout, routes, skill module contract, content convention, how a step runs (autosave and resume), application shell
 - `docs/DATA-SCHEMA.md` — Data model, identifiers, keeping the code, windows and programme sittings, form assignment, autosave, storage, migrations and export bundle; student-facing export and import added in S12
 - `docs/CONSENT.md` — Every version of the consent wording, word for word, and the commitments it makes
@@ -87,16 +87,16 @@ Planned by later sessions (not yet present): `src/report/` (S11, S12), `cohort.h
 - `docs/OPEN-DECISIONS.md` — Every open decision for the owner or Hult and every outstanding piece of human review work, with who, when it is needed and the source; resolved items with date and where the answer is recorded
 - `styles/tokens.css` — Design tokens: reference palette copied exactly, ink tones, feedback colours, skill tokens (`--skill-<id>`, `-ink`, `-on`, `-tint`), spacing, motion, focus
 - `styles/base.css` — Reset, system font stack, type scale, focus-visible outline, utilities, reduced motion (system setting and `html[data-motion="reduce"]` from Settings), print base
-- `styles/components.css` — Accent context (`data-skill`, `data-accent`), eyebrow, lede, pip, tag, colour bars, brand lockup, buttons, cards, Likert radio group, choice cards, timer ring, progress dots, feedback, notices, skill tiles, results bar with uncertainty band, banners, decorative geometry; application shell components (S5): skip link, navigation, form fields, checkboxes, danger and on-fill buttons, code display, facet list, battery list, mode cards, step list, run header, dialog; task material (S7): rule and scenario cards, card grid, reasons list, evidence notice, confidence scale; idea-list task (S8): prompt card, timer, text box, live count, feedback list, tag row
+- `styles/components.css` — Accent context (`data-skill`, `data-accent`), eyebrow, lede, pip, tag, colour bars, brand lockup, buttons, cards, Likert radio group, choice cards, timer ring, progress dots, feedback, notices, skill tiles, results bar with uncertainty band, banners, decorative geometry; application shell components (S5): skip link, navigation, form fields, checkboxes, danger and on-fill buttons, code display, facet list, battery list, mode cards, step list, run header, dialog; task material (S7): rule and scenario cards, card grid, reasons list, evidence notice, confidence scale; idea-list task (S8): prompt card, timer, text box, live count, feedback list, tag row; communication tasks (S9): situation card, unmarked passage, two-part screens, rewrite box, self-check, rubric notes
 - `styleguide.html` — Living specimen page of every token and component in every state, for visual review; hover and focus specimens are derived from the real rules at load time
 - `assets/hult-logo.png` — Hult logo, one copy extracted unchanged from the prototype's base64 PNG (640x737, transparent padding cropped in CSS). Replace with an official SVG when supplied
 - `assets/favicon.svg`, `assets/favicon.png` — Favicon (geometric, palette colours), SVG with a 32px PNG fallback
-- `src/core/version.js` — `SCHEMA_VERSION` (3), `APP_VERSION` (0.6.0), `SCORING_VERSION` (1.2.0-draft)
+- `src/core/version.js` — `SCHEMA_VERSION` (4), `APP_VERSION` (0.7.0), `SCORING_VERSION` (1.3.0-draft)
 - `src/core/rng.js` — Seeded generator (mulberry32), `seedFromString`, `randomSeed`, unbiased `int(n)` and Fisher-Yates `shuffle`
 - `src/core/ids.js` — Pseudonymous participant codes (`P-XXXX-XXXXC`, Crockford base 32 with a check character) and record IDs (`S-`, `A-`, `R-`)
 - `src/core/schema.js` — Data model as JSDoc types and field definitions; `validate()`, `assertValid()`, `toJsonSchema()`
-- `src/core/migrate.js` — Migration chain (1 to 2, S5; 2 to 3, S6) and `migrate(bundle)`
-- `src/core/store.js` — Storage adapter interface (including `clear()`); `LocalStorageAdapter` (prefix `skills5c:v3:`, try/catch, memory fallback with notice), `MemoryAdapter`, `migrateStoredNamespaces`, `mountStorageNotice`
+- `src/core/migrate.js` — Migration chain (1 to 2, S5; 2 to 3, S6; 3 to 4, S9) and `migrate(bundle)`
+- `src/core/store.js` — Storage adapter interface (including `clear()`); `LocalStorageAdapter` (prefix `skills5c:v4:`, try/catch, memory fallback with notice), `MemoryAdapter`, `migrateStoredNamespaces`, `mountStorageNotice`
 - `src/core/timing.js` — End-timestamp timers with pause, extend, accommodation multiplier, untimed mode, snapshot and restore; `startTicker`, `formatMs`
 - `src/core/router.js` — Hash routes `#/hub`, `#/skill/<id>`, `#/task/<skill>/<task>` (redirected), `#/results/<skill>`, `#/profile`, `#/start[/<step>]`, `#/run/<sittingId>/<stepId>`, `#/settings`
 - `src/skills/registry.js` — `SKILL_MODULES` (the five skills, S6), `EXAMPLE_MODULES`, `SKILL_CATALOGUE` (the five skills, accents and facets), `SELF_REPORT_STEP`, `validateManifest`, `validateContent`, `createRegistry`, `loadSkills`, `stepsFor`
@@ -104,12 +104,19 @@ Planned by later sessions (not yet present): `src/report/` (S11, S12), `cohort.h
 - `src/skills/common/self-report.js` — Self-report component (S6): one facet per screen, labelled Likert radio groups, Back and Next, autosave and resume, retrospective screen at the end of the programme
 - `src/skills/common/self-report-score.js` — Self-report scoring (scoringVersion 1.0.0-draft): agreement scale, reverse keying, facet and skill means, retrospective means, response-quality indicators
 - `src/skills/common/manifest.js` — `skillManifest()`: builds a skill manifest from its `SKILL_CATALOGUE` entry
-- `src/skills/collaboration/index.js`, `curiosity/index.js`, `communication/index.js` — Skill manifests (self-report only until S9 and S10)
+- `src/skills/collaboration/index.js`, `curiosity/index.js` — Skill manifests (self-report only until S10)
+- `src/skills/common/ui.js` — DOM helpers shared by the task components (choice cards, marks, feedback box, next button); moved from `critical/` in S9
+- `src/skills/communication/index.js` — Communication manifest: self-report and three tasks, CM-T1 Which is clearer?, CM-T2 Spot the problem, CM-T3 Rewrite (S9)
+- `src/skills/communication/two-part.js` — `twoPartTask`: task material and two single-choice questions per screen, practice feedback; used by CM-T1 and CM-T2; `contextCard`
+- `src/skills/communication/clearer.js` — CM-T1: two versions (fixed order) and four shuffled reasons
+- `src/skills/communication/spot.js` — CM-T2: unmarked passage, five numbered sentences and five shuffled kinds of problem
+- `src/skills/communication/rewrite.js` — CM-T3: text box with "Copy the original into the box", five-point self-check, drafts autosaved, practice example rewrite and notes
+- `src/skills/communication/score.js` — Communication scoring (scoringVersion 1.3.0-draft): `scoreClearer`, `scoreSpot` (two all-or-nothing parts per item, facet proportions), `scoreRewrite` (null score, `coachScorable`), `latestRewrite`
+- `src/skills/communication/llm-scorer.js` — Optional language-model rubric scorer interface for CM-T3, disabled; no network call (D-8)
 - `src/skills/critical/index.js` — Critical thinking manifest: self-report and four tasks (S7)
 - `src/skills/critical/selection.js` — CT-T1 conditional reasoning: `mount` (multi-select cards, card-by-card explanation in practice), `deriveKey`, `cardReason`, `score` (all-or-nothing; abstract and deontic sub-scores)
 - `src/skills/critical/choice.js` — `choiceTask({ facet })`: scenario and four options, select then Next, rationale in practice; used by CT-T2 and CT-T4
 - `src/skills/critical/calibration.js` — CT-T3 calibration and revision: `mount` (answer and confidence, evidence and revision, practice summary), `score` (accuracy, overconfidence, Brier score, revision indices)
-- `src/skills/critical/ui.js` — DOM helpers shared by the critical thinking tasks
 - `src/skills/creativity/index.js` — Creativity manifest: self-report and two tasks, CR-T1 Alternate uses and CR-T2 Problem finding (S8); loads the word list with the task content
 - `src/skills/creativity/ideas.js` — Idea-list task (CR-T1, CR-T2): `mount` (3-minute timer with multiplier, pause and Add 1 minute; one idea per line, live count; drafts autosaved; practice feedback with kinds used and not tried)
 - `src/skills/creativity/ideas-score.js` — Creativity scoring (scoringVersion 1.2.0-draft): `analyse` (non-words, too short, duplicate, table match, category, points), `indicators`, `score`
@@ -124,6 +131,7 @@ Planned by later sessions (not yet present): `src/report/` (S11, S12), `cohort.h
 - `content/collaboration/self-report.js`, `content/curiosity/self-report.js`, `content/critical/self-report.js`, `content/creativity/self-report.js`, `content/communication/self-report.js` — Self-report items (S6, draft): `formA`, `formB`, empty `practice`, `retrospective`
 - `content/critical/ct-t1.js`, `ct-t2.js`, `ct-t3.js`, `ct-t4.js` — Critical thinking task items (S7, draft): `formA`, `formB`, `practice`; CT-T3 items carry source URLs
 - `content/creativity/cr-t1.js`, `cr-t2.js` — Creativity task items (S8, draft): one object or situation per form, practice pool, 12-category taxonomies
+- `content/communication/cm-t1.js`, `cm-t2.js`, `cm-t3.js` — Communication task items (S9, draft): `formA`, `formB`, `practice`; CM-T1 exports `DIMENSIONS` and `REASONS`, CM-T2 `PROBLEMS`, CM-T3 the checklist `RUBRIC` and `SELF_CHECK`
 - `content/creativity/aut-norms.js`, `problem-norms.js` — Frequency tables for CR-T1 and CR-T2: provisional, author-estimated, replace with pilot norms
 - `content/creativity/wordlist.js` — English word list (SCOWL sizes 10 to 35), generated by `tests/write-wordlist.mjs`; never edited by hand
 - `content/creativity/SCOWL-COPYRIGHT.txt` — SCOWL copyright and permission notice, required with the word list
@@ -144,8 +152,9 @@ Planned by later sessions (not yet present): `src/report/` (S11, S12), `cohort.h
 - `tests/self-report.test.mjs` — Self-report content rules and scoring (S6): reverse keying, straight-lining, missing items, quality indicators, retrospective items
 - `tests/creativity.test.mjs` — Creativity tasks (S8): content rules, table examples, parallel forms, text handling, unscorable lines, no reverse substring, adversarial patterns (gibberish, repeated phrase, filler padding, empty input), ten varied ideas above six common ones, summary, disabled scorer
 - `tests/write-wordlist.mjs` — Writes `content/creativity/wordlist.js` from an unpacked `wordlist-english` 1.2.1 package (development only)
+- `tests/communication.test.mjs` — Communication tasks (S9): content rules, single-dimension pairs, the shortening trap, balanced keys, unmarked passages, two-part scoring, always-first and random selection at chance, rewrite with no automated score and the coach-scorable flag, disabled scorer, no legacy scoring terms
 - `tests/critical.test.mjs` — Critical thinking tasks (S7): content rules, keys recomputed from item data, scoring, adversarial patterns (select-all, select-none, fixed card choices, always-first, always-100% confidence)
-- `tests/e2e/hub.e2e.mjs` — Playwright end-to-end tests of the shell (`npm run e2e`), including a keyboard-only run with reloads mid-step, a full programme battery, a real skill's self-report, the critical thinking tasks and the creativity tasks (with a fake clock for expiry and extension)
+- `tests/e2e/hub.e2e.mjs` — Playwright end-to-end tests of the shell (`npm run e2e`), including a keyboard-only run with reloads mid-step, a full programme battery, a real skill's self-report, the critical thinking tasks, the creativity tasks (with a fake clock for expiry and extension) and the communication tasks
 - `tests/write-data-schema.mjs` — Writes `docs/data-schema.json` (`npm run schema`)
 - `tests/legacy-scoring.test.mjs` — Characterisation tests asserting the prototype's current scores, ported from `audit/evidence/`
 - `tests/lint.mjs` — Static checks across every `.html`, `.css` and `.js` file outside `audit/` and `legacy/`, plus the reference-palette and contrast checks on `styles/tokens.css`
@@ -331,7 +340,7 @@ npm run e2e     # node --test tests/e2e/*.e2e.mjs (needs Playwright and Chromium
 
 `npm test` runs every `tests/*.test.mjs` file with `node:test`. The script uses a shell glob rather than `node --test tests/`, because Node 22 treats a bare directory argument as a module path and fails.
 
-- `tests/critical.test.mjs` and `tests/creativity.test.mjs` check content and scoring without a DOM; the task UI is covered by the end-to-end tests. `tests/creativity.test.mjs` loads the word list first (`loadDictionary()`).
+- `tests/critical.test.mjs`, `tests/creativity.test.mjs` and `tests/communication.test.mjs` check content and scoring without a DOM; the task UI is covered by the end-to-end tests. `tests/creativity.test.mjs` loads the word list first (`loadDictionary()`).
 
 - The platform tests (`rng`, `ids`, `schema`, `store`, `migrate`, `timing`, `router`, `registry`) import the browser modules in `src/` directly; they need no DOM. Storage is tested through `MemoryStorage`, timers through an injected clock. The shuffle is checked for uniformity with chi-square tests over 10,000 shuffles, and the test is shown to catch a known biased shuffle. `schema.test.mjs` fails if `docs/data-schema.json` is out of date (`npm run schema`).
 
