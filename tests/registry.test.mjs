@@ -62,9 +62,17 @@ test('loadSkills imports the example module', async () => {
   assert.equal(reg.get('nope'), undefined);
 });
 
-test('no production skills are registered before S6, and the stub is never among them', () => {
-  assert.deepEqual(SKILL_MODULES, []);
+test('the five production skills are registered in canonical order, agree with the catalogue, and the stub is never among them', async () => {
   assert.ok(!SKILL_MODULES.some((s) => s.includes('_example')));
+  const reg = await loadSkills(SKILL_MODULES);
+  assert.deepEqual(reg.list().map((s) => s.id), SKILL_CATALOGUE.map((c) => c.id));
+  for (const c of SKILL_CATALOGUE) {
+    const m = reg.get(c.id);
+    assert.equal(m.label, c.label);
+    assert.equal(m.accentToken, c.accentToken);
+    assert.deepEqual(m.facets, c.facets);
+    assert.ok(m.selfReport, `${c.id} has a self-report`);
+  }
 });
 
 test('validateManifest reports contract violations', () => {

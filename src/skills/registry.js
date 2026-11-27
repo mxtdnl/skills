@@ -4,8 +4,17 @@
 // The skill module contract is specified in docs/ARCHITECTURE.md. validateManifest() enforces the
 // parts of it that can be checked without running a task.
 
-/** Production skill modules, in canonical order (CLAUDE.md, 5C accent mapping). Added in S6 to S10. */
-export const SKILL_MODULES = [];
+/**
+ * Production skill modules, in canonical order (CLAUDE.md, 5C accent mapping). Registered in S6
+ * with their self-reports; their tasks are added in S7 to S10.
+ */
+export const SKILL_MODULES = [
+  './collaboration/index.js',
+  './curiosity/index.js',
+  './critical/index.js',
+  './creativity/index.js',
+  './communication/index.js',
+];
 
 /** Developer-only modules. Listed in the hub only when the page is opened with ?example. */
 export const EXAMPLE_MODULES = ['./_example/index.js'];
@@ -15,7 +24,7 @@ export const SELF_REPORT_STEP = 'self-report';
 
 /**
  * The five skills in canonical order (CLAUDE.md, 5C accent mapping), with their facets from
- * docs/CONSTRUCTS.md (DRAFT, revision 2; not yet signed off). The hub shows a skill whose
+ * docs/CONSTRUCTS.md (revision 2; signed off by the owner on 2026-11-27). The hub shows a skill whose
  * module is not yet built as "in preparation" from this entry; once the module is registered,
  * its manifest is used instead and must agree with this entry (tests/registry.test.mjs).
  * Estimated minutes are not given here: they come from the manifests' tasks.
@@ -103,7 +112,10 @@ export function validateManifest(m) {
       if (!(sr.estMinutes > 0)) at(`${id}.selfReport`, 'estMinutes must be positive');
     }
   }
-  if (!Array.isArray(m.tasks) || m.tasks.length === 0) at(id, 'tasks must be a non-empty array');
+  // A skill may have no tasks yet (S6: self-report only; tasks arrive in S7 to S10), but it
+  // must have at least one step.
+  if (!Array.isArray(m.tasks)) at(id, 'tasks must be an array');
+  else if (m.tasks.length === 0 && !m.selfReport) at(id, 'a skill needs a self-report or at least one task');
   else {
     const ids = new Set();
     m.tasks.forEach((t, i) => {
@@ -129,7 +141,8 @@ export function validateManifest(m) {
 /**
  * Check a content module: { formA, formB, practice }, each an array of items with a unique id
  * and status 'draft' or 'reviewed'. Practice and assessment pools never share an item (global
- * rule); forms A and B never share an item either (parallel forms, audit D-2).
+ * rule); forms A and B never share an item either (parallel forms, audit D-2). A self-report may
+ * also export `retrospective` (end-of-programme items, S6), whose ids are checked the same way.
  * @param {any} content
  * @returns {string[]}
  */
@@ -137,7 +150,8 @@ export function validateContent(content) {
   const errs = [];
   if (!content || typeof content !== 'object') return ['content: must be an object'];
   const seen = new Map();
-  for (const pool of ['formA', 'formB', 'practice']) {
+  const pools = ['formA', 'formB', 'practice', ...(content.retrospective !== undefined ? ['retrospective'] : [])];
+  for (const pool of pools) {
     const list = content[pool];
     if (!Array.isArray(list)) { errs.push(`${pool}: must be an array`); continue; }
     list.forEach((item, i) => {

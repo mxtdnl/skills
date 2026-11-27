@@ -49,6 +49,17 @@ export function firstForm(participantId) {
   return seedFromString(participantId) % 2 === 0 ? 'A' : 'B';
 }
 
+/**
+ * True for an assessment sitting at the end of the programme: a programme sitting whose window
+ * is even (window 2 is the end; the same parity rule as assignForm). Only these sittings show a
+ * self-report's retrospective items (audit D-5).
+ * @param {object} sitting
+ * @returns {boolean}
+ */
+export function isProgrammeEnd(sitting) {
+  return Boolean(sitting && sitting.mode === 'assessment' && sitting.programme && sitting.programme.window % 2 === 0);
+}
+
 /** @param {'A' | 'B'} formId */
 export const otherForm = (formId) => (formId === 'A' ? 'B' : 'A');
 
@@ -139,6 +150,8 @@ export function runStep({ skill, step, sitting, store, el, existing = null, mult
     const problems = validateContent(content);
     if (problems.length) throw new TypeError(`Content for ${skill.id}/${step.id} is invalid:\n${problems.join('\n')}`);
     const items = itemsFor(content, sitting.mode, sitting.formId);
+    // End-of-programme retrospective items follow the form's own items (self-reports only).
+    if (!isTask && isProgrammeEnd(sitting) && Array.isArray(content.retrospective)) items.push(...content.retrospective);
     const taskSeed = seedFromString(`${sitting.seed}:${skill.id}:${step.id}`);
     const rng = createRng(taskSeed);
     if (cancelled) return null; // cancelled while content was loading: nothing to save
@@ -152,6 +165,8 @@ export function runStep({ skill, step, sitting, store, el, existing = null, mult
         kind: step.kind,
         mode: sitting.mode,
         formId: sitting.formId,
+        /** True in an end-of-programme sitting (retrospective items are then among ctx.items). */
+        programmeEnd: isProgrammeEnd(sitting),
         items,
         rng,
         /** A generator for one item, the same on every mount, so a resumed step shows the same order. */
@@ -198,6 +213,10 @@ export function runStep({ skill, step, sitting, store, el, existing = null, mult
     const result = def.score(record, items);
     if (isTask) record.rawScore = result.rawScore === undefined ? null : result.rawScore;
     record.score = result.score === undefined ? null : result.score;
+    // Self-reports (scoringVersion 1.0.0-draft): retrospective means and response-quality
+    // indicators, kept for the coach view and never shown to the student.
+    if (!isTask && result.retrospective !== undefined) record.retrospective = result.retrospective;
+    if (!isTask && result.quality !== undefined) record.quality = result.quality;
     record.scoringVersion = SCORING_VERSION;
     record.status = 'complete';
     record.updatedAt = iso();

@@ -117,11 +117,25 @@ import { SCHEMA_VERSION } from './version.js';
  * @property {string} skillId
  * @property {ItemResponse[]} responses
  * @property {number | Object<string, number | null> | null} score
+ * @property {Object<string, number | null>} [retrospective]  end-of-programme "then" ratings per facet (schema 3)
+ * @property {SelfReportQuality} [quality]     response-quality indicators, coach view only (schema 3)
  * @property {string} scoringVersion
  * @property {'in-progress' | 'complete'} status
  * @property {string} startedAt
  * @property {string} updatedAt
  * @property {string | null} completedAt
+ */
+
+/**
+ * @typedef {object} SelfReportQuality
+ * @property {number} items                    main (not retrospective) items on the form
+ * @property {number} answered                 items with a valid answer
+ * @property {number} missing                  items without one
+ * @property {boolean} straightLining          every answer the same (at least 3 answers)
+ * @property {number | null} medianItemMs      median time per item
+ * @property {boolean} fastResponding          medianItemMs under 1000
+ * @property {number} longestRun               longest run of identical answers, in the order shown
+ * @property {boolean} longRun                 longestRun at or above the provisional threshold
  */
 
 // ---------------------------------------------------------------------------
@@ -277,6 +291,27 @@ export const RECORDS = {
       skillId: SLUG,
       responses: { type: 'array', items: ITEM_RESPONSE },
       score: SCORE,
+      retrospective: {
+        type: 'object',
+        optional: true,
+        description: 'End-of-programme retrospective ("then") rating per facet, 1 to 5; never part of the skill score. Added in schema version 3.',
+        additionalProperties: { type: ['number', 'null'] },
+      },
+      quality: {
+        type: 'object',
+        optional: true,
+        description: 'Response-quality indicators for the coach view. Never shown to the student and never used in a score. Added in schema version 3.',
+        properties: {
+          items: { type: 'integer', minimum: 0 },
+          answered: { type: 'integer', minimum: 0 },
+          missing: { type: 'integer', minimum: 0 },
+          straightLining: { type: 'boolean' },
+          medianItemMs: { type: ['number', 'null'], minimum: 0 },
+          fastResponding: { type: 'boolean' },
+          longestRun: { type: 'integer', minimum: 0 },
+          longRun: { type: 'boolean' },
+        },
+      },
       scoringVersion: VERSION,
       ...PROGRESS,
     },
@@ -351,6 +386,7 @@ function progressRules(r, errors) {
     if (r.completedAt !== null) errors.push({ path: '$.completedAt', message: 'must be null while in progress' });
     if (r.score !== null) errors.push({ path: '$.score', message: 'must be null while in progress' });
     if ('rawScore' in r && r.rawScore !== null) errors.push({ path: '$.rawScore', message: 'must be null while in progress' });
+    for (const k of ['quality', 'retrospective']) if (r[k] !== undefined) errors.push({ path: `$.${k}`, message: 'is set only on completion' });
   }
   if (r.status === 'complete' && r.timerSnapshot !== undefined) errors.push({ path: '$.timerSnapshot', message: 'is kept only while in progress' });
   if (typeof r.completedAt === 'string' && Date.parse(r.completedAt) < Date.parse(r.startedAt)) errors.push({ path: '$.completedAt', message: 'is before startedAt' });

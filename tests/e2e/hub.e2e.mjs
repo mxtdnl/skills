@@ -162,10 +162,10 @@ test('keyboard only: first run, an assessment with reloads mid-step, resumes exa
   assert.equal(participant.consent.languageBackground, true);
   assert.deepEqual(participant.languageBackground, { englishFirstLanguage: 'no' });
 
-  // Hub: five skill tiles plus the example; open the example skill
+  // Hub: five skill tiles (registered since S6, self-report only) plus the example; open the example skill
   assert.equal(await page.locator('.skill-tile').count(), 6);
-  assert.equal(await page.locator('.skill-tile.locked').count(), 5);
-  await tabTo(page, 'a.skill-tile');
+  assert.equal(await page.locator('.skill-tile.locked').count(), 0);
+  await tabTo(page, 'a.skill-tile[data-skill-id="_example"]');
   await page.keyboard.press('Enter');
   await page.locator('.mode-grid').waitFor();
 
@@ -304,32 +304,59 @@ test('a programme sitting code switches the hub to the full battery in a fixed, 
   await page.locator('h1', { hasText: 'Full battery' }).waitFor();
   assert.equal(await page.locator('.skill-grid').count(), 0, 'tiles are replaced by the battery');
 
+  const ORDER = ['collaboration', 'curiosity', 'critical', 'creativity', 'communication', '_example'];
   let r = await records(page);
-  assert.equal(r.sitting.length, 1);
-  const s = r.sitting[0];
-  assert.deepEqual(s.programme, { code: 'SEP26-2', window: 2, skillOrder: ['_example'], position: 0 });
-  assert.equal(s.windowId, 'programme:SEP26-2');
-  assert.notEqual(s.formId, firstForm(r.participant[0].id), 'window 2 takes the second form');
+  assert.equal(r.sitting.length, ORDER.length);
+  const byPosition = [...r.sitting].sort((a, b) => a.programme.position - b.programme.position);
+  for (const [i, s] of byPosition.entries()) {
+    assert.deepEqual(s.programme, { code: 'SEP26-2', window: 2, skillOrder: ORDER, position: i });
+    assert.equal(s.skillId, ORDER[i]);
+    assert.equal(s.windowId, 'programme:SEP26-2');
+    assert.notEqual(s.formId, firstForm(r.participant[0].id), 'window 2 takes the second form');
+  }
 
   // The skill page points back to the battery; no self-directed assessment meanwhile
   await page.goto(`${base}index.html?example#/skill/_example`);
   await page.locator('.notice', { hasText: 'Programme sitting in progress' }).waitFor();
 
+  // Work through the battery in order, answering every screen
   await page.goto(`${base}index.html?example#/hub`);
   await page.getByRole('link', { name: 'Continue' }).click();
-  for (const option of [0, 1]) {
-    await page.locator('.likert-option').nth(3).click();
-    await page.getByRole('button', { name: option ? 'Finish' : 'Next' }).click();
+  for (let guard = 0; guard < 60; guard++) {
+    await page.locator('.task, .step-complete').first().waitFor();
+    const complete = page.locator('.step-complete');
+    if (await complete.count()) {
+      if (await complete.filter({ hasText: 'finished every skill' }).count()) break;
+      const hash = await page.evaluate(() => location.hash);
+      await complete.locator('a.btn').first().click();
+      await page.waitForFunction((h) => location.hash !== h, hash);
+      await page.locator('.task').first().waitFor();
+      continue;
+    }
+    if (await page.locator('.likert').count()) {
+      for (const fs of await page.locator('.likert').all()) await fs.locator('.likert-option').nth(3).click();
+      const part = await page.locator('.progress-count').textContent();
+      await page.locator('.task button[type="submit"]').click();
+      await page.waitForFunction((p) => { const n = document.querySelector('.progress-count'); return !n || n.textContent !== p || document.querySelector('.step-complete'); }, part);
+    } else {
+      const q = await page.locator('.progress-count').textContent();
+      await page.locator('.choice-card').first().click();
+      await page.waitForFunction((p) => { const n = document.querySelector('.progress-count'); return !n || n.textContent !== p || document.querySelector('.step-complete'); }, q);
+    }
   }
-  await page.getByRole('link', { name: 'Next: Pick the answer' }).click();
-  await page.locator('.choice-card').first().click();
-  await page.locator('.choice-card').first().click();
   await page.locator('.step-complete', { hasText: 'finished every skill' }).waitFor();
+  r = await records(page);
+  const end = r.selfReport.filter((x) => x.skillId !== '_example');
+  assert.equal(end.length, 5);
+  for (const x of end) {
+    assert.ok(x.retrospective, `${x.skillId}: window 2 is the end of the programme, so retrospective items are asked`);
+    assert.ok(Object.values(x.retrospective).every((v) => v === 4));
+  }
   await page.getByRole('link', { name: 'Back to your skills' }).click();
   await page.locator('.skill-grid').waitFor();
   await page.locator('.programme-entry', { hasText: 'Completed: SEP26-2' }).waitFor();
   r = await records(page);
-  assert.ok(r.sitting[0].completedAt);
+  assert.ok(r.sitting.every((x) => x.completedAt));
 });
 
 test('settings: extended time and reduced motion are saved; reset needs the typed word', async (t) => {
@@ -381,4 +408,57 @@ test('returning students can enter their code, which is checked', async (t) => {
   const r = await records(page);
   assert.equal(r.participant[0].consent.languageBackground, false);
   assert.equal(r.participant[0].languageBackground, undefined);
+});
+
+test('a real skill\'s self-report: one facet per screen, every point labelled, resumes after a reload, no quality notice to the student', async (t) => {
+  const page = await openApp(t);
+  await onboard(page);
+  await page.locator('a.skill-tile[data-skill-id="critical"]').click();
+  await page.locator('.mode-card[data-mode="practice"]', { hasText: 'not available for this skill yet' }).waitFor();
+  await page.getByRole('button', { name: 'Start assessment' }).click();
+  await page.locator('dialog').getByRole('button', { name: 'Start assessment' }).click();
+
+  // Four facets, so four screens of two statements each
+  await page.locator('.progress-count', { hasText: 'Part 1 of 4' }).waitFor();
+  assert.equal(await page.locator('.likert').count(), 2);
+  assert.deepEqual(await page.locator('.likert').first().locator('.likert-label').allTextContents(),
+    ['Strongly disagree', 'Disagree', 'Neither agree nor disagree', 'Agree', 'Strongly agree']);
+
+  // Next with an unanswered statement: a plain prompt, and nothing moves on
+  await page.locator('.likert').first().locator('.likert-option').nth(3).click();
+  await page.getByRole('button', { name: 'Next' }).click();
+  await page.locator('.field-error', { hasText: 'not answered yet' }).waitFor();
+  await page.locator('.likert').nth(1).locator('.likert-option').nth(1).click();
+  await page.getByRole('button', { name: 'Next' }).click();
+  await page.locator('.progress-count', { hasText: 'Part 2 of 4' }).waitFor();
+  await page.locator('.likert').first().locator('.likert-option').nth(4).click();
+
+  // Reload mid-screen: the answered statement is kept and the screen resumes
+  await page.reload();
+  await page.locator('.progress-count', { hasText: 'Part 2 of 4' }).waitFor();
+  assert.equal(await page.locator('.likert').first().locator('input[value="5"]').isChecked(), true);
+
+  // Back keeps earlier answers
+  await page.getByRole('button', { name: 'Back' }).click();
+  await page.locator('.progress-count', { hasText: 'Part 1 of 4' }).waitFor();
+  assert.equal(await page.locator('.likert').first().locator('input[value="4"]').isChecked(), true);
+  await page.getByRole('button', { name: 'Next' }).click();
+
+  // Straight-line the rest with "Agree"
+  for (let part = 2; part <= 4; part++) {
+    await page.locator('.progress-count', { hasText: `Part ${part} of 4` }).waitFor();
+    for (const fs of await page.locator('.likert').all()) await fs.locator('.likert-option').nth(3).click();
+    await page.getByRole('button', { name: part === 4 ? 'Finish' : 'Next' }).click();
+  }
+  await page.locator('.step-complete').waitFor();
+  const text = (await page.locator('main').textContent()).toLowerCase();
+  for (const word of ['straight', 'consisten', 'quality', 'too fast', 'implausible']) assert.ok(!text.includes(word), `no "${word}" shown to the student`);
+
+  const r = await records(page);
+  const sr = r.selfReport.find((x) => x.skillId === 'critical');
+  assert.equal(sr.status, 'complete');
+  assert.equal(sr.scoringVersion, '1.0.0-draft');
+  assert.equal(sr.retrospective, undefined, 'no retrospective items outside an end-of-programme sitting');
+  assert.equal(typeof sr.quality.straightLining, 'boolean');
+  for (const k of ['CT1', 'CT2', 'CT3', 'CT4', 'skill']) assert.ok(sr.score[k] >= 1 && sr.score[k] <= 5, k);
 });

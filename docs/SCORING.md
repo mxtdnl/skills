@@ -9,8 +9,73 @@
 | 0.1.0 | [Legacy prototype](#legacy-scoringversion-010-known-defects-see-audit) | Legacy, known defects |
 | 0.2.0 | [Platform skeleton](#platform-skeleton-scoringversion-020) | Rebuilt platform; no skill measures yet |
 | 0.3.0 | [Application shell](#application-shell-scoringversion-030) | Adds the developer stub's self-report score; no skill measures yet |
+| 1.0.0-draft | [Self-report](#self-report-scoringversion-100-draft) | Self-reports of the five skills (S6). Draft: items not yet reviewed, no pilot data |
 
 The rebuilt measures add their own sections from Session 6 onwards.
+
+---
+
+## Self-report, scoringVersion 1.0.0-draft
+
+Introduced in Session 6 for the five skills' self-reports (CO-SR, CU-SR, CT-SR, CR-SR, CM-SR in `docs/CONSTRUCTS.md`). Code: `src/skills/common/self-report-score.js` (`scoreSelfReport`). The component is `src/skills/common/self-report.js`; the items are in `content/<skill>/self-report.js` and listed in `docs/ITEM-BANK.md`. Everything in 0.3.0 is unchanged; the developer stub keeps its own scoring.
+
+This replaces the legacy self-assessment entirely (audit A-8, A-9, C-2): there are no forced-choice items, no faking item, no within-person "consistency" statistic, no 0 to 100 rescaling, and the self-report is not combined with any task score.
+
+### Items and responses
+
+- Each form has 8 or 9 statements: three per facet for Collaboration, Curiosity and Communication; two per facet for Critical thinking and Creativity. Forms A and B have the same facets with the same number of items each, and share no item.
+- Every item records its `keying`: `+` (agreeing means more of the facet) or `-` (agreeing means less). Each form has 4 or 5 items of each keying, and each facet has both keyings across the two forms.
+- Response: an integer from 1 to 5 on the agreement scale, every point labelled: 1 Strongly disagree, 2 Disagree, 3 Neither agree nor disagree, 4 Agree, 5 Strongly agree.
+- Every answer and every change of answer is recorded. **The latest response to each item counts.** A response that is not an integer from 1 to 5 makes the item missing.
+- Items on the form taken are scored; responses to any other item ID are ignored.
+
+### Scores
+
+All scores are on the response scale, 1 to 5.
+
+```
+item score   = response            if keying is "+"
+             = 6 - response        if keying is "-"
+facet mean   = mean of the item scores of the facet's answered items
+               null if fewer than half of the facet's items on the form are answered
+skill        = mean of the facet means (each facet weighs the same)
+               null if any facet mean is null
+```
+
+`score` is `{ <facet code>: facet mean, ..., skill }`, for example `{ CO1: 3.67, CO2: 4, CO3: 3.33, skill: 3.67 }` (values are stored unrounded).
+
+**Missing items.** The rule above is the only treatment of missing data: no imputation, and no default value (unlike the legacy 0.5, audit B-5). The number answered and missing is recorded in `quality`. The component asks for an answer to every statement before moving on, so missing items arise only from records changed outside the component.
+
+**Straight-lining.** Answering every statement the same way gives exactly the score those answers imply, with no penalty and no adjustment. Because each form is balanced for keying, this lands near the midpoint: for example, all "Agree" (4) on Collaboration form A gives CO1 3.33, CO2 2.67, CO3 3.33, skill 3.11; all "Neither" (3) gives 3 everywhere. Across every form, answering all 1, 2, 4 or 5 gives a skill mean within 0.5 of 3 (`tests/self-report.test.mjs`).
+
+### Retrospective items (end of programme)
+
+Each skill has one retrospective item per facet ("Looking back, at the start of the programme I would have rated myself as good at ..."), rated on the same agreement scale, positively keyed. They are a mitigation for response-shift bias (audit D-5; Howard, 1980).
+
+- Asked only in an end-of-programme sitting: a programme sitting at an even window (`isProgrammeEnd`, `src/skills/runner.js`). They come on a final screen after the form's items.
+- Stored as `retrospective: { <facet code>: mean of the facet's answered retrospective items, or null }` on the SelfReport record.
+- Never part of `score`, and never compared with the start-of-programme score in the student view. How "then" and "now" ratings are compared is for the validation plan (S15).
+
+### Response-quality indicators (coach view only)
+
+Computed over the form's items (not the retrospective items) and stored as `quality` on the SelfReport record. They describe a pattern of answers; they do not show that a student answered carelessly or dishonestly. **They are never shown to the student, never worded as an accusation, and never change a score.** They are for the coach and cohort view (S13).
+
+| Field | Rule |
+|---|---|
+| `items`, `answered`, `missing` | Items on the form; items with a valid latest response; the difference |
+| `straightLining` | At least 3 valid responses, all identical |
+| `medianItemMs` | Median time per item. Items answered on one screen share a `shownAt`; on each screen the latest responses are ordered by `rtMs`, and each item's time is the gap from the previous one (the first from the screen appearing). Null if no timed response |
+| `fastResponding` | `medianItemMs` under 1000 ms |
+| `longestRun` | Longest run of identical valid responses in the order shown (facet screens in order; a missing item breaks a run) |
+| `longRun` | `longestRun` at least 6. **Provisional**: chosen for 8- and 9-item forms before any data; to be reviewed against the pilot (`docs/VALIDATION-PLAN.md`) |
+
+### Not computed
+
+No within-person "split-half" or consistency statistic (audit C-2). Internal consistency (Cronbach's alpha, McDonald's omega) and item-total correlations are properties of a sample of respondents and belong in the cohort view and the pilot analysis, not in an individual's record.
+
+### Records from earlier versions
+
+Self-reports stored under scoringVersion 0.3.0 (schema version 2) were scored by the developer stub only. Every response is kept, so any record can be re-scored under 1.0.0-draft.
 
 ---
 
