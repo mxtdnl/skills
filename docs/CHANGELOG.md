@@ -80,3 +80,9 @@ To be written in Session 15.
 - appVersion 0.3.0 to 0.4.0.
 - `docs/ITEM-BANK.md`: pools, item fields, review, sources and licences, and the item table with sources. `docs/VALIDATION-PLAN.md`: provisional rules to be set from pilot data. `docs/ARCHITECTURE.md` updated.
 - Tests: `tests/self-report.test.mjs` (content rules, reverse keying, straight-lining with no penalty and the flag set, missing and invalid responses, timing, retrospective only at the end of the programme, schema). `tests/registry.test.mjs` and `tests/migrate.test.mjs` updated. `tests/e2e/hub.e2e.mjs`: the programme battery now covers all six registered skills and checks retrospective items at window 2; new test of a real self-report (labels, unanswered prompt, reload, Back, nothing about response quality shown).
+
+### Open decisions register (2026-11-27)
+
+- Added `docs/OPEN-DECISIONS.md`: every open decision for the owner or Hult (D-1 to D-11) and every outstanding piece of human review work (R-1 to R-6), gathered from the audit, the build plan, `docs/CONSTRUCTS.md`, `docs/CONSENT.md`, `docs/DATA-SCHEMA.md`, `docs/DESIGN.md`, `docs/ITEM-BANK.md` and `docs/VALIDATION-PLAN.md`, with resolved decisions to date.
+- `CLAUDE.md`: Workflow step 6 requires every session to maintain it; the report step cites its IDs; added to Files.
+- No change to code, scoring or data.
