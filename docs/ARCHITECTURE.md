@@ -27,11 +27,16 @@ src/skills/
   runner.js      runs one task in a sitting and stores the attempt
   _example/      developer stub skill proving the contract
   <skill>/       one directory per skill, from S6
+src/app/
+  main.js        application shell entry (loaded by index.html): store, registry, router, render
+  progress.js    pure rules: step and sitting state, windows, forms, programme batteries
+  consent.js     consent wording and its version
+  dom.js         createElement helpers, confirmation dialog, live announcements
+  transfer.js    export and import stubs, replaced in S12
+  views/         start (first run), hub, skill, run, results, settings
 content/
   _example/      example content for the stub
   <skill>/       item banks, from S6
-dev/
-  platform.html  developer harness (not student-facing), replaced by the hub in S5
 ```
 
 Design system (S4): `styles/` (tokens, base, components), `assets/` and `styleguide.html`; see `docs/DESIGN.md`. Planned: `src/report/` (S11, S12), `cohort.html` (S13).
@@ -46,9 +51,12 @@ Design system (S4): `styles/` (tokens, base, components), `assets/` and `stylegu
 | `#/skill/<skillId>` | `skill` | `skillId` |
 | `#/task/<skillId>/<taskId>` | `task` | `skillId`, `taskId` |
 | `#/results/<skillId>` | `results` | `skillId` |
-| `#/profile` | `profile` | |
+| `#/profile` | `profile` | (shows Settings) |
+| `#/start`, `#/start/<step>` | `start` | `step`: `consent`, `language`, `code` or `returning` (first run) |
+| `#/run/<sittingId>/<stepId>` | `run` | `sittingId` (`S-` record ID), `stepId` (`self-report` or a task ID) |
+| `#/settings` | `settings` | |
 
-IDs are slugs (`[a-z0-9_][a-z0-9_-]*`); anything else is `notFound`. `toHash(name, params)` builds a hash and refuses invalid IDs.
+IDs are slugs (`[a-z0-9_][a-z0-9_-]*`), except `sittingId`, which is a sitting record ID; anything else is `notFound`. `toHash(name, params)` builds a hash and refuses invalid IDs. The shell redirects the S3 route `#/task/<skillId>/<taskId>` to the skill page: steps run under `#/run/...`, which names the sitting, so a reload resumes the right one.
 
 ## Skill module contract
 
@@ -63,8 +71,10 @@ export default {
     { code: 'CT1', label: 'Logical reasoning' },
   ],
   selfReport: null | {
+    label: 'About you',              // optional; shown as the step name
     estMinutes: 3,
     loadContent: () => import('../../../content/critical/self-report.js'),
+    mount(el, ctx) { /* as for a task */ },
     score(selfReport, items) { return { score }; },
   },
   tasks: [
@@ -84,7 +94,13 @@ export default {
 
 The S3 prompt's contract is `{id, label, accentToken, facets, selfReport, tasks: [{id, type, estMinutes, mount(el, ctx), score(attempt, form)}]}`. S3 adds three task fields, all required: `label` (for the hub), `facets` (so coverage can be checked against `docs/CONSTRUCTS.md`) and `loadContent` (so the runner, not the task, chooses the item pool).
 
+S5 adds `selfReport.mount` (required) and `selfReport.label` (optional), and reserves the task ID `self-report` for the self-report step.
+
 `validateManifest()` checks every rule above that can be checked without running a task. `createRegistry()` also refuses two skills with the same `id` or the same `accentToken`.
+
+**Steps.** `stepsFor(skill, mode)` gives a skill's ordered steps: the self-report first, then the tasks in manifest order. Practice has no self-report (a self-report has no practice pool), so a practice sitting is the tasks only.
+
+**Skill catalogue.** `SKILL_CATALOGUE` in `src/skills/registry.js` lists the five skills in canonical order with their accent tokens and their facets from `docs/CONSTRUCTS.md` (draft). The hub shows a skill whose module is not yet registered as "in preparation" from this entry. When a skill module is added to `SKILL_MODULES`, its manifest replaces the entry in the hub; its `id`, `label`, `accentToken` and facets should match.
 
 ### `mount(el, ctx)`
 
@@ -99,8 +115,12 @@ Renders the task into `el` and returns an optional cleanup function. It builds D
 | `rng` | Seeded generator for this task in this sitting (`src/core/rng.js`). Use it for every random choice |
 | `now()` | Clock in epoch milliseconds. Use it for `shownAt` |
 | `createTimer(limitMs, options)` | A timer with the participant's accommodation multiplier already applied (`src/core/timing.js`). Pass `null` for untimed |
-| `record({ itemId, response, shownAt, answeredAt? })` | Record one raw response. `shownAt` and `answeredAt` are epoch ms; the runner stores `shownAt` as ISO and computes `rtMs` |
+| `record({ itemId, response, shownAt, answeredAt? })` | Record one raw response and autosave. `shownAt` and `answeredAt` are epoch ms; the runner stores `shownAt` as ISO and computes `rtMs`. Returns a Promise that resolves when saved |
 | `complete()` | The task is finished |
+| `kind` | `"task"` or `"selfReport"` (S5) |
+| `resume` | The responses already recorded, when resuming an in-progress record (S5). Start at the first item without a response; never re-record those items |
+| `rngFor(itemId)` | A generator for one item, the same on every mount (S5). Use it for per-item choices such as option order, so a resumed item looks the same |
+| `checkpoint()` | Save without a response, for example after pausing a timer (S5) |
 
 ### `score(attempt, form)`
 
@@ -123,18 +143,29 @@ Every item has a unique `id` and `status: "draft"` or `"reviewed"`. Other fields
 
 The runner calls `validateContent()` before every task and refuses to run on invalid content. Items are draft until reviewed by Hult staff.
 
-## How a task runs
+## How a step runs
 
-`runTask({ skill, task, sitting, store, el, multiplier })` in `src/skills/runner.js`:
+`runStep({ skill, step, sitting, store, el, existing, multiplier })` in `src/skills/runner.js` (S5; `runTask({ task, ... })` is kept as a wrapper):
 
-1. Loads the task's content and validates it.
+1. Loads the step's content and validates it.
 2. Chooses the items: the practice pool in practice mode, form A or B in assessment mode (`itemsFor`).
-3. Derives the task's seed from the sitting seed, skill ID and task ID.
-4. Mounts the task with its context and collects the responses it records.
-5. When the task calls `complete()`, unmounts it, stops its timer, calls `score(attempt, items)`, and saves the TaskAttempt through the store (which validates it).
+3. Derives the step's seed from the sitting seed, skill ID and step ID.
+4. Saves a new record with `status: "in-progress"`, or takes `existing` (an in-progress record of the same step) to resume.
+5. Mounts the step with its context. Every `record()` appends the response and saves the record; saves run one after another, in order. A timed step's timer state is saved with each response.
+6. When the step calls `complete()`, unmounts it, stops its timer, calls `score(record, items)`, and saves the record with `status: "complete"` through the store (which validates it).
 
-`cancel()` unmounts without saving. The developer harness (`dev/platform.html`) shows the whole path with the stub skill: hub, skill, task, results and profile routes, with records saved to and restored from `localStorage`.
+`cancel()` unmounts without completing: it pauses the timer, saves, and leaves the in-progress record for a later resume. `flush()` waits for pending saves.
 
-## Developer harness
+## Application shell
 
-`dev/platform.html` is for developers only. Serve the repository (`python3 -m http.server 8000`) and open `http://localhost:8000/dev/platform.html`. It creates a participant with the consent notice version `dev-harness`, lists the stub skill, runs its task in practice or assessment mode, and shows saved attempts and the full JSON export. It is replaced by the skill hub in S5.
+`index.html` loads `src/app/main.js`. Every render reloads the records from the store, so the page always shows what is saved and a reload restores the same screen. Pure rules live in `src/app/progress.js` and are unit-tested; views build DOM with `createElement` and `textContent` only.
+
+- **First run** (`#/start`): welcome (purpose, what is stored, prototype notice) → consent (a, required; b, optional; wording in `src/app/consent.js`, recorded in `docs/CONSENT.md`) → optional language question → your code. The participant record is created at the end of the language step. A returning student can enter an existing code instead of getting a new one.
+- **Hub** (`#/hub`): one tile per skill in `SKILL_CATALOGUE`, with facets, estimated minutes (from the manifest's steps) and a status per mode; last activity; the programme sitting entry. While a programme battery is in progress, the hub shows only the battery.
+- **Skill page** (`#/skill/<id>`): Practice (unlimited, feedback, never counted) and Assessment sitting (one per skill in the "self" window; no feedback until finished), each with its ordered steps. Assessment steps are taken in order; practice steps in any order.
+- **Runner** (`#/run/<sittingId>/<stepId>`): runs one step, resuming at the next unanswered item. "Save and exit" and in-page links ask for confirmation while a step runs; the browser's Back button leaves without asking, which loses nothing because every response is already saved.
+- **Results** (`#/results/<id>`): available once an assessment sitting is complete; lists what was recorded. Full results views come in S11. No claim of change between sittings is made (audit D-3).
+- **Settings** (`#/settings`): code, extended time, reduced motion, programme-evaluation consent, export and import (stubs until S12), reset all data (type `DELETE`).
+- Rules for windows, forms and programme sittings: `docs/DATA-SCHEMA.md`, Sitting.
+
+**Example skill.** Open `index.html?example` to add the developer stub skill to the hub (and to programme batteries). Without `?example`, the hub lists only production skills, of which there are none before S6. The end-to-end tests use it.

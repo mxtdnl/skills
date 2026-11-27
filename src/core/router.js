@@ -6,8 +6,12 @@
 //   #/task/<skillId>/<taskId>   run a task
 //   #/results/<skillId>         one skill's results
 //   #/profile                   participant code, data export and import
+//   #/start                     first-run flow (also #/start/<step>)
+//   #/run/<sittingId>/<stepId>  run one step (self-report or task) of a sitting; resumable
+//   #/settings                  extended time, reduced motion, data reset, export and import
 
 const SEG = '[a-z0-9_][a-z0-9_-]*';
+const SITTING = 'S-[0-9A-HJKMNP-TV-Z]{16}';
 
 const ROUTES = [
   { name: 'hub', pattern: new RegExp('^/hub$'), keys: [] },
@@ -15,6 +19,9 @@ const ROUTES = [
   { name: 'task', pattern: new RegExp(`^/task/(${SEG})/(${SEG})$`), keys: ['skillId', 'taskId'] },
   { name: 'results', pattern: new RegExp(`^/results/(${SEG})$`), keys: ['skillId'] },
   { name: 'profile', pattern: new RegExp('^/profile$'), keys: [] },
+  { name: 'start', pattern: new RegExp(`^/start(?:/(${SEG}))?$`), keys: ['step'] },
+  { name: 'run', pattern: new RegExp(`^/run/(${SITTING})/(${SEG})$`), keys: ['sittingId', 'stepId'] },
+  { name: 'settings', pattern: new RegExp('^/settings$'), keys: [] },
 ];
 
 export const ROUTE_NAMES = Object.freeze(ROUTES.map((r) => r.name));
@@ -34,7 +41,7 @@ export function parseHash(hash) {
   path = path.replace(/\/+$/, '');
   for (const r of ROUTES) {
     const m = r.pattern.exec(path);
-    if (m) return { name: r.name, params: Object.fromEntries(r.keys.map((k, i) => [k, m[i + 1]])) };
+    if (m) return { name: r.name, params: Object.fromEntries(r.keys.map((k, i) => [k, m[i + 1]]).filter(([, v]) => v !== undefined)) };
   }
   return { name: 'notFound', params: { hash: String(hash) } };
 }
@@ -46,9 +53,9 @@ export function parseHash(hash) {
  * @returns {string}
  */
 export function toHash(name, params = {}) {
-  const need = (k) => {
+  const need = (k, seg = SEG) => {
     const v = params[k];
-    if (typeof v !== 'string' || !new RegExp(`^${SEG}$`).test(v)) throw new RangeError(`toHash: invalid ${k} "${v}"`);
+    if (typeof v !== 'string' || !new RegExp(`^${seg}$`).test(v)) throw new RangeError(`toHash: invalid ${k} "${v}"`);
     return v;
   };
   switch (name) {
@@ -57,6 +64,9 @@ export function toHash(name, params = {}) {
     case 'task': return `#/task/${need('skillId')}/${need('taskId')}`;
     case 'results': return `#/results/${need('skillId')}`;
     case 'profile': return '#/profile';
+    case 'start': return params.step === undefined ? '#/start' : `#/start/${need('step')}`;
+    case 'run': return `#/run/${need('sittingId', SITTING)}/${need('stepId')}`;
+    case 'settings': return '#/settings';
     default: throw new RangeError(`toHash: unknown route "${name}"`);
   }
 }

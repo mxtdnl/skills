@@ -1,7 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createRegistry, loadSkills, validateManifest, validateContent, EXAMPLE_MODULES, SKILL_MODULES } from '../src/skills/registry.js';
-import { runTask, itemsFor, assignForm } from '../src/skills/runner.js';
+import { createRegistry, loadSkills, validateManifest, validateContent, stepsFor, EXAMPLE_MODULES, SKILL_MODULES, SKILL_CATALOGUE, SELF_REPORT_STEP } from '../src/skills/registry.js';
+import { runTask, runStep, itemsFor, assignForm, firstForm } from '../src/skills/runner.js';
+import { seedFromString } from '../src/core/rng.js';
+import { SCORING_VERSION } from '../src/core/version.js';
+import * as exampleSelfReport from '../content/_example/self-report.js';
 import { MemoryAdapter } from '../src/core/store.js';
 import { validate } from '../src/core/schema.js';
 import example from '../src/skills/_example/index.js';
@@ -34,6 +37,21 @@ function fakeSkill(over = {}) {
 test('the example manifest satisfies the contract', () => {
   assert.deepEqual(validateManifest(example), []);
   assert.deepEqual(validateContent(exampleContent), []);
+  assert.deepEqual(validateContent(exampleSelfReport), []);
+});
+
+test('the skill catalogue lists the five skills in canonical order with unique accents', () => {
+  assert.deepEqual(SKILL_CATALOGUE.map((s) => s.id), ['collaboration', 'curiosity', 'critical', 'creativity', 'communication']);
+  for (const c of SKILL_CATALOGUE) {
+    assert.equal(c.accentToken, `--skill-${c.id}`);
+    assert.ok(c.facets.length >= 2 && c.facets.length <= 4, c.id);
+  }
+});
+
+test('stepsFor puts the self-report first in assessment and leaves it out of practice', () => {
+  assert.deepEqual(stepsFor(example, 'assessment').map((s) => [s.id, s.kind]), [[SELF_REPORT_STEP, 'selfReport'], ['pick', 'task']]);
+  assert.deepEqual(stepsFor(example, 'practice').map((s) => s.id), ['pick']);
+  assert.ok(validateManifest(fakeSkill({ tasks: [{ ...fakeSkill().tasks[0], id: SELF_REPORT_STEP }] })).some((e) => e.includes('reserved')));
 });
 
 test('loadSkills imports the example module', async () => {
@@ -75,18 +93,31 @@ test('validateContent enforces ids, status and separate pools', () => {
 });
 
 test('itemsFor keeps practice and assessment pools apart', () => {
-  assert.deepEqual(itemsFor(exampleContent, 'practice', 'practice').map((i) => i.id), ['EX-PICK-P01']);
+  assert.deepEqual(itemsFor(exampleContent, 'practice', 'practice').map((i) => i.id), ['EX-PICK-P01', 'EX-PICK-P02']);
   assert.deepEqual(itemsFor(exampleContent, 'assessment', 'A').map((i) => i.id), ['EX-PICK-A01', 'EX-PICK-A02']);
   assert.deepEqual(itemsFor(exampleContent, 'assessment', 'B').map((i) => i.id), ['EX-PICK-B01', 'EX-PICK-B02']);
   assert.throws(() => itemsFor(exampleContent, 'practice', 'A'), RangeError);
   assert.throws(() => itemsFor(exampleContent, 'assessment', 'practice'), RangeError);
 });
 
-test('assignForm counterbalances: second sitting gets the other form', () => {
-  assert.equal(assignForm({ seed: 2 }), 'A');
-  assert.equal(assignForm({ seed: 3 }), 'B');
-  assert.equal(assignForm({ seed: 2, previousFormId: 'A' }), 'B');
-  assert.equal(assignForm({ seed: 3, previousFormId: 'B' }), 'A');
+test('firstForm uses the parity of a hash of the participant ID: even A first, odd B first', () => {
+  const ids = ['P-0000-00000', 'P-7K3M-Q9TX4', 'P-1111-11111', 'P-ABCD-EFGH0'];
+  for (const id of ids) assert.equal(firstForm(id), seedFromString(id) % 2 === 0 ? 'A' : 'B', id);
+  // Both orders occur, so the parity really splits participants.
+  const forms = new Set(Array.from({ length: 40 }, (_, i) => firstForm(`P-0000-${String(i).padStart(5, '0')}`)));
+  assert.deepEqual([...forms].sort(), ['A', 'B']);
+});
+
+test('assignForm counterbalances by programme window and alternates self-directed sittings', () => {
+  const even = ['P-0000-00000', 'P-0000-00001', 'P-0000-00002'].find((id) => firstForm(id) === 'A');
+  const odd = Array.from({ length: 40 }, (_, i) => `P-0000-${String(i).padStart(5, '0')}`).find((id) => firstForm(id) === 'B');
+  assert.equal(assignForm({ participantId: even, programmeWindow: 1 }), 'A');
+  assert.equal(assignForm({ participantId: even, programmeWindow: 2 }), 'B');
+  assert.equal(assignForm({ participantId: odd, programmeWindow: 1 }), 'B');
+  assert.equal(assignForm({ participantId: odd, programmeWindow: 2 }), 'A');
+  assert.equal(assignForm({ participantId: even }), 'A');
+  assert.equal(assignForm({ participantId: even, previousFormId: 'A' }), 'B');
+  assert.equal(assignForm({ participantId: odd, previousFormId: 'B' }), 'A');
 });
 
 test('runTask scores and saves a valid attempt with timings and versions', async () => {
@@ -97,7 +128,9 @@ test('runTask scores and saves a valid attempt with timings and versions', async
   assert.deepEqual(validate('taskAttempt', attempt).errors, []);
   assert.deepEqual(attempt.itemResponses.map((r) => [r.itemId, r.rtMs]), [['FB1', 500]]);
   assert.equal(attempt.rawScore, 1);
-  assert.equal(attempt.scoringVersion, '0.2.0');
+  assert.equal(attempt.scoringVersion, SCORING_VERSION);
+  assert.equal(attempt.status, 'complete');
+  assert.equal(attempt.completedAt, new Date(t).toISOString());
   assert.deepEqual(attempt.timing, { limitMs: 60_000, multiplier: 1.5, extendedMs: 0, pausedMs: 0, expired: false });
   assert.deepEqual(await store.load('taskAttempt', attempt.id), attempt);
 });
@@ -108,14 +141,125 @@ test('runTask refuses invalid content', async () => {
   await assert.rejects(runTask({ skill, task: skill.tasks[0], sitting: fx.sitting(), store: new MemoryAdapter(), el: null }).done, /Content for fake\/t1 is invalid/);
 });
 
-test('runTask cancel saves nothing', async () => {
+test('runTask cancelled before it loads saves nothing', async () => {
   const store = new MemoryAdapter();
   const skill = fakeSkill();
   skill.tasks[0].mount = () => () => {};
   const run = runTask({ skill, task: skill.tasks[0], sitting: fx.sitting(), store, el: null });
-  run.cancel();
+  await run.cancel();
   assert.equal(await run.done, null);
   assert.deepEqual(await store.list('taskAttempt'), []);
+});
+
+// A step that records one response per call to answer(), so a test can stop it part-way.
+function stepwiseSkill() {
+  const skill = fakeSkill();
+  let ctxRef = null;
+  skill.tasks[0].loadContent = async () => ({ formA: [{ id: 'FA1', status: 'draft' }, { id: 'FA2', status: 'draft' }, { id: 'FA3', status: 'draft' }], formB: [], practice: [] });
+  skill.tasks[0].mount = (el, ctx) => { ctxRef = ctx; ctxRef.mountedWith = ctx.resume.map((r) => r.itemId); return () => {}; };
+  const answer = async () => {
+    const answered = new Set(ctxRef.resume.map((r) => r.itemId));
+    const done = ctxRef.answered || (ctxRef.answered = [...answered]);
+    const item = ctxRef.items.find((it) => !done.includes(it.id));
+    done.push(item.id);
+    await ctxRef.record({ itemId: item.id, response: item.id.toLowerCase(), shownAt: ctxRef.now() });
+    if (done.length === ctxRef.items.length) ctxRef.complete();
+  };
+  return { skill, step: { kind: 'task', id: 't1', def: skill.tasks[0] }, answer, ctx: () => ctxRef };
+}
+
+const tick = () => new Promise((r) => setTimeout(r, 0));
+
+test('runStep autosaves after every response and resumes at the next item', async () => {
+  const store = new MemoryAdapter();
+  const sitting = fx.sitting();
+  const a = stepwiseSkill();
+  const first = runStep({ skill: a.skill, step: a.step, sitting, store, el: null });
+  await tick();
+  const [started] = await store.list('taskAttempt');
+  assert.equal(started.status, 'in-progress', 'saved as soon as the step starts');
+  assert.deepEqual(started.itemResponses, []);
+  await a.answer();
+  let [saved] = await store.list('taskAttempt');
+  assert.deepEqual(saved.itemResponses.map((r) => r.itemId), ['FA1']);
+  assert.deepEqual(validate('taskAttempt', saved).errors, []);
+  await first.cancel();
+  assert.equal(await first.done, null);
+
+  // Reload: resume from the stored in-progress record.
+  const b = stepwiseSkill();
+  [saved] = await store.list('taskAttempt');
+  const second = runStep({ skill: b.skill, step: b.step, sitting, store, el: null, existing: saved });
+  await tick();
+  assert.deepEqual(b.ctx().mountedWith, ['FA1']);
+  await b.answer();
+  await b.answer();
+  const done = await second.done;
+  assert.equal(done.id, saved.id, 'the same record is completed');
+  assert.equal(done.status, 'complete');
+  assert.deepEqual(done.itemResponses.map((r) => r.itemId), ['FA1', 'FA2', 'FA3']);
+  assert.equal((await store.list('taskAttempt')).length, 1);
+});
+
+test('rngFor gives the same order for an item on every mount', async () => {
+  const seen = [];
+  for (let i = 0; i < 2; i++) {
+    const a = stepwiseSkill();
+    runStep({ skill: a.skill, step: a.step, sitting: fx.sitting(), store: new MemoryAdapter(), el: null });
+    await tick();
+    seen.push(a.ctx().rngFor('FA2').shuffle([0, 1, 2, 3, 4, 5]));
+  }
+  assert.deepEqual(seen[0], seen[1]);
+});
+
+test('runStep refuses an existing record that is not an in-progress record of this sitting', () => {
+  const a = stepwiseSkill();
+  assert.throws(() => runStep({ skill: a.skill, step: a.step, sitting: fx.sitting(), store: new MemoryAdapter(), el: null, existing: fx.attempt() }), RangeError);
+});
+
+test('runStep saves a timed step\'s timer while in progress and restores it on resume', async () => {
+  const store = new MemoryAdapter();
+  let t = 1_700_000_000_000;
+  const now = () => t;
+  const a = stepwiseSkill();
+  const inner = a.skill.tasks[0].mount;
+  a.skill.tasks[0].mount = (el, ctx) => { const r = inner(el, ctx); ctx.createTimer(60_000).start(); return r; };
+  const run = runStep({ skill: a.skill, step: a.step, sitting: fx.sitting(), store, el: null, now, multiplier: 2 });
+  await tick();
+  t += 10_000;
+  await a.answer();
+  t += 5_000;
+  await run.cancel();
+  const [saved] = await store.list('taskAttempt');
+  assert.equal(saved.timerSnapshot.state, 'paused', 'leaving pauses the timer');
+  assert.equal(saved.timerSnapshot.remainingMs, 120_000 - 15_000);
+
+  const b = stepwiseSkill();
+  let timer = null;
+  const innerB = b.skill.tasks[0].mount;
+  b.skill.tasks[0].mount = (el, ctx) => { const r = innerB(el, ctx); timer = ctx.createTimer(60_000); timer.resume(); return r; };
+  const resumed = runStep({ skill: b.skill, step: b.step, sitting: fx.sitting(), store, el: null, now, existing: saved });
+  await tick();
+  assert.equal(timer.remainingMs(), 105_000);
+  await b.answer();
+  await b.answer();
+  const done = await resumed.done;
+  assert.equal(done.timerSnapshot, undefined);
+  assert.deepEqual(done.timing, { limitMs: 60_000, multiplier: 2, extendedMs: 0, pausedMs: 0, expired: false });
+});
+
+test('runStep runs a self-report and stores a SelfReport record', async () => {
+  const store = new MemoryAdapter();
+  const step = stepsFor(example, 'assessment')[0];
+  const fakeSr = {
+    ...example.selfReport,
+    mount: (el, ctx) => { for (const it of ctx.items) ctx.record({ itemId: it.id, response: 4, shownAt: ctx.now() }); ctx.complete(); },
+  };
+  const r = await runStep({ skill: example, step: { ...step, def: fakeSr }, sitting: fx.sitting({ formId: 'B' }), store, el: null }).done;
+  assert.equal(r.type, 'selfReport');
+  assert.deepEqual(r.responses.map((x) => x.itemId), ['EX-SR-B01', 'EX-SR-B02']);
+  assert.deepEqual(r.score, { EX1: 4 });
+  assert.deepEqual(validate('selfReport', r).errors, []);
 });
 
 test('example score() counts correct choices against the form key', () => {
@@ -125,4 +269,12 @@ test('example score() counts correct choices against the form key', () => {
   assert.deepEqual(task.score({ itemResponses: [r('EX-PICK-A01', 1), r('EX-PICK-A02', 0)] }, form), { rawScore: 1, score: { EX1: 0.5 } });
   assert.deepEqual(task.score({ itemResponses: [r('EX-PICK-B01', 2)] }, form), { rawScore: 0, score: { EX1: 0 } }, 'items from another form never score');
   assert.deepEqual(task.score({ itemResponses: [] }, []), { rawScore: 0, score: { EX1: null } });
+});
+
+test('example self-report score() is the mean rating on the form, ignoring other items and bad values', () => {
+  const r = (itemId, response) => ({ itemId, response });
+  const form = exampleSelfReport.formA;
+  assert.deepEqual(example.selfReport.score({ responses: [r('EX-SR-A01', 5), r('EX-SR-A02', 2)] }, form), { score: { EX1: 3.5 } });
+  assert.deepEqual(example.selfReport.score({ responses: [r('EX-SR-B01', 5), r('EX-SR-A01', 9), r('EX-SR-A02', 4)] }, form), { score: { EX1: 4 } });
+  assert.deepEqual(example.selfReport.score({ responses: [] }, form), { score: { EX1: null } });
 });

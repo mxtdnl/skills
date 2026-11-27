@@ -8,6 +8,7 @@
 |---|---|---|
 | 0.1.0 | Legacy prototype, `legacy/skills-assessment-hult.html` | Legacy; known defects, see `audit/AUDIT-REPORT.md` |
 | 0.2.0 | Rebuilt platform skeleton (S3). Only the developer stub task is scored | No skill measures; nothing to compare |
+| 0.3.0 | Application shell (S5). Adds the developer stub's self-report score | No skill measures; nothing to compare |
 
 ## Release checklist for scoringVersion 1.0.0
 
@@ -49,3 +50,19 @@ To be written in Session 15.
 - Extended `tests/lint.mjs` with a reference-palette check and a contrast check over a `CONTRAST_PAIRS` table (70 pairs).
 - Communication text uses `--accent-7-ink`, because `--accent-3` fails AA as body text. Confirmed by the owner on 2026-11-27 and recorded in `docs/DESIGN.md`, the 5C mapping table in `CLAUDE.md` and the decisions log in `audit/BUILD-PLAN.md`.
 - No change to scoring, data or `scoringVersion`.
+
+### S5. Skill hub, flow, consent and modes (2026-11-27)
+
+- Replaced the temporary `index.html` with the application shell (`src/app/`): first-run flow (welcome, consent, optional language question, your code; a returning student can enter an existing code), skill hub (`#/hub`), skill pages with Practice and Assessment modes (`#/skill/<id>`), the step runner (`#/run/<sittingId>/<stepId>`), results placeholder (`#/results/<id>`) and settings (`#/settings`, also `#/profile`).
+- Consent wording written and versioned (`src/app/consent.js`, `consent-2026-11-27`), recorded in `docs/CONSENT.md` and stored on every participant record.
+- Autosave after every item response: the runner (`runStep`, `src/skills/runner.js`) saves an in-progress record when a step starts and after every response, and resumes it at the next unanswered item. Timer state is saved with it and paused on exit.
+- Form assignment: first form by the parity of an FNV-1a hash of the participant ID (even A, odd B). Programme sittings take the form from the window digit of the sitting code; self-directed sittings alternate from the previous assessment sitting of the skill.
+- Programme sittings: a coach's sitting code (for example `SEP26-1`) starts a full battery, one assessment sitting per available skill in the fixed canonical order, recorded in `sitting.programme`.
+- Settings: extended time (x1.5, x2), reduced motion (`html[data-motion="reduce"]`, `styles/base.css`), programme-evaluation consent, export and import stubs (`src/app/transfer.js`, wired for S12), and reset all data with a typed confirmation (`store.clear()`).
+- Skill module contract: `selfReport` now needs `mount(el, ctx)` (and may give a `label`); the task ID `self-report` is reserved; the step context gains `resume`, `rngFor(itemId)`, `checkpoint()` and `kind`. `stepsFor(skill, mode)` and `SKILL_CATALOGUE` added to `src/skills/registry.js`. The stub skill gains a self-report (`src/skills/_example/rate.js`, `content/_example/self-report.js`), practice feedback and a second practice item.
+- Router: routes `start`, `run` and `settings` added. `#/task/...` now redirects to the skill page.
+- **Schema version 1 to 2** (storage prefix `skills5c:v2:`), with a migration: `consent.toolUse`; `participant.settings`; `sitting.skillId`, `windowId` and `programme`; `status`, `startedAt`, `updatedAt`, `completedAt` and `timerSnapshot` on task attempts and self-reports. `docs/DATA-SCHEMA.md` and `docs/data-schema.json` updated.
+- **scoringVersion 0.2.0 to 0.3.0**: the stub self-report score (`docs/SCORING.md`). No skill measure. `appVersion` 0.3.0.
+- Removed the S3 developer harness (`dev/`), replaced by the hub (`index.html?example` shows the stub skill).
+- Added `styles/components.css` shell components (navigation, form fields, checkboxes, dialog, step list, battery, run header) and five contrast pairs to `tests/lint.mjs`.
+- Tests: `tests/progress.test.mjs`; runner autosave, resume and timer tests; migration test with a real version 1 bundle; Playwright end-to-end tests `tests/e2e/hub.e2e.mjs` (`npm run e2e`), including a keyboard-only run with reloads mid-step.

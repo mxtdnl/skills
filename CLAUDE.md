@@ -8,7 +8,7 @@ A browser-based tool for Hult's five core skills: Collaboration, Curiosity, Crit
 
 Programme evaluation sets the validity bar for every measure (see `audit/AUDIT-REPORT.md` section 0.2). The tool is static and client-side: no build step, no server, no network calls. It is served over HTTP (GitHub Pages, or a local server for previews).
 
-**Status.** The only working version is the legacy prototype in `legacy/`. An audit (`audit/AUDIT-REPORT.md`) found it unfit for programme evaluation. The rebuild follows `audit/BUILD-PLAN.md`, session by session (S0 to S15). The legacy prototype is kept unchanged for reference and characterisation tests; it is not edited unless a session prompt says so.
+**Status.** The only version with skill measures is the legacy prototype in `legacy/`. An audit (`audit/AUDIT-REPORT.md`) found it unfit for programme evaluation. The rebuild follows `audit/BUILD-PLAN.md`, session by session (S0 to S15). Since S5, `index.html` is the rebuilt application shell (first run, consent, hub, modes, programme sittings, settings); it has no skill measures until S6 to S10 (`index.html?example` adds the developer stub skill). The legacy prototype is kept unchanged for reference and characterisation tests; it is not edited unless a session prompt says so.
 
 Read this file first in every session. Then read the session prompt in `audit/BUILD-PLAN.md`, and the documents it names. Construct definitions are in `docs/CONSTRUCTS.md`.
 
@@ -31,7 +31,7 @@ These are copied verbatim from `audit/BUILD-PLAN.md` and apply to every session.
 ## Repository structure
 
 ```
-index.html                  Temporary landing page linking to the legacy prototype (replaced by the skill hub in S5)
+index.html                  The application shell (S5): loads src/app/main.js
 CLAUDE.md                   This file
 README.md                   What the tool is, status, how to run and test it
 LICENSE                     PLACEHOLDER: licence to be chosen by the owner
@@ -49,10 +49,10 @@ assets/                     Hult logo (PNG extracted from the prototype) and fav
 styleguide.html             Living specimen of every token and component, for visual review
 src/
   core/                     Platform modules: version, rng, ids, schema, migrate, store, timing, router
-  skills/                   Skill registry, task runner, one directory per skill (_example is a developer stub)
+  skills/                   Skill registry, step runner, one directory per skill (_example is a developer stub)
+  app/                      Application shell: main, progress rules, consent wording, DOM helpers, views
 content/                    Item banks, content/<skill>/<task>.js exporting {formA, formB, practice}
-dev/                        Developer harness for the platform (not student-facing)
-tests/                      Node test and lint scripts (see Testing)
+tests/                      Node test and lint scripts, and Playwright end-to-end tests in tests/e2e/ (see Testing)
 ```
 
 Planned by later sessions (not yet present): `src/report/` (S11, S12), `cohort.html` (S13), `analysis/` (S15). The target layout is in `audit/AUDIT-REPORT.md` section 4.
@@ -62,8 +62,8 @@ Planned by later sessions (not yet present): `src/report/` (S11, S12), `cohort.h
 - `CLAUDE.md` — Repository rules, technical conventions, visual system, workflow and testing
 - `README.md` — What the tool is, its status, how to run it locally and how to run the tests
 - `LICENSE` — `PLACEHOLDER: licence to be chosen by the owner`
-- `package.json` — `"type": "module"`; version 0.2.0 (= `APP_VERSION`); scripts `test`, `lint` and `schema`; no dependencies
-- `index.html` — Temporary landing page with a legacy-prototype notice and a link to `legacy/skills-assessment-hult.html`. Replaced by the skill hub in S5
+- `package.json` — `"type": "module"`; version 0.3.0 (= `APP_VERSION`); scripts `test`, `lint`, `schema` and `e2e`; no dependencies
+- `index.html` — The application shell page: header lockup and navigation, storage notice area, `main#app`, footer with version and a link to the legacy prototype, live region. Loads `src/app/main.js`
 - `legacy/skills-assessment-hult.html` — The original single-file prototype (scoringVersion 0.1.0), moved here unchanged from the repository root in S0. Line references in the audit and in `docs/SCORING.md` refer to this file. Exempt from lint through the allowlist in `tests/lint.mjs`
 - `audit/AUDIT-REPORT.md` — Audit of the prototype against the brief: parameters, findings with severity and line references, premise challenges, target architecture, recommended measures, validation roadmap
 - `audit/BUILD-PLAN.md` — The rebuild plan: decisions log, global rules, sessions S0 to S15, dependency map, human inputs required
@@ -77,35 +77,49 @@ Planned by later sessions (not yet present): `src/report/` (S11, S12), `cohort.h
 - `docs/REVIEW-CHECKLIST.md` — Checklist Hult reviewers use to approve each skill in `docs/CONSTRUCTS.md`
 - `docs/SCORING.md` — Scoring specification: legacy formulas (scoringVersion 0.1.0) and the platform skeleton with the stub task (0.2.0); new measures add sections as they are built
 - `docs/ITEM-BANK.md` — Item bank conventions (set in S3) and the item table (empty until S6)
-- `docs/ARCHITECTURE.md` — Module layout, routes, skill module contract, content convention, how a task runs, developer harness
-- `docs/DATA-SCHEMA.md` — Data model, identifiers, storage, migrations and export bundle (S3); student-facing export and import added in S12
+- `docs/ARCHITECTURE.md` — Module layout, routes, skill module contract, content convention, how a step runs (autosave and resume), application shell
+- `docs/DATA-SCHEMA.md` — Data model, identifiers, keeping the code, windows and programme sittings, form assignment, autosave, storage, migrations and export bundle; student-facing export and import added in S12
+- `docs/CONSENT.md` — Every version of the consent wording, word for word, and the commitments it makes
 - `docs/data-schema.json` — The data model as JSON Schema, generated from `src/core/schema.js` by `npm run schema`; never edited by hand
 - `docs/VALIDATION-PLAN.md` — Pilot protocol, analyses and change thresholds (written in S15)
 - `docs/DESIGN.md` — Pointer to the Visual style section of this file
 - `docs/CHANGELOG.md` — Changes by session, including every `scoringVersion` bump
 - `styles/tokens.css` — Design tokens: reference palette copied exactly, ink tones, feedback colours, skill tokens (`--skill-<id>`, `-ink`, `-on`, `-tint`), spacing, motion, focus
-- `styles/base.css` — Reset, system font stack, type scale, focus-visible outline, utilities, reduced motion, print base
-- `styles/components.css` — Accent context (`data-skill`, `data-accent`), eyebrow, lede, pip, tag, colour bars, brand lockup, buttons, cards, Likert radio group, choice cards, timer ring, progress dots, feedback, notices, skill tiles, results bar with uncertainty band, banners, decorative geometry
+- `styles/base.css` — Reset, system font stack, type scale, focus-visible outline, utilities, reduced motion (system setting and `html[data-motion="reduce"]` from Settings), print base
+- `styles/components.css` — Accent context (`data-skill`, `data-accent`), eyebrow, lede, pip, tag, colour bars, brand lockup, buttons, cards, Likert radio group, choice cards, timer ring, progress dots, feedback, notices, skill tiles, results bar with uncertainty band, banners, decorative geometry; application shell components (S5): skip link, navigation, form fields, checkboxes, danger and on-fill buttons, code display, facet list, battery list, mode cards, step list, run header, dialog
 - `styleguide.html` — Living specimen page of every token and component in every state, for visual review; hover and focus specimens are derived from the real rules at load time
 - `assets/hult-logo.png` — Hult logo, one copy extracted unchanged from the prototype's base64 PNG (640x737, transparent padding cropped in CSS). Replace with an official SVG when supplied
 - `assets/favicon.svg`, `assets/favicon.png` — Favicon (geometric, palette colours), SVG with a 32px PNG fallback
-- `src/core/version.js` — `SCHEMA_VERSION`, `APP_VERSION`, `SCORING_VERSION`
+- `src/core/version.js` — `SCHEMA_VERSION` (2), `APP_VERSION` (0.3.0), `SCORING_VERSION` (0.3.0)
 - `src/core/rng.js` — Seeded generator (mulberry32), `seedFromString`, `randomSeed`, unbiased `int(n)` and Fisher-Yates `shuffle`
 - `src/core/ids.js` — Pseudonymous participant codes (`P-XXXX-XXXXC`, Crockford base 32 with a check character) and record IDs (`S-`, `A-`, `R-`)
 - `src/core/schema.js` — Data model as JSDoc types and field definitions; `validate()`, `assertValid()`, `toJsonSchema()`
-- `src/core/migrate.js` — Migration chain (empty at schema version 1) and `migrate(bundle)`
-- `src/core/store.js` — Storage adapter interface; `LocalStorageAdapter` (prefix `skills5c:v1:`, try/catch, memory fallback with notice), `MemoryAdapter`, `migrateStoredNamespaces`, `mountStorageNotice`
+- `src/core/migrate.js` — Migration chain (1 to 2, S5) and `migrate(bundle)`
+- `src/core/store.js` — Storage adapter interface (including `clear()`); `LocalStorageAdapter` (prefix `skills5c:v2:`, try/catch, memory fallback with notice), `MemoryAdapter`, `migrateStoredNamespaces`, `mountStorageNotice`
 - `src/core/timing.js` — End-timestamp timers with pause, extend, accommodation multiplier, untimed mode, snapshot and restore; `startTicker`, `formatMs`
-- `src/core/router.js` — Hash routes `#/hub`, `#/skill/<id>`, `#/task/<skill>/<task>`, `#/results/<skill>`, `#/profile`
-- `src/skills/registry.js` — `SKILL_MODULES` (empty until S6), `EXAMPLE_MODULES`, `validateManifest`, `validateContent`, `createRegistry`, `loadSkills`
-- `src/skills/runner.js` — `runTask` (loads content, mounts, scores, saves the attempt), `itemsFor`, `assignForm`
+- `src/core/router.js` — Hash routes `#/hub`, `#/skill/<id>`, `#/task/<skill>/<task>` (redirected), `#/results/<skill>`, `#/profile`, `#/start[/<step>]`, `#/run/<sittingId>/<stepId>`, `#/settings`
+- `src/skills/registry.js` — `SKILL_MODULES` (empty until S6), `EXAMPLE_MODULES`, `SKILL_CATALOGUE` (the five skills, accents and draft facets), `SELF_REPORT_STEP`, `validateManifest`, `validateContent`, `createRegistry`, `loadSkills`, `stepsFor`
+- `src/skills/runner.js` — `runStep` (loads content, mounts, autosaves every response, resumes, scores, saves), `runTask`, `itemsFor`, `firstForm`, `otherForm`, `assignForm`
 - `src/skills/_example/index.js` — Developer stub skill manifest (accent `--accent-5`, not a skill hue)
-- `src/skills/_example/pick.js` — The stub's one task: `mount` and `score`
-- `content/_example/pick.js` — Example items for the stub (draft; not part of the item bank)
-- `dev/platform.html` — Developer harness page, served over HTTP; replaced by the hub in S5
-- `dev/platform.js` — Harness script: participant, sittings, routes, runs the stub task, shows saved attempts and the export
+- `src/skills/_example/pick.js` — The stub's one task: `mount` (resumable; practice feedback) and `score`
+- `src/skills/_example/rate.js` — The stub's self-report: `mount` and `score` (mean rating)
+- `content/_example/pick.js` — Example items for the stub task (draft; not part of the item bank)
+- `content/_example/self-report.js` — Example statements for the stub self-report (draft; not part of the item bank)
+- `src/app/main.js` — Shell entry: store, registry (plus the stub with `?example`), router, render loop, focus management, leave-step confirmation, skip link
+- `src/app/progress.js` — Pure rules: data loading, step and sitting state, windows, self-directed and programme sittings, sitting codes, last activity
+- `src/app/consent.js` — Consent wording, `CONSENT_VERSION`, language question
+- `src/app/dom.js` — `h()` element builder, accent attributes, decorative shapes, dates, status tags, `confirmDialog`, `announce`
+- `src/app/transfer.js` — Export and import stubs, replaced in S12
+- `src/app/views/start.js` — First run: welcome, returning code, consent, language, your code
+- `src/app/views/hub.js` — Skill hub, programme sitting entry, full battery
+- `src/app/views/skill.js` — Skill page: Practice and Assessment modes with their steps
+- `src/app/views/run.js` — Step runner with save and exit, progress dots and completion panel
+- `src/app/views/results.js` — Results placeholder until S11
+- `src/app/views/settings.js` — Settings: code, extended time, reduced motion, consent (b), export and import, reset
 - `tests/fixtures.mjs` — Valid example records shared by the tests
 - `tests/rng.test.mjs`, `tests/ids.test.mjs`, `tests/schema.test.mjs`, `tests/store.test.mjs`, `tests/migrate.test.mjs`, `tests/timing.test.mjs`, `tests/router.test.mjs`, `tests/registry.test.mjs` — Unit tests for the platform core, registry, runner and stub skill
+- `tests/progress.test.mjs` — Unit tests for the shell rules in `src/app/progress.js`
+- `tests/e2e/hub.e2e.mjs` — Playwright end-to-end tests of the shell (`npm run e2e`), including a keyboard-only run with reloads mid-step
 - `tests/write-data-schema.mjs` — Writes `docs/data-schema.json` (`npm run schema`)
 - `tests/legacy-scoring.test.mjs` — Characterisation tests asserting the prototype's current scores, ported from `audit/evidence/`
 - `tests/lint.mjs` — Static checks across every `.html`, `.css` and `.js` file outside `audit/` and `legacy/`, plus the reference-palette and contrast checks on `styles/tokens.css`
@@ -137,7 +151,7 @@ These are non-negotiable.
 
 This tool follows the reference design system of `mxtdnl/slides` and `mxtdnl/third-places`. Where this section and the reference disagree, the reference (`slides/CLAUDE.md`, Visual style) wins, except for the 5C accent mapping below, which is specific to this repository. The tokens and rules below are copied from `slides/CLAUDE.md`; wording that referred to decks or to `SLIDES.md` has been adapted and is marked *(adapted)*.
 
-The tokens live in `styles/tokens.css` (S4). New pages link `styles/tokens.css`, `styles/base.css` and `styles/components.css` in that order; `index.html` and `dev/platform.html` still define a subset inline until S5 replaces them.
+The tokens live in `styles/tokens.css` (S4). Pages link `styles/tokens.css`, `styles/base.css` and `styles/components.css` in that order.
 
 A warm, hard-edged, playful Bauhaus visual language, closer to a Kandinsky painting or a Herbert Bayer poster than a corporate template. Pages should feel alive with colour and geometric energy: floating shapes, bold accent blocks, diagonal tension. The eight accent colours are the primary expressive tool; neutral surfaces exist to let them sing. Colours are CSS custom properties on `:root`. Use these values exactly.
 
@@ -280,6 +294,7 @@ Requires Node 18 or later; no `npm install` is needed for the current tests.
 ```sh
 npm test        # node --test tests/*.test.mjs
 npm run lint    # node tests/lint.mjs
+npm run e2e     # node --test tests/e2e/*.e2e.mjs (needs Playwright and Chromium)
 ```
 
 `npm test` runs every `tests/*.test.mjs` file with `node:test`. The script uses a shell glob rather than `node --test tests/`, because Node 22 treats a bare directory argument as a module path and fails.
@@ -299,7 +314,7 @@ npm run lint    # node tests/lint.mjs
 - A count of `PLACEHOLDER:` strings per file, printed as a warning
 - `styles/tokens.css`: every reference token (`REFERENCE_TOKENS`) still has its `slides/CLAUDE.md` value, and every pair in `CONTRAST_PAIRS` meets its level: 4.5:1 for `text`, 3:1 for `large` (24px, or 18.66px bold) and `ui` (boundaries, focus, state marks). Values are resolved through `var()`, `rgb()` and `color-mix(in srgb, …)`. Add a row whenever a component puts a new colour on a new surface
 
-Later sessions extend this: Playwright end-to-end tests (S5, S11, S14) and axe-core accessibility checks (S14), added as development dependencies only.
+`npm run e2e` (S5) serves the repository with a built-in Node static server, opens `index.html?example` in Chromium with Playwright and tests the shell: a keyboard-only first run and assessment with reloads mid-step (exact resume, option order kept, form recorded by participant-ID parity), practice feedback and separate storage, exit confirmation and resume, a programme battery, settings and reset, and a returning code. Every test fails on any request to another host or any page error. Playwright is resolved from the project or, failing that, the global installation; it is a development tool only. Later sessions extend this (S11, S14) and add axe-core accessibility checks (S14).
 
 To reproduce the audit evidence, see `audit/README.md`.
 
@@ -309,4 +324,4 @@ To serve the repository locally:
 python3 -m http.server 8000
 ```
 
-Then open `http://localhost:8000/`. The platform developer harness is at `http://localhost:8000/dev/platform.html`; the style guide is at `http://localhost:8000/styleguide.html`.
+Then open `http://localhost:8000/`. Add `?example` (`http://localhost:8000/?example`) to include the developer stub skill and try the whole flow; the style guide is at `http://localhost:8000/styleguide.html`.

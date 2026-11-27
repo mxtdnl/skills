@@ -59,8 +59,10 @@ test('language background is allowed only with consent', () => {
 });
 
 test('practice sittings use the practice pool and assessment sittings use form A or B', () => {
-  assert.deepEqual(errorsOf('sitting', fx.sitting({ mode: 'practice', formId: 'practice' })), []);
-  assert.deepEqual(errorsOf('sitting', fx.sitting({ mode: 'practice', formId: 'A' })), ['$.formId must be "practice" in practice mode']);
+  const practice = (over) => fx.sitting({ mode: 'practice', formId: 'practice', windowId: null, ...over });
+  assert.deepEqual(errorsOf('sitting', practice()), []);
+  assert.deepEqual(errorsOf('sitting', practice({ formId: 'A' })), ['$.formId must be "practice" in practice mode']);
+  assert.deepEqual(errorsOf('sitting', practice({ windowId: 'self' })), ['$.windowId practice sittings have no window and no programme']);
   assert.deepEqual(errorsOf('sitting', fx.sitting({ mode: 'assessment', formId: 'practice' })), ['$.formId must be A or B in assessment mode']);
 });
 
@@ -69,7 +71,38 @@ test('completedAt cannot precede startedAt', () => {
 });
 
 test('records from another schema version are rejected until migrated', () => {
-  assert.match(errorsOf('sitting', fx.sitting({ schemaVersion: 2 }))[0], /run migrations first/);
+  assert.match(errorsOf('sitting', fx.sitting({ schemaVersion: 1 }))[0], /run migrations first/);
+});
+
+test('assessment sittings need a window; programme sittings record their code, window and order', () => {
+  assert.deepEqual(errorsOf('sitting', fx.sitting({ windowId: null })), ['$.windowId is required in assessment mode']);
+  assert.ok(errorsOf('sitting', fx.sitting({ windowId: 'later' })).some((e) => e.startsWith('$.windowId does not match')));
+  const programme = { code: 'SEP26-1', window: 1, skillOrder: ['collaboration', '_example'], position: 1 };
+  assert.deepEqual(errorsOf('sitting', fx.sitting({ windowId: 'programme:SEP26-1', programme })), []);
+  assert.deepEqual(errorsOf('sitting', fx.sitting({ windowId: 'self', programme })), ['$.windowId must be programme:<code> for a programme sitting']);
+  assert.deepEqual(errorsOf('sitting', fx.sitting({ windowId: 'programme:SEP26-1', programme: { ...programme, window: 2 } })), ['$.programme.window must match the last digit of the code']);
+  assert.deepEqual(errorsOf('sitting', fx.sitting({ windowId: 'programme:SEP26-1', programme: { ...programme, position: 0 } })), ["$.programme.position must point at this sitting's skill in skillOrder"]);
+  assert.deepEqual(errorsOf('sitting', fx.sitting({ windowId: 'programme:SEP26-1', programme: null })), ['$.windowId must be "self" outside a programme sitting']);
+});
+
+test('consent to use the tool must be true', () => {
+  const p = fx.participant();
+  p.consent.toolUse = false;
+  assert.deepEqual(errorsOf('participant', p), ['$.consent.toolUse must be "true"']);
+});
+
+test('settings accept only the offered time multipliers', () => {
+  assert.deepEqual(errorsOf('participant', fx.participant({ settings: { timeMultiplier: 1.5, reducedMotion: true } })), []);
+  assert.ok(errorsOf('participant', fx.participant({ settings: { timeMultiplier: 3, reducedMotion: false } })).some((e) => e.startsWith('$.settings.timeMultiplier must be one of')));
+});
+
+test('in-progress attempts carry no score and no completion time; complete ones do', () => {
+  const inProgress = fx.attempt({ status: 'in-progress', rawScore: null, score: null, completedAt: null, timerSnapshot: { limitMs: null, multiplier: 1, state: 'running', endAt: null, remainingMs: null, extendedMs: 0, pausedMs: 0, pausedAt: null, startedAt: 1 } });
+  assert.deepEqual(errorsOf('taskAttempt', inProgress), []);
+  assert.deepEqual(errorsOf('taskAttempt', fx.attempt({ status: 'in-progress', completedAt: null })), ['$.score must be null while in progress', '$.rawScore must be null while in progress']);
+  assert.deepEqual(errorsOf('taskAttempt', fx.attempt({ completedAt: null })), ['$.completedAt is required when status is complete']);
+  assert.deepEqual(errorsOf('taskAttempt', fx.attempt({ timerSnapshot: inProgress.timerSnapshot })), ['$.timerSnapshot is kept only while in progress']);
+  assert.deepEqual(errorsOf('selfReport', fx.selfReport({ updatedAt: '2026-11-25T09:00:00.000Z' })), ['$.updatedAt is before startedAt']);
 });
 
 test('unknown type and assertValid', () => {

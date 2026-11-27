@@ -25,4 +25,5 @@ export const formB = [
 
 export const practice = [
   item('EX-PICK-P01', 'Which number is even?', ['3', '8', '5'], 1),
+  item('EX-PICK-P02', 'Which of these is a day of the week?', ['April', 'Tuesday', 'Winter'], 1),
 ];

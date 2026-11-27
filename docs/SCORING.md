@@ -8,8 +8,24 @@
 |---|---|---|
 | 0.1.0 | [Legacy prototype](#legacy-scoringversion-010-known-defects-see-audit) | Legacy, known defects |
 | 0.2.0 | [Platform skeleton](#platform-skeleton-scoringversion-020) | Rebuilt platform; no skill measures yet |
+| 0.3.0 | [Application shell](#application-shell-scoringversion-030) | Adds the developer stub's self-report score; no skill measures yet |
 
 The rebuilt measures add their own sections from Session 6 onwards.
+
+---
+
+## Application shell, scoringVersion 0.3.0
+
+Introduced in Session 5. It contains no skill measure. Everything in 0.2.0 below is unchanged, plus:
+
+**Self-report scoring.** A skill's self-report has `score(selfReport, form)`, a pure function of the record's `responses` and the items of the form taken. It returns `{ score }` (a self-report has no raw score). The runner stores it on the SelfReport record with `scoringVersion`.
+
+**Stub self-report `_example/self-report`** (`src/skills/_example/rate.js`). One statement per screen, rated on a five-point agreement scale.
+
+- Response: an integer from 1 (Strongly disagree) to 5 (Strongly agree).
+- `score` = `{ EX1: mean of the valid responses }`, counting only items of the form taken and integers from 1 to 5; `{ EX1: null }` if there are none.
+
+**In-progress records.** A step that has started but not finished is stored with `status: "in-progress"`, `rawScore: null` and `score: null`. Scores are computed only on completion, under the `scoringVersion` in force at that moment, which is the version recorded on the record.
 
 ---
 
@@ -21,7 +37,7 @@ Introduced in Session 3 so that records written by the rebuilt platform are neve
 
 **Stub task `_example/pick`** (`src/skills/_example/pick.js`). One multiple-choice question per screen.
 
-- Response: `{ choice, position }`, where `choice` is the index of the chosen option in the item's `options` and `position` is where it appeared on screen (option order is shuffled from the sitting seed).
+- Response: `{ choice, position }`, where `choice` is the index of the chosen option in the item's `options` and `position` is where it appeared on screen (option order is shuffled from the sitting seed; from 0.3.0, per item with `ctx.rngFor(itemId)`, so a resumed item keeps its order). In practice mode the task shows whether the answer was right; this does not change the score.
 - `rawScore` = number of responses whose `choice` equals the item's `key`, counting only items of the form taken.
 - `score` = `{ EX1: rawScore / number of items in the form }`, or `{ EX1: null }` for an empty form.
 

@@ -1,13 +1,18 @@
-// Runs one task of one skill within a sitting and stores the attempt.
+// Runs one step (a self-report or a task) of one skill within a sitting and stores it.
 //
-// The runner is the only code that turns a task's raw responses into a TaskAttempt record: it
-// picks the item pool for the sitting's mode and form, builds the task context, collects
-// responses, calls the task's pure score() function, and saves the result. Tasks never write to
-// storage themselves.
+// The runner is the only code that turns a step's raw responses into a TaskAttempt or
+// SelfReport record: it picks the item pool for the sitting's mode and form, builds the step
+// context, collects responses, calls the step's pure score() function, and saves the result.
+// Steps never write to storage themselves.
+//
+// Autosave (S5). The record is saved as soon as the step starts (status "in-progress"), again
+// after every response, and once more, scored, on completion (status "complete"). Passing the
+// in-progress record back as `existing` resumes the step at the next unanswered item: the
+// step reads ctx.resume (the responses already recorded) and carries on from there.
 
 import { createRng, seedFromString } from '../core/rng.js';
 import { createTimer } from '../core/timing.js';
-import { newAttemptId } from '../core/ids.js';
+import { newAttemptId, newSelfReportId } from '../core/ids.js';
 import { SCHEMA_VERSION, SCORING_VERSION } from '../core/version.js';
 import { validateContent } from './registry.js';
 
@@ -33,108 +38,194 @@ export function itemsFor(content, mode, formId) {
 }
 
 /**
- * Form for a new assessment sitting. A participant's second sitting gets the other form, so
- * nobody sees the same items twice; the first form is assigned by seed parity, which splits a
- * cohort roughly in half between A-then-B and B-then-A (audit D-2).
- * @param {{ seed: number, previousFormId?: string | null }} args
+ * The form a participant takes first: the parity of a hash (FNV-1a, rng.js seedFromString) of
+ * their participant ID. Even means A first, odd means B first, which splits a cohort roughly in
+ * half between A-then-B and B-then-A (audit D-2). Because it depends only on the code, a
+ * student who re-enters their code on another device keeps the same order.
+ * @param {string} participantId
  * @returns {'A' | 'B'}
  */
-export function assignForm({ seed, previousFormId = null }) {
-  if (previousFormId === 'A') return 'B';
-  if (previousFormId === 'B') return 'A';
-  return (seed >>> 0) % 2 === 0 ? 'A' : 'B';
+export function firstForm(participantId) {
+  return seedFromString(participantId) % 2 === 0 ? 'A' : 'B';
+}
+
+/** @param {'A' | 'B'} formId */
+export const otherForm = (formId) => (formId === 'A' ? 'B' : 'A');
+
+/**
+ * Form for a new assessment sitting of one skill.
+ *   - Programme sittings: the window number in the sitting code decides. Odd windows (1, the
+ *     start of the programme) get the participant's first form; even windows (2, the end) get
+ *     the other. This holds even if the student's browser data was lost in between.
+ *   - Self-directed sittings: the other form from the participant's most recent assessment
+ *     sitting of the same skill, or their first form if there is none.
+ * @param {{ participantId: string, programmeWindow?: number | null, previousFormId?: string | null }} args
+ * @returns {'A' | 'B'}
+ */
+export function assignForm({ participantId, programmeWindow = null, previousFormId = null }) {
+  const first = firstForm(participantId);
+  if (programmeWindow !== null) return programmeWindow % 2 === 1 ? first : otherForm(first);
+  if (previousFormId === 'A' || previousFormId === 'B') return otherForm(previousFormId);
+  return first;
 }
 
 /**
- * Mount a task, wait for it to finish, score it and save the attempt.
+ * Mount a step, autosave every response, and on completion score it and save the record.
  *
  * @param {object} args
  * @param {object} args.skill        manifest from the registry
- * @param {object} args.task         one entry of skill.tasks
+ * @param {{ kind: 'task' | 'selfReport', id: string, def: object }} args.step  from stepsFor()
  * @param {object} args.sitting      a valid Sitting record
  * @param {object} args.store        storage adapter (store.js)
- * @param {HTMLElement | null} args.el  where the task renders
+ * @param {HTMLElement | null} args.el  where the step renders
+ * @param {object | null} [args.existing]  an in-progress record of this step, to resume
  * @param {number} [args.multiplier=1]  accommodation multiplier for timed tasks
  * @param {() => number} [args.now]
- * @returns {{ done: Promise<object | null>, cancel: () => void }}  done resolves with the saved
- *   TaskAttempt, or null if cancelled
+ * @param {(error: Error) => void} [args.onSaveError]  called if an autosave fails
+ * @returns {{ done: Promise<object | null>, cancel: () => Promise<void>, flush: () => Promise<void> }}
+ *   done resolves with the completed record, or null if cancelled (the in-progress record stays
+ *   saved, so the step can be resumed)
  */
-export function runTask({ skill, task, sitting, store, el, multiplier = 1, now = () => Date.now() }) {
+export function runStep({ skill, step, sitting, store, el, existing = null, multiplier = 1, now = () => Date.now(), onSaveError = () => {} }) {
+  const isTask = step.kind === 'task';
+  const type = isTask ? 'taskAttempt' : 'selfReport';
+  const listKey = isTask ? 'itemResponses' : 'responses';
+  const def = step.def;
+  const iso = () => new Date(now()).toISOString();
+
+  if (existing && (existing.status !== 'in-progress' || existing.sittingId !== sitting.id || existing.type !== type)) {
+    throw new RangeError('runStep: existing must be an in-progress record of this step in this sitting');
+  }
+
+  /** The record as it stands. Mutated in place and saved after every change. */
+  const record = existing
+    ? structuredClone(existing)
+    : {
+        type,
+        schemaVersion: SCHEMA_VERSION,
+        id: isTask ? newAttemptId() : newSelfReportId(),
+        sittingId: sitting.id,
+        skillId: skill.id,
+        ...(isTask ? { taskId: step.id } : {}),
+        [listKey]: [],
+        ...(isTask ? { rawScore: null } : {}),
+        score: null,
+        scoringVersion: SCORING_VERSION,
+        status: 'in-progress',
+        startedAt: iso(),
+        updatedAt: iso(),
+        completedAt: null,
+      };
+
   let cleanup = null;
   let cancelled = false;
   let timer = null;
   let finish = () => {};
-  const responses = [];
+  let queue = Promise.resolve();
+
+  // Saves run one after another, in order, so a later response never lands before an earlier one.
+  const save = () => {
+    const snapshot = structuredClone(record);
+    queue = queue.then(() => store.save(type, snapshot)).then(() => {}, (e) => onSaveError(e));
+    return queue;
+  };
+  const touch = () => {
+    record.updatedAt = iso();
+    if (timer && record.status === 'in-progress') record.timerSnapshot = timer.snapshot();
+  };
 
   const done = (async () => {
-    const content = await task.loadContent();
+    const content = await def.loadContent();
     const problems = validateContent(content);
-    if (problems.length) throw new TypeError(`Content for ${skill.id}/${task.id} is invalid:\n${problems.join('\n')}`);
+    if (problems.length) throw new TypeError(`Content for ${skill.id}/${step.id} is invalid:\n${problems.join('\n')}`);
     const items = itemsFor(content, sitting.mode, sitting.formId);
-    const rng = createRng(seedFromString(`${sitting.seed}:${skill.id}:${task.id}`));
+    const taskSeed = seedFromString(`${sitting.seed}:${skill.id}:${step.id}`);
+    const rng = createRng(taskSeed);
+    if (cancelled) return null; // cancelled while content was loading: nothing to save
+    if (!existing) save();
 
     const finished = new Promise((resolve) => {
       finish = resolve;
       const ctx = {
         skillId: skill.id,
-        taskId: task.id,
+        taskId: step.id,
+        kind: step.kind,
         mode: sitting.mode,
         formId: sitting.formId,
         items,
         rng,
+        /** A generator for one item, the same on every mount, so a resumed step shows the same order. */
+        rngFor: (itemId) => createRng(seedFromString(`${taskSeed}:${itemId}`)),
+        /** Responses already recorded (when resuming). Continue from the next item. */
+        resume: structuredClone(record[listKey]),
         now,
-        /** Create the task's timer, with the participant's accommodation applied. */
+        /** Create the step's timer, with the participant's accommodation applied; restored when resuming. */
         createTimer(limitMs, opts = {}) {
-          timer = createTimer({ limitMs, multiplier, now, ...opts });
+          const restore = record.timerSnapshot;
+          timer = restore
+            ? createTimer({ now, ...opts, limitMs: restore.limitMs, multiplier: restore.multiplier, restore })
+            : createTimer({ limitMs, multiplier, now, ...opts });
           return timer;
         },
         /**
-         * Record one item response. shownAt is epoch ms from ctx.now(); rtMs is computed here.
+         * Record one item response and autosave. shownAt is epoch ms from ctx.now().
          * @param {{ itemId: string, response: *, shownAt: number, answeredAt?: number | null }} r
+         * @returns {Promise<void>} resolves when saved
          */
         record({ itemId, response, shownAt, answeredAt = now() }) {
-          responses.push({
+          record[listKey].push({
             itemId,
             response: response === undefined ? null : response,
             rtMs: answeredAt === null ? null : Math.max(0, answeredAt - shownAt),
             shownAt: new Date(shownAt).toISOString(),
           });
+          touch();
+          return save();
         },
+        /** Save the timer state without a response (for example, after a pause). */
+        checkpoint() { touch(); return save(); },
         complete: () => resolve(),
       };
-      cleanup = task.mount(el, ctx) || null;
+      cleanup = def.mount(el, ctx) || null;
     });
 
-    if (cancelled) finish(); // cancelled while content was loading
     await finished;
     if (cleanup) cleanup();
-    if (cancelled) return null;
+    if (cancelled) { await queue; return null; }
 
-    const attempt = {
-      type: 'taskAttempt',
-      schemaVersion: SCHEMA_VERSION,
-      id: newAttemptId(),
-      sittingId: sitting.id,
-      skillId: skill.id,
-      taskId: task.id,
-      itemResponses: responses,
-      rawScore: null,
-      score: null,
-      scoringVersion: SCORING_VERSION,
-    };
-    if (timer) attempt.timing = timer.stop();
-    const { rawScore, score } = task.score(attempt, items);
-    attempt.rawScore = rawScore;
-    attempt.score = score;
-    return store.save('taskAttempt', attempt);
+    if (timer) record.timing = timer.stop();
+    delete record.timerSnapshot;
+    const result = def.score(record, items);
+    if (isTask) record.rawScore = result.rawScore === undefined ? null : result.rawScore;
+    record.score = result.score === undefined ? null : result.score;
+    record.scoringVersion = SCORING_VERSION;
+    record.status = 'complete';
+    record.updatedAt = iso();
+    record.completedAt = record.updatedAt;
+    await queue;
+    return store.save(type, structuredClone(record));
   })();
 
   return {
     done,
-    /** Unmount without saving; done resolves with null. */
-    cancel() {
+    /** Stop without completing. Pauses the timer and saves, so the step resumes where it was. */
+    async cancel() {
+      if (cancelled) return;
       cancelled = true;
+      if (timer && timer.state === 'running') timer.pause();
+      if (timer) { touch(); save(); }
       finish();
+      await queue;
     },
+    /** Resolves when every pending autosave has finished. */
+    flush: () => queue,
   };
+}
+
+/**
+ * runStep for a task, kept for the S3 call shape: runTask({ skill, task, sitting, store, el }).
+ * @param {object} args  as runStep, with `task` (one entry of skill.tasks) in place of `step`
+ */
+export function runTask({ task, ...rest }) {
+  return runStep({ ...rest, step: { kind: 'task', id: task.id, def: task } });
 }
