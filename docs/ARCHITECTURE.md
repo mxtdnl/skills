@@ -29,6 +29,7 @@ src/skills/
   common/        shared by the five skills (S6): self-report component, its scoring, manifest builder
   <skill>/       one directory per skill, from S6 (index.js: the manifest)
   critical/      S7: selection.js (CT-T1), choice.js (CT-T2, CT-T4), calibration.js (CT-T3), ui.js
+  creativity/    S8: ideas.js (idea-list task UI), ideas-score.js, text.js, summary.js, llm-scorer.js (disabled)
 src/app/
   main.js        application shell entry (loaded by index.html): store, registry, router, render
   progress.js    pure rules: step and sitting state, windows, forms, programme batteries
@@ -106,6 +107,8 @@ S6 allows `tasks: []` for a skill that has a self-report, so the five skills can
 
 **Critical thinking (S7).** The first skill with tasks: `ct-t1` (type `selection`), `ct-t2` and `ct-t4` (type `choice`, both built by `choiceTask({ facet })`), `ct-t3` (type `calibration`). Each task resumes at the first item without a response; CT-T3 records two responses on a revision item (`phase` `initial`, then `revised`) and resumes at the evidence screen when only the first exists. Response shapes and scoring: `docs/SCORING.md`, Critical thinking tasks.
 
+**Creativity (S8).** `cr-t1` and `cr-t2` (type `idea-list`) share `ideas.js` and `ideas-score.js`; one item per form, so the step records drafts of one response (`{ lines, final, elapsedMs }`) and the latest is scored. The scorer needs the English word list, which is loaded with the task content (`loadDictionary()` in `text.js`, called by `loadContent`) so the hub never loads it. The timer comes from `ctx.createTimer`. Response shapes and scoring: `docs/SCORING.md`, Creativity tasks.
+
 **Skill catalogue.** `SKILL_CATALOGUE` in `src/skills/registry.js` lists the five skills in canonical order with their accent tokens and their facets from `docs/CONSTRUCTS.md` (signed off by the owner, 2026-11-27). The hub shows a skill whose module is not yet registered as "in preparation" from this entry. Since S6 all five modules are registered in `SKILL_MODULES`; their manifests are built from this entry, and `tests/registry.test.mjs` checks that they agree. A skill with no tasks yet shows Practice as "in preparation" on its skill page.
 
 ### `mount(el, ctx)`
@@ -160,7 +163,7 @@ The runner calls `validateContent()` before every task and refuses to run on inv
 2. Chooses the items: the practice pool in practice mode, form A or B in assessment mode (`itemsFor`). For a self-report in an end-of-programme sitting, appends the content's `retrospective` items (S6).
 3. Derives the step's seed from the sitting seed, skill ID and step ID.
 4. Saves a new record with `status: "in-progress"`, or takes `existing` (an in-progress record of the same step) to resume.
-5. Mounts the step with its context. Every `record()` appends the response and saves the record; saves run one after another, in order. A timed step's timer state is saved with each response.
+5. Mounts the step with its context. Every `record()` appends the response and saves the record; saves run one after another, in order. A timed step's timer state is saved with each response and each `checkpoint()`. A timer saved while running resumes paused, at the remaining time it had when last saved, so time away from the page is not counted (S8).
 6. When the step calls `complete()`, unmounts it, stops its timer, calls `score(record, items)` (for a self-report, also storing `quality` and `retrospective` when returned), and saves the record with `status: "complete"` through the store (which validates it).
 
 `cancel()` unmounts without completing: it pauses the timer, saves, and leaves the in-progress record for a later resume. `flush()` waits for pending saves.

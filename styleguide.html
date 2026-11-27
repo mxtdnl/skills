@@ -405,6 +405,31 @@
         <p class="timer-note">Untimed mode: no limit applies.</p>
       </div>
     </div>
+    <p class="sg-note">Idea list (S8, creativity): the prompt in a railed card, the timer, a text box with one idea per line and a live count; a locked text box while paused or after the time; and practice feedback listing each line with its kind or why it did not count.</p>
+    <div class="task task-ideas" data-skill="creativity">
+      <div class="card card-rail task-scenario task-ideas-prompt"><p class="eyebrow">Alternate uses</p><h3 class="task-ideas-question">How many different uses can you think of for a pencil?</h3></div>
+      <div class="task-ideas-field">
+        <label class="field-label" for="sg-ideas">Your uses, one per line</label>
+        <p class="field-hint">One idea per line, in at least two words.</p>
+        <textarea class="input task-ideas-input" id="sg-ideas" rows="4">write a shopping list
+stir paint</textarea>
+        <p class="task-ideas-count">Uses so far: 2</p>
+      </div>
+      <div class="task-ideas-field" style="margin-top: var(--space-4)">
+        <label class="field-label" for="sg-ideas-locked">Locked (paused or time is up)</label>
+        <textarea class="input task-ideas-input locked" id="sg-ideas-locked" rows="2" readonly>write a shopping list</textarea>
+      </div>
+      <div class="card card-top task-summary task-ideas-feedback" style="margin-top: var(--space-4)">
+        <h3>Your uses</h3>
+        <ol class="idea-list">
+          <li class="idea-line counted"><span class="idea-text">write a shopping list</span><span class="tag accent">Writing and drawing</span></li>
+          <li class="idea-line counted"><span class="idea-text">wind an old cassette tape</span><span class="tag accent">A small tool</span><span class="tag">Few give this</span></li>
+          <li class="idea-line not-counted"><span class="idea-text">asdkj qwpeo</span><span class="idea-reason small">Not counted: most of the words were not recognised as English words.</span></li>
+        </ol>
+        <h4 class="task-ideas-subhead">Kinds of idea you used</h4>
+        <p class="tag-row"><span class="tag accent">Writing and drawing</span><span class="tag accent">A small tool</span></p>
+      </div>
+    </div>
   </div>
 </section>
 
