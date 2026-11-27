@@ -44,6 +44,12 @@ Rules fixed before any data exists. Each must be reviewed against the pilot and 
 | CT-T3 indices: minimum answered items | at least half the form's items (5 of 10) | `score`, `src/skills/critical/calibration.js` |
 | CT-T3 headline `CT3` | 1 minus the Brier score (PROVISIONAL, D-12) | same file |
 | CT-T3 intended difficulty tags and form matching | author's judgement (4 easier, 6 harder per form) | `content/critical/ct-t3.js` |
+| Creativity time limit | 3 minutes x the accommodation multiplier; "Add 1 minute" in the last 30 s (D-21) | `LIMIT_MS`, `EXTEND_OFFER_MS`, `src/skills/creativity/ideas.js` |
+| Creativity task time estimates | CR-T1 4, CR-T2 4 minutes (PROVISIONAL) | `src/skills/creativity/index.js` |
+| Creativity frequency bands | author-estimated: common at least 1 in 10, occasional 1 to 10 in 100, rare under 1 in 50 (PROVISIONAL; R-10) | `content/creativity/aut-norms.js`, `problem-norms.js` |
+| Creativity originality: minimum valid ideas | 3 (PROVISIONAL) | `MIN_FLUENCY_FOR_ORIGINALITY`, `src/skills/creativity/ideas-score.js` |
+| Creativity unscorable rules | at least 2 meaningful words; non-words if under half the content words are known; duplicate if core-word overlap at least 0.6 or a subset; typing errors accepted from 5 letters (PROVISIONAL) | same file and `text.js` |
+| Creativity form matching (familiarity) | author's judgement | `content/creativity/cr-t1.js`, `cr-t2.js` |
 
 The response-quality flags are for the coach view only. Before any flag is used to exclude data from a cohort analysis, the pilot should check how flagged response patterns affect the scale's reliability estimates.
 

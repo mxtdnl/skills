@@ -1275,6 +1275,50 @@ fieldset.consent-choices {
 .task-form > .btn-row { margin-top: var(--space-4); }
 .task-summary h2 { margin-top: 0; font-size: 1.35rem; }
 
+/* Idea lists (S8, creativity): the prompt card, the timer beside the text box on wide screens,
+   one idea per line with a live count, and practice feedback listing each line with its kind. */
+.task-ideas-prompt .eyebrow { margin: 0 0 var(--space-2); }
+.task-ideas-question { margin: 0; font-size: clamp(1.2rem, 2.4vw, 1.5rem); line-height: 1.35; }
+.task-ideas-intro p { max-width: var(--measure); }
+.task-ideas-body { display: grid; gap: var(--space-5); }
+.task-ideas-body .task-timer { justify-self: start; }
+.task-timer .timer-controls [hidden] { display: none; }
+.task-timer .timer-note:empty { display: none; }
+.task-ideas-field .field-hint { margin-bottom: var(--space-2); }
+.input.task-ideas-input {
+  display: block;
+  max-width: none;
+  min-height: 15rem;
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.6;
+}
+.input.task-ideas-input.locked { background: var(--bg-deep); cursor: not-allowed; }
+.task-ideas-count {
+  margin: var(--space-2) 0 0;
+  font-size: 0.8rem;
+  font-weight: var(--weight-label);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-variant-numeric: tabular-nums;
+}
+.task-ideas-confirm .btn-row { margin-top: var(--space-2); }
+.task-ideas-subhead {
+  margin: var(--space-5) 0 var(--space-2);
+  font-size: 0.8rem;
+  font-weight: var(--weight-label);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+.idea-list { margin: var(--space-4) 0 0; padding-left: 1.5rem; }
+.idea-line { margin-bottom: var(--space-2); }
+.idea-line .idea-text { margin-right: var(--space-2); }
+.idea-line .tag { margin-right: var(--space-1); }
+.idea-line.not-counted .idea-text { color: var(--text-muted); text-decoration: line-through; }
+.idea-reason { display: block; color: var(--text-muted); }
+.tag-row { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; }
+.task-ideas-feedback + .btn { margin-top: var(--space-4); }
+
 /* ---------------------------------------------------------------- dialog */
 
 .dialog {

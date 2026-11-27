@@ -11,8 +11,111 @@
 | 0.3.0 | [Application shell](#application-shell-scoringversion-030) | Adds the developer stub's self-report score; no skill measures yet |
 | 1.0.0-draft | [Self-report](#self-report-scoringversion-100-draft) | Self-reports of the five skills (S6). Draft: items not yet reviewed, no pilot data |
 | 1.1.0-draft | [Critical thinking tasks](#critical-thinking-tasks-scoringversion-110-draft) | Adds the four critical thinking tasks (S7). Self-report scoring unchanged. Draft: items not yet reviewed, no pilot data |
+| 1.2.0-draft | [Creativity tasks](#creativity-tasks-scoringversion-120-draft) | Adds the two creativity tasks (S8). Self-report and critical thinking scoring unchanged. Draft: items and frequency tables not yet reviewed, frequency bands author-estimated, no pilot data |
 
 The rebuilt measures add their own sections from Session 6 onwards, newest first.
+
+---
+
+## Creativity tasks, scoringVersion 1.2.0-draft
+
+Introduced in Session 8 for CR-T1 Alternate uses and CR-T2 Problem finding (`docs/CONSTRUCTS.md` section 4). Everything in 1.1.0-draft is unchanged: self-reports and the critical thinking tasks score exactly as before. Code: `src/skills/creativity/` (`text.js` text handling, `ideas-score.js` scoring, `summary.js` skill summary, `llm-scorer.js` disabled interface). Items: `content/creativity/cr-t1.js`, `cr-t2.js`; frequency tables: `content/creativity/aut-norms.js`, `problem-norms.js`; word list: `content/creativity/wordlist.js`. Listed in `docs/ITEM-BANK.md`.
+
+This replaces the legacy AUT scoring (scoringVersion 0.1.0) and fixes audit A-6 and B-2: one fixed object per form, a revised per-object taxonomy with no "Other" credit, originality from a frequency table matched by whole stems (never by reverse substring), gibberish and padding detected, no elaboration score, and no weighted blend.
+
+### Task and response
+
+- One item per form, fixed: CR-T1 form A is a cardboard box, form B an empty glass jar; CR-T2 form A is sharing a flat with other students for the first time, form B starting a part-time job while studying full time. A practice sitting shows one practice item, chosen with the sitting's seed (`ctx.rng`), so repeated practice can show another object.
+- **Time.** 3 minutes (`LIMIT_MS`, `src/skills/creativity/ideas.js`) times the participant's accommodation multiplier (1, 1.5 or 2; Settings). The timer starts when the student selects "Start the timer". The student can pause (the text box is locked while paused). In the last 30 seconds "Add 1 minute" is offered, any number of times (WCAG 2.2.1, Extend). Leaving the page pauses the timer; a reload resumes it paused at the last save, so time away is not counted (runner, `createTimer`). The timing log records `limitMs`, `multiplier`, `extendedMs`, `pausedMs` and `expired`; nothing in the score depends on it. At expiry the text box is locked; the text written so far is scored.
+- **Response**: `{ lines, final, elapsedMs }`, the non-empty lines of the text box as written, whether this is the final response, and the active time used. Drafts (`final: false`) are recorded as the student writes (2 seconds after the last change, and on pause); the **latest** response to a form item is scored. Responses to other items, and responses without a `lines` array, are ignored. Lines are trimmed; empty lines are dropped; at most 100 lines (`MAX_LINES`) of at most 200 characters (`MAX_LINE_LENGTH`) are scored.
+- No feedback in assessment mode. Practice shows how each line was read (see Practice feedback).
+
+### Reading a line
+
+Each line is tokenised (lower case, accents removed, apostrophes dropped, anything other than letters and digits a separator) and every token is put in a canonical form (`text.js`):
+
+1. **Spelling.** British and American forms are made equal: -ise/-ize, -yse/-yze, -our/-or (also -ourful, -ourless), -tre/-ter, applied only when the other spelling is a known word ("organise" = "organize", "colour" = "color"; "four" stays "four").
+2. **Stem.** Plural and verb endings are removed (-ies, -es, -s, -ied, -ing, -ed, with a final "e" restored or a doubled consonant undone) **only if what is left is a known word**: "storing", "stores" and "stored" all become "store"; "notes" becomes "note", not "not".
+3. **Known words**: the English word list (SCOWL sizes 10 to 35, English, British and American, 40,194 words; `content/creativity/wordlist.js`) plus every word in the item's own categories, object words and frequency table.
+4. **Typing errors.** A token of 5 letters or more (`TYPO_MIN_LENGTH`) that is not a known word but is one edit (one letter deleted, added, changed or two swapped) from a known word is read as that word, preferring the item's own words ("stroe old clothse" = "store old clothes"). This limits the penalty for typing errors in a second language (audit E-1).
+
+Word classes (`WORD_LISTS`): **function words** (articles, pronouns, prepositions, "inside", "around" and the like) and **padding words** ("really", "basically", "honestly", "stuff", "things", "lol", "I guess", modal verbs and the like) are never meaningful. **General words** ("use", "make", "put", "get", "not", "no", "enough", "hard", "problem", "lack" and the like) count as meaningful words but are ignored when comparing ideas. The item's **object words** ("box", "jar", "flat", "flatmate", "job", "student"...) also count as meaningful but are ignored when comparing ideas.
+
+For each line: `content` = tokens that are neither function nor padding words (digits excluded); `recognised` = those that are known words (after the typing-error rule); `meaningful` = recognised content tokens; `core` = the canonical forms of meaningful tokens that are neither general nor object words.
+
+### Classification
+
+Lines are classified in order, each against the valid lines before it (`analyse`, `ideas-score.js`):
+
+| Status | Rule | Credit |
+|---|---|---|
+| `non-words` | the line has no letters or digits, or fewer than half of its content tokens are recognised | none |
+| `too-short` | fewer than 2 meaningful words (`MIN_MEANINGFUL_WORDS`), or no core word (only the object's name and general words, for example "use the box") | none |
+| `duplicate` | the same idea as an earlier valid line: the core sets are equal, or one is a subset of the other (when the smaller has at least 2 words), or their Jaccard overlap is at least 0.6 (`DUPLICATE_OVERLAP`) | none |
+| `valid` | otherwise | scored |
+
+The students are told the rule: "Write each idea on its own line, in at least two words." A single-word idea such as "drum" is therefore not scored (`docs/OPEN-DECISIONS.md` D-18).
+
+**Table match.** A valid line matches a frequency-table entry when, for every word group of the entry, at least one of the group's alternatives occurs in the line's canonical tokens (a multi-word alternative must occur as consecutive tokens). The entry is found *in* the idea; an idea is never matched because it is contained in an entry (no reverse substring; audit B-2). If several entries match: the one with more groups (more specific) wins; then the rarer band; then the entry whose words come first in the line; then the first listed (D-20).
+
+**Category.** A matched line takes its entry's category. An unmatched line takes the category with the most keyword hits (whole canonical tokens or consecutive phrases; at least one hit; a tie goes to the category listed first). A line with no hit has no category and earns no flexibility credit. There is no "Other" category.
+
+**Originality points** per valid line:
+
+| Case | Points |
+|---|---|
+| table entry, band `common` (author expects at least 1 student in 10 to give it) | 0 |
+| table entry, band `occasional` (about 1 to 10 in 100) | 1 |
+| table entry, band `rare` (fewer than 1 in 50) | 2 |
+| not in the table, in one of the item's categories | 2 (`UNLISTED_POINTS`) |
+| not in the table and in no category | 1 (`UNPLACED_POINTS`): its originality is unknown (D-19) |
+
+**The bands are provisional and author-estimated, to be replaced with pilot norms** (`content/creativity/aut-norms.js`, `STATUS`). Until then originality is a rough indicator, not a measured infrequency.
+
+### Indicators
+
+`score` (all numbers or null; `rawScore` = `fluency`):
+
+```
+entered             non-empty lines scored (at most 100)
+fluency             valid lines
+flexibility         distinct categories among valid lines
+originality         sum of points / fluency, 0 to 2; null if fluency < 3 (MIN_FLUENCY_FOR_ORIGINALITY)
+uncommon            valid lines scoring 2
+unlisted            valid lines matching no table entry
+uncategorised       valid lines with no category
+nonWords, tooShort, duplicates   lines of each unscorable status
+categoriesAvailable categories in the item's taxonomy (12 on every form)
+```
+
+Every component is reported separately. Nothing is weighted, blended or normalised against another component. **Originality is a mean per valid idea**, so writing more ideas does not raise it; it is independent of typing speed in the way fluency is not (audit E-1). There is no elaboration score, so padding a line cannot raise any score; padding words are ignored by every rule above, and `tests/creativity.test.mjs` checks that padding a list changes none of its indicators.
+
+Adversarial checks (`tests/creativity.test.mjs`, every form of both tasks): gibberish, one phrase repeated (with or without padding and punctuation), filler-padded common ideas and empty input all give fluency at most 1, flexibility at most 1, originality null or 0 and no uncommon idea. Ten sensible, varied ideas score above six common ones on fluency, flexibility and originality.
+
+### Skill summary
+
+`creativitySummary({ uses, problems })` (`src/skills/creativity/summary.js`) lists each facet through single indicators, task by task, and never adds, averages or weights them:
+
+| Facet | Indicators |
+|---|---|
+| CR1 Fluency | CR-T1 `fluency` (primary); CR-T2 `fluency` beside it |
+| CR2 Flexibility | CR-T1 `flexibility` of `categoriesAvailable`; CR-T2 beside it |
+| CR3 Originality | CR-T1 `originality`; CR-T2 beside it |
+| CR4 Problem finding | CR-T2 `fluency`, `flexibility` (kinds of problem) and `originality`, side by side |
+
+In particular originality is never combined with fluency. There is no single creativity score. How results are shown is for S11; the second CR4 behaviour ("restates a vague situation as a specific problem") is not measured (D-22).
+
+### Practice feedback
+
+After the time (or Finish), practice shows every line with the kind it was placed in, or why it did not count; the kinds used; up to three kinds not used, with the category's hint, chosen in a seeded random order; and, for lines matching a `rare` table entry, a "Few give this" tag. Unlisted lines are not tagged as rare. Practice is not stored as a result and its items never appear in a form.
+
+### Language-model scoring (disabled)
+
+`src/skills/creativity/llm-scorer.js` defines the interface of a future originality rater. In this build `isEnabled()` is false, `score()` resolves `{ status: "disabled" }` without any request, and `configure()` throws. Switching it on needs a backend proxy run by Hult, data protection sign-off and a pilot comparison with human ratings (D-8); even then the frequency-table score stays the reported score and any model score is stored beside it.
+
+### Records from earlier versions
+
+Records scored under 1.1.0-draft or earlier contain no creativity task attempts. Legacy AUT scores (0.1.0) are not comparable: different objects, taxonomy, originality rule and a weighted composite.
 
 ---
 

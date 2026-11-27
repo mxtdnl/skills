@@ -176,7 +176,19 @@ export function runStep({ skill, step, sitting, store, el, existing = null, mult
         now,
         /** Create the step's timer, with the participant's accommodation applied; restored when resuming. */
         createTimer(limitMs, opts = {}) {
-          const restore = record.timerSnapshot;
+          let restore = record.timerSnapshot;
+          // A timer saved while running (the page was closed or reloaded) resumes paused, as at
+          // the moment it was last saved: time away from the page is not counted.
+          if (restore && restore.state === 'running') {
+            const at = Math.min(now(), Date.parse(record.updatedAt));
+            restore = {
+              ...restore,
+              state: 'paused',
+              pausedAt: at,
+              remainingMs: restore.limitMs === null ? null : Math.max(0, restore.endAt - at),
+              endAt: null,
+            };
+          }
           timer = restore
             ? createTimer({ now, ...opts, limitMs: restore.limitMs, multiplier: restore.multiplier, restore })
             : createTimer({ limitMs, multiplier, now, ...opts });

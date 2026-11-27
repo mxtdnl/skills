@@ -334,6 +334,15 @@ test('a programme sitting code switches the hub to the full battery in a fixed, 
       await page.locator('.task').first().waitFor();
       continue;
     }
+    // Creativity (S8): start the timer, write a few ideas, finish early and confirm.
+    if (await page.locator('.task-ideas').count()) {
+      await page.getByRole('button', { name: 'Start the timer' }).click();
+      await page.locator('.task-ideas textarea').fill('store old clothes\nsend a parcel by post\nmake a bed for a cat');
+      await page.getByRole('button', { name: 'Finish', exact: true }).click();
+      await page.getByRole('button', { name: 'Finish now' }).click();
+      await page.locator('.step-complete').waitFor();
+      continue;
+    }
     // A screen is identified by its progress text and whether it shows new evidence (CT-T3).
     const screen = () => page.evaluate(() => `${document.querySelector('.progress-count')?.textContent}|${Boolean(document.querySelector('.task-evidence'))}`);
     const before = await screen();
@@ -366,6 +375,13 @@ test('a programme sitting code switches the hub to the full battery in a fixed, 
     assert.ok(a.itemResponses.every((x) => /^CT-T\d-[AB]\d\d$/.test(x.itemId)), `${a.taskId}: assessment items only`);
   }
   assert.equal(typeof ct.find((a) => a.taskId === 'ct-t3').score.brier, 'number');
+  const cr = r.taskAttempt.filter((a) => a.skillId === 'creativity');
+  assert.deepEqual(cr.map((a) => a.taskId).sort(), ['cr-t1', 'cr-t2']);
+  for (const a of cr) {
+    assert.equal(a.status, 'complete', a.taskId);
+    assert.match(a.itemResponses.at(-1).itemId, /^CR-T\d-[AB]01$/);
+    assert.equal(a.timing.limitMs, 180_000);
+  }
   await page.getByRole('link', { name: 'Back to your skills' }).click();
   await page.locator('.skill-grid').waitFor();
   await page.locator('.programme-entry', { hasText: 'Completed: SEP26-2' }).waitFor();
@@ -428,7 +444,7 @@ test('a real skill\'s self-report: one facet per screen, every point labelled, r
   const page = await openApp(t);
   await onboard(page);
   await page.locator('a.skill-tile[data-skill-id="creativity"]').click();
-  await page.locator('.mode-card[data-mode="practice"]', { hasText: 'not available for this skill yet' }).waitFor();
+  await page.getByRole('button', { name: 'Start practice' }).waitFor(); // creativity has tasks since S8
   await page.getByRole('button', { name: 'Start assessment' }).click();
   await page.locator('dialog').getByRole('button', { name: 'Start assessment' }).click();
 
@@ -546,4 +562,128 @@ test('critical thinking: practice explains the logic; calibration evidence survi
   assert.equal(resp.selected.length, 2);
   assert.deepEqual([...resp.order].sort(), [0, 1, 2, 3]);
   assert.equal(r.sitting.find((s) => s.id === sel.sittingId).mode, 'assessment');
+});
+
+test('creativity practice: timed idea list with a live count, pause, reload resume and feedback on kinds of idea', async (t) => {
+  const page = await openApp(t);
+  await onboard(page);
+  await page.locator('a.skill-tile[data-skill-id="creativity"]').click();
+  await page.getByRole('button', { name: 'Start practice' }).click();
+
+  // Intro: nothing runs until the student starts the timer
+  await page.locator('.task-ideas-intro', { hasText: 'You will have 3 minutes' }).waitFor();
+  let r = await records(page);
+  assert.equal(r.taskAttempt[0].itemResponses.length, 0);
+  assert.notEqual(r.taskAttempt[0].timerSnapshot?.state, 'running');
+  await page.getByRole('button', { name: 'Start the timer' }).click();
+  const area = page.locator('.task-ideas textarea');
+  await area.waitFor();
+  assert.equal(await page.evaluate(() => document.activeElement.tagName), 'TEXTAREA');
+  assert.equal(await page.locator('[role="timer"]').count(), 1);
+  assert.equal(await page.getByRole('button', { name: 'Add 1 minute' }).isVisible(), false, 'extension is offered only near the end');
+
+  // Which practice item was drawn decides the ideas; write a mix of valid and unscorable lines
+  const question = await page.locator('.task-ideas-question').textContent();
+  const lines = question.includes('pencil')
+    ? ['write a shopping list', 'hold your hair in a bun', 'asdkj qwpeo', 'write a shopping list again', 'tap out a rhythm like a drumstick']
+    : ['wipe up spills', 'a superhero cape for a child', 'asdkj qwpeo', 'wipe up the spills', 'wave it as a flag'];
+  await area.click();
+  for (const l of lines) { await page.keyboard.type(l); await page.keyboard.press('Enter'); }
+  await page.locator('.task-ideas-count', { hasText: 'Uses so far: 5' }).waitFor();
+
+  // Pause locks the text box; resume unlocks it
+  await page.getByRole('button', { name: 'Pause' }).click();
+  await page.locator('.timer-state', { hasText: 'Paused' }).waitFor();
+  assert.equal(await area.evaluate((el) => el.readOnly), true);
+  await page.getByRole('button', { name: 'Resume' }).click();
+  assert.equal(await area.evaluate((el) => el.readOnly), false);
+
+  // Reload: the text is kept and the timer comes back paused
+  await page.waitForTimeout(2300); // the draft is saved 2 s after the last change
+  await page.reload();
+  await area.waitFor();
+  assert.equal((await area.inputValue()).trim(), lines.join('\n'));
+  await page.locator('.timer-note', { hasText: 'paused while you were away' }).waitFor();
+  r = await records(page);
+  const draft = r.taskAttempt[0].itemResponses.at(-1).response;
+  assert.deepEqual(draft.lines, lines);
+  assert.equal(draft.final, false);
+  await page.getByRole('button', { name: 'Resume' }).click();
+
+  // Finishing early asks first
+  await page.getByRole('button', { name: 'Finish', exact: true }).click();
+  await page.getByRole('button', { name: 'Keep writing' }).click();
+  await page.getByRole('button', { name: 'Finish', exact: true }).click();
+  await page.getByRole('button', { name: 'Finish now' }).click();
+
+  // Feedback: every line with its kind or why it did not count, kinds used, kinds not tried
+  const fb = page.locator('.task-ideas-feedback');
+  await fb.waitFor();
+  assert.equal(await fb.locator('.idea-line').count(), 5);
+  assert.equal(await fb.locator('.idea-line.not-counted').count(), 2);
+  await fb.locator('.idea-reason', { hasText: 'not recognised as English words' }).waitFor();
+  await fb.locator('.idea-reason', { hasText: 'same idea as an earlier line' }).waitFor();
+  assert.ok(await fb.locator('.tag-row .tag').count() >= 2);
+  assert.equal(await fb.locator('h3', { hasText: 'not tried yet' }).count(), 1);
+  assert.equal(await fb.locator('.task-reasons li').count(), 3);
+  await page.getByRole('button', { name: 'Finish', exact: true }).click();
+  await page.locator('.step-complete').waitFor();
+  r = await records(page);
+  const done = r.taskAttempt.find((a) => a.taskId === 'cr-t1');
+  assert.equal(done.status, 'complete');
+  assert.equal(done.itemResponses.at(-1).response.final, true);
+  assert.equal(done.score.fluency, 3);
+  assert.equal(done.score.nonWords, 1);
+  assert.equal(done.score.duplicates, 1);
+  assert.equal(r.sitting.find((s) => s.id === done.sittingId).mode, 'practice');
+});
+
+test('creativity assessment: extended time applies, time can be added near the end, the text box locks at expiry, no feedback', async (t) => {
+  const page = await openApp(t);
+  await page.clock.install();
+  await page.reload();
+  await onboard(page);
+  await page.getByRole('link', { name: 'Settings' }).click();
+  await page.locator('#time-1-5').check();
+  await page.goto(`${base}index.html?example#/skill/creativity`);
+  await page.getByRole('button', { name: 'Start assessment' }).click();
+  await page.locator('dialog').getByRole('button', { name: 'Start assessment' }).click();
+  for (let part = 1; part <= 4; part++) {
+    await page.locator('.progress-count', { hasText: `Part ${part} of 4` }).waitFor();
+    for (const fs of await page.locator('.likert').all()) await fs.locator('.likert-option').nth(2).click();
+    await page.getByRole('button', { name: part === 4 ? 'Finish' : 'Next' }).click();
+  }
+  await page.locator('.step-complete a.btn').first().click();
+
+  // Form A or B by participant code: a fixed object
+  await page.locator('.task-ideas-intro', { hasText: 'You will have 4.5 minutes' }).waitFor();
+  let r = await records(page);
+  const form = firstForm(r.participant[0].id);
+  const object = form === 'A' ? 'a cardboard box' : 'an empty glass jar';
+  await page.locator('.task-ideas-question', { hasText: object }).waitFor();
+  await page.getByRole('button', { name: 'Start the timer' }).click();
+  const area = page.locator('.task-ideas textarea');
+  await area.fill(form === 'A' ? 'store old clothes\nsit on it as a stool\ngrow seedlings in it' : 'store dry pasta\nhold a candle\nbury a time capsule');
+
+  // 4:30 allowed; 4:05 later, 25 s are left and an extension is offered
+  await page.clock.runFor(245_000);
+  const extend = page.getByRole('button', { name: 'Add 1 minute' });
+  await extend.waitFor();
+  await extend.click();
+  await page.locator('.timer-note', { hasText: '1 minute added' }).waitFor();
+  await page.clock.runFor(90_000);
+  await page.locator('.timer-state', { hasText: 'Time is up' }).waitFor();
+  assert.equal(await area.evaluate((el) => el.readOnly), true);
+  await page.getByRole('button', { name: 'Finish', exact: true }).click();
+  await page.locator('.step-complete').waitFor();
+  assert.equal(await page.locator('.task-ideas-feedback').count(), 0, 'no feedback in assessment mode');
+
+  r = await records(page);
+  const a = r.taskAttempt.find((x) => x.taskId === 'cr-t1');
+  assert.equal(a.itemResponses.at(-1).itemId, `CR-T1-${form}01`);
+  assert.deepEqual(a.timing, { limitMs: 180_000, multiplier: 1.5, extendedMs: 60_000, pausedMs: 0, expired: true });
+  assert.equal(a.score.fluency, 3);
+  assert.equal(a.rawScore, 3);
+  assert.equal(typeof a.score.originality, 'number');
+  assert.equal(a.scoringVersion, SCORING_VERSION);
 });

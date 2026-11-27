@@ -137,7 +137,7 @@ One attempt at one task within a sitting.
 | `startedAt` | date-time | yes | When the step was first opened |
 | `updatedAt` | date-time | yes | Last autosave |
 | `completedAt` | date-time or null | yes | Null while in progress |
-| `timerSnapshot` | object | no | The timer state (`snapshot()` in `src/core/timing.js`) while a timed task is in progress, so it resumes with the same time left. Removed on completion |
+| `timerSnapshot` | object | no | The timer state (`snapshot()` in `src/core/timing.js`) while a timed task is in progress, so it resumes with the same time left. A snapshot saved while running is resumed paused at `updatedAt`, so time away is counted as paused (S8). Removed on completion |
 | `timing` | timing log | no | Present for completed timed tasks |
 
 Item response:

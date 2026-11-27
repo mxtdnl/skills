@@ -256,6 +256,39 @@ test('runStep saves a timed step\'s timer while in progress and restores it on r
   assert.deepEqual(done.timing, { limitMs: 60_000, multiplier: 2, extendedMs: 0, pausedMs: 0, expired: false });
 });
 
+test('runStep resumes a timer saved while running as paused at the moment of the last save (S8)', async () => {
+  const store = new MemoryAdapter();
+  let t = 1_700_000_000_000;
+  const now = () => t;
+  const a = stepwiseSkill();
+  const inner = a.skill.tasks[0].mount;
+  a.skill.tasks[0].mount = (el, ctx) => { const r = inner(el, ctx); ctx.createTimer(60_000).start(); return r; };
+  runStep({ skill: a.skill, step: a.step, sitting: fx.sitting(), store, el: null, now });
+  await tick();
+  t += 20_000;
+  await a.answer(); // saved while running, 40 s left
+  const [saved] = await store.list('taskAttempt');
+  assert.equal(saved.timerSnapshot.state, 'running');
+
+  t += 600_000; // the page was closed for ten minutes, without Save and exit
+  const b = stepwiseSkill();
+  let timer = null;
+  const innerB = b.skill.tasks[0].mount;
+  b.skill.tasks[0].mount = (el, ctx) => { const r = innerB(el, ctx); timer = ctx.createTimer(60_000); return r; };
+  const resumed = runStep({ skill: b.skill, step: b.step, sitting: fx.sitting(), store, el: null, now, existing: saved });
+  await tick();
+  assert.equal(timer.state, 'paused', 'the time away is not counted');
+  assert.equal(timer.remainingMs(), 40_000);
+  timer.resume();
+  t += 5_000;
+  assert.equal(timer.remainingMs(), 35_000);
+  await b.answer();
+  await b.answer();
+  const done = await resumed.done;
+  assert.equal(done.timing.pausedMs, 600_000);
+  assert.equal(done.timing.expired, false);
+});
+
 test('runStep runs a self-report and stores a SelfReport record', async () => {
   const store = new MemoryAdapter();
   const step = stepsFor(example, 'assessment')[0];

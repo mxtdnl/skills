@@ -2,7 +2,7 @@
 
 **Purpose.** Records every item used by the tool: what it measures, which pool and form it belongs to, where it came from, and whether it has been reviewed. It is the provenance record required by audit finding M-1 and the global rule that item content is draft until reviewed by Hult staff.
 
-Session 6 added the self-report items for all five skills (all draft). Session 7 added the items of the four critical thinking tasks (all draft). The legacy prototype's items are not part of this bank and must not be ported without review (see `audit/AUDIT-REPORT.md` sections A and B).
+Session 6 added the self-report items for all five skills (all draft). Session 7 added the items of the four critical thinking tasks (all draft). Session 8 added the creativity task items, their category lists and their provisional frequency tables (all draft). The legacy prototype's items are not part of this bank and must not be ported without review (see `audit/AUDIT-REPORT.md` sections A and B).
 
 ## Conventions
 
@@ -64,6 +64,22 @@ Defined in S7 (`content/critical/ct-t1.js` to `ct-t4.js`; scoring in `docs/SCORI
 
 Writing rules applied (checked where possible in `tests/critical.test.mjs`): plain UK English for readers of English as a second language; straight quotes; culturally neutral content (speeds in km/h, no ages, no alcohol, no country-specific law); forms A and B parallel in item types, kinds and negation patterns, in the same order; keys spread across option positions; option and card order shuffled on screen.
 
+## Creativity task item fields
+
+Defined in S8 (`content/creativity/cr-t1.js`, `cr-t2.js`; frequency tables in `aut-norms.js`, `problem-norms.js`; scoring in `docs/SCORING.md`, Creativity tasks). One item per form; the practice pools hold other objects and situations.
+
+| Field | Meaning |
+|---|---|
+| `kind` | `uses` (CR-T1) or `problems` (CR-T2) |
+| `object` / `situation` | The object ("a cardboard box"), or the situation completing "What problems might a student face when ...?" |
+| `objectWords` | Words that only name the object or restate the situation: they count towards the two-word minimum but never make an idea on their own |
+| `categories` | The taxonomy: `{ id, label, keywords, hint? }`. Written for this tool, not taken from Guilford (1967) or any scoring guide. No "Other" category. `hint` (practice items only) suggests the category in practice feedback |
+| `norms` | The item's frequency table (attached from the norms file by item ID) |
+
+Frequency-table entry fields: `id` (stable), `category`, `freq` (`common`, `occasional` or `rare`: **provisional, author-estimated, to be replaced with pilot norms**), `match` (word groups; the idea must contain one alternative of every group, as whole normalised words), `example` (an idea that matches the entry; `tests/creativity.test.mjs` checks that every example is read as valid and matched to its own entry and category).
+
+Construction rules (checked in `tests/creativity.test.mjs`): forms A and B have the same number of categories (12) and tables whose sizes and band counts differ by at most 3; no alternative repeats across the groups of one entry; every category has at least 5 keywords. Forms A and B were chosen to be similar in familiarity (two everyday household containers; two common situations of student life). This is the author's judgement, to be checked in the pilot (R-10).
+
 ## Item status and review
 
 Every item is `status: "draft"` until a Hult subject expert reviews it; only a reviewer changes it to `"reviewed"`. A materially changed item gets a new ID. Review should check, for each item: that it matches its facet definition in `docs/CONSTRUCTS.md` and nothing outside it; that its keying is right; that it reads clearly for a student writing in a second language; and that it fits the cultural-neutrality checks in `docs/REVIEW-CHECKLIST.md`. Self-report items are also candidates for cognitive interviews in the pilot (`docs/VALIDATION-PLAN.md`).
@@ -76,6 +92,8 @@ For task items, review should also check that the key is the single defensible a
 - **IPIP items.** The International Personality Item Pool (ipip.ori.org) is in the public domain: its permission page states that permission is granted automatically for any use, commercial or non-commercial. Each IPIP item records its IPIP item code (from the site's alphabetical list of the 3,320 IPIP items), the IPIP scale it is keyed on and the page of that scale's key, and its original wording. The text here adds only the subject "I" and the matching verb form ("Am an original thinker." becomes "I am an original thinker."). Codes, wording and keying were checked against ipip.ori.org on 27 November 2026. General citation, as printed on the site's citation page: Goldberg, L. R., Johnson, J. A., Eber, H. W., Hogan, R., Ashton, M. C., Cloninger, C. R., & Gough, H. C. (2006). The International Personality Item Pool and the future of public-domain personality measures. *Journal of Research in Personality, 40*, 84-96.
 - **Critical thinking task items (S7)** were written for this tool. No item is copied or adapted from a published or proprietary test (for example, Watson-Glaser, HCTA or CART). The paradigms are standard and named in the literature: the selection task (Wason, 1968), base-rate and sample-size reasoning and independent chance events (Stanovich, West & Toplak, 2016, review such tasks). The widely circulated versions are avoided: no letter-and-number (vowel / even number) or drinking-age selection item, no Cognitive Reflection Test item, and no taxicab, Linda, hospital or medical-screening problem. Two CT-T4 sample-size items (CT-T4-A03, CT-T4-B03) use the same logic as the well-known hospital problem with different content; a reviewer should decide whether they are too close.
 - **CT-T3 facts.** Every answer and every piece of evidence was checked on 27 November 2026 against the pages listed in the item's `source.urls`. The check was made through web searches whose results quoted those pages; the pages could not be opened directly from the build environment (its network policy refused them). A person must open each source and confirm it before the items are used (`docs/OPEN-DECISIONS.md` R-8). Items whose facts could not be confirmed were not written (for example, a comparison of Antarctica with Europe, because no source for Europe's area was found). Every item is decided by a margin larger than the differences between sources. CT-T3-B05 (Nigeria and Brazil, by population) depends on current estimates and must be rechecked before each use.
+- **Creativity task items (S8)** were written for this tool. The alternate uses paradigm (Guilford, 1967) and problem-finding prompts are standard and not proprietary; no item, category list or norm table was copied from a published test or scoring guide (for example, the Torrance Tests). The objects of the legacy prototype (brick, paperclip, shoe, newspaper, plastic bottle, rubber band, wooden spoon) are not reused. The frequency bands are the author's estimates, not data.
+- **Word list.** `content/creativity/wordlist.js` is generated (`tests/write-wordlist.mjs`) from SCOWL (Spell Checker Oriented Word Lists) by Kevin Atkinson, as packaged in the npm package `wordlist-english` 1.2.1 (MIT): sizes 10, 20 and 35 of the English, British and American lists, lower case a to z only. SCOWL permits use, copying, modification, distribution and sale provided its copyright and permission notice appear in all copies and in supporting documentation; the notice is in the file header and in full in `content/creativity/SCOWL-COPYRIGHT.txt` (R-11).
 - **Why few IPIP items.** IPIP scales measure broad traits (openness, intellect, VIA character strengths). Most of the facets here are specific behaviours (for example, CO2 coordination, CM3 explicit reasoning, CT4 base-rate reasoning) with no close IPIP match. IPIP items were used only where an item matches a facet definition directly; three did. Candidates considered and not used, because they match a facet only loosely, include VIA Originality/Creativity V5 ("Am able to come up with new and different ideas.") and V71 ("Like to think of new ways to do things."), and NEO O4 H2021 ("Am interested in many things.").
 
 ## Item table
@@ -291,3 +309,18 @@ Self-report items (S6). 86 form items (43 per form) and 17 retrospective items; 
 | CT-T4-P01 | CT4 | Practice | base-rate | A parcel is marked "damaged". How likely is it that it really is damaged? | About 30% | New (written for this tool); numbers invented and stated in the item | draft |
 | CT-T4-P02 | CT4 | Practice | sample-size | Which rating tells you more about what most buyers think of the product? | Product Y's rating, because it comes from many more buyers. | New (written for this tool); numbers invented and stated in the item | draft |
 | CT-T4-P03 | CT4 | Practice | proportion | Which club has the higher proportion of members who joined this year? | Club B. | New (written for this tool); numbers invented and stated in the item | draft |
+
+### Creativity task items (S8)
+
+All `status: "draft"`. Categories and frequency tables written for this tool; bands are author-estimated (provisional).
+
+| ID | Task | Pool | Object or situation | Categories | Table entries (common / occasional / rare) |
+|---|---|---|---|---|---|
+| CR-T1-A01 | CR-T1 | Form A | a cardboard box | 12: Storing and organising; Carrying, sending and giving; Play and toys; Animals and plants; Furniture and building; Art, craft and display; Wearing and dressing up; Covering and protecting; Signs and messages; Cardboard as a material; Sport and movement; Music and sound | 37 (8 / 16 / 13) |
+| CR-T1-B01 | CR-T1 | Form B | an empty glass jar | 12: Storing and organising; Food and drink; Light and candles; Plants and animals; Money and saving; Decoration and craft; Using it as a tool; Science and measuring; Music and sound; Memories and messages; Cleaning and the bathroom; Games and play | 36 (7 / 19 / 10) |
+| CR-T1-P01 | CR-T1 | Practice | a pencil | 9: Writing and drawing; A small tool; Hair, food and the body; Music and sound; Measuring and lines; Plants and the garden; Games and play; Building and models; What it is made of | 14 (3 / 7 / 4) |
+| CR-T1-P02 | CR-T1 | Practice | an old towel | 8: Cleaning and drying; Wearing and dressing up; Comfort and sleep; Protecting and insulating; Sport and exercise; Signals and first aid; Craft and new material; Play and games | 14 (2 / 7 / 5) |
+| CR-T2-A01 | CR-T2 | Form A | they share a flat (an apartment) with other students for the first time | 12: Money and bills; Cleaning and chores; Noise and sleep; Privacy, space and guests; Food and the kitchen; Getting on with each other; Rules, contracts and the landlord; Safety and security; Studying and concentration; Health and wellbeing; Different habits and cultures; Internet, heating and shared equipment | 37 (7 / 17 / 13) |
+| CR-T2-B01 | CR-T2 | Form B | they start a part-time job while studying full time | 12: Time and balance; Studies and grades; Health, sleep and stress; Pay and money; Contracts, rights and rules; Managers and colleagues; Customers and the work itself; Travel and getting there; Friends, family and social life; Shifts and rotas; Safety at work; Career and the future | 34 (5 / 15 / 14) |
+| CR-T2-P01 | CR-T2 | Practice | they organise a weekend trip with friends on a small budget | 10: Money and costs; Getting there; Somewhere to stay; Dates and plans; Group decisions; Food; Weather and the unexpected; Safety and belongings; Health and insurance; Documents and borders | 14 (5 / 4 / 5) |
+
