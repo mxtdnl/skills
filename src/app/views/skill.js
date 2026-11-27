@@ -70,6 +70,15 @@ function stepList(app, sitting, steps, label) {
 function practiceCard(app, skill, mins) {
   const { data } = app;
   const steps = stepsFor(skill, 'practice');
+  if (steps.length === 0) {
+    // A skill whose tasks are not built yet (S6: self-report only). A self-report has no practice.
+    return h('section', { class: 'card card-top mode-card', dataset: { mode: 'practice' }, attrs: { 'aria-labelledby': 'mode-practice' } },
+      h('p', { class: 'eyebrow', text: 'Mode 1' }),
+      h('h2', { class: 'card-title', id: 'mode-practice', text: 'Practice' }),
+      h('p', { text: 'Practice is not available for this skill yet. Its practice questions are being written with its tasks.' }),
+      h('p', { class: 'mode-status' }, h('span', { class: 'tag', text: 'In preparation' })),
+    );
+  }
   const sitting = latestPractice(data, skill.id);
   const state = sittingState(data, sitting, steps);
   const startNew = async () => {

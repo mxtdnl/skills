@@ -16,7 +16,7 @@ Three versions are recorded, all defined in `src/core/version.js`:
 | `appVersion` | semver string | The release of the tool. Matches `package.json` | Every release |
 | `scoringVersion` | semver string | The scoring rules in force | Any change to any scoring function. Documented in `docs/SCORING.md` |
 
-Current values: `schemaVersion` 2, `appVersion` 0.3.0, `scoringVersion` 0.3.0.
+Current values: `schemaVersion` 3, `appVersion` 0.4.0, `scoringVersion` 1.0.0-draft.
 
 Every record carries `schemaVersion`. A sitting carries all three plus `formId` and `seed`. Task attempts and self-reports carry `scoringVersion` and every raw response with its timing, so any score can be recomputed under a later scoring version (audit D-6). Results with different `scoringVersion` values are never compared without re-scoring.
 
@@ -115,6 +115,7 @@ Per-task seeds are derived as `seedFromString("<seed>:<skillId>:<taskId>")`, so 
   - `"programme:<code>"`: started with a coach's sitting code. The code starts a full battery: one assessment sitting per available skill, created together, in the fixed canonical order (`SKILL_CATALOGUE` in `src/skills/registry.js`), each recording that order in `programme.skillOrder`. Steps are taken in that order; practice and self-directed assessment are unavailable until the battery is complete. Each code can be used once.
 - Sitting code format: 2 to 12 letters or digits, a hyphen and one window digit (`^[A-Z0-9]{2,12}-[1-9]$`, after normalising case and removing spaces). The code is not verified against any list: the tool has no server, so any well-formed code is accepted.
 - A sitting is complete when every step has a complete record; `completedAt` is then set.
+- **End of programme (S6).** A programme sitting at an even window (2, the end) is an end-of-programme sitting (`isProgrammeEnd`, `src/skills/runner.js`), the same parity rule as form assignment. Only these sittings ask the self-report's retrospective items (audit D-5). No field records this; it follows from `programme.window`.
 
 ### TaskAttempt
 
@@ -170,9 +171,26 @@ One skill's self-report questionnaire within a sitting.
 | `sittingId` | record ID, prefix `S` | yes | |
 | `skillId` | slug | yes | |
 | `responses` | array of item responses | yes | Same shape as a task's item responses |
-| `score` | number, null, or object | yes | As for TaskAttempt |
+| `score` | number, null, or object | yes | As for TaskAttempt. From scoringVersion 1.0.0-draft: one mean per facet code plus `skill`, on the 1 to 5 scale (`docs/SCORING.md`, Self-report) |
+| `retrospective` | object | no | End-of-programme sittings only: one retrospective ("then") mean per facet code, 1 to 5, or null. Never part of `score`. Added in schema version 3 |
+| `quality` | object | no | Response-quality indicators, for the coach view only; never shown to the student and never used in a score. See below. Added in schema version 3 |
 | `scoringVersion` | semver | yes | Added: a self-report score is a scoring rule too (D-6) |
 | `status`, `startedAt`, `updatedAt`, `completedAt` | | yes | As for TaskAttempt. Added in schema version 2 |
+
+`quality` (schema version 3; set on completion by the self-report scoring):
+
+| Field | Type | Notes |
+|---|---|---|
+| `items` | integer | Items on the form taken, not counting retrospective items |
+| `answered` | integer | Items with a valid answer (an integer from 1 to 5) |
+| `missing` | integer | `items` minus `answered` |
+| `straightLining` | boolean | Every valid answer is the same (at least 3 answers) |
+| `medianItemMs` | number or null | Median time per item: on each screen, the gap from the previous answer (or from the screen appearing) |
+| `fastResponding` | boolean | `medianItemMs` under 1000 |
+| `longestRun` | integer | Longest run of identical answers, in the order shown |
+| `longRun` | boolean | `longestRun` at or above the provisional threshold (6) |
+
+A self-report may hold more than one response per item: every change of answer is recorded, in order, and the last one counts.
 
 ### Autosave
 
@@ -188,7 +206,7 @@ These rules are enforced by `validate()` but cannot be expressed in `docs/data-s
 4. A record whose `schemaVersion` is not the current version is rejected until it has been migrated.
 5. A practice sitting has `windowId` and `programme` null; an assessment sitting has a `windowId`.
 6. A sitting with `programme` has `windowId` `"programme:<code>"`, `programme.window` equal to the last digit of the code, and `programme.skillOrder[programme.position]` equal to `skillId`. A sitting without `programme` has `windowId` `"self"` or null.
-7. On task attempts and self-reports: `status` `"complete"` needs `completedAt`; `"in-progress"` needs `completedAt`, `score` (and `rawScore`) null; `timerSnapshot` only while in progress; `updatedAt` and `completedAt` not before `startedAt`.
+7. On task attempts and self-reports: `status` `"complete"` needs `completedAt`; `"in-progress"` needs `completedAt`, `score` (and `rawScore`) null, and no `quality` or `retrospective`; `timerSnapshot` only while in progress; `updatedAt` and `completedAt` not before `startedAt`.
 8. `consent.toolUse` is `true`.
 
 ## Identifiers
@@ -216,7 +234,7 @@ These rules are enforced by `validate()` but cannot be expressed in `docs/data-s
 
 Properties: `persistent` (false when data is held only in memory) and `notice` (the text to show when it is false). `onStatusChange(callback)` reports a switch to memory.
 
-**LocalStorageAdapter.** Keys are `skills5c:v<schemaVersion>:<type>:<id>`, for example `skills5c:v2:sitting:S-0123456789ABCDEF`. Values are the record as JSON. Every access is wrapped in `try/catch`. If storage is unavailable at start-up (blocked, private mode, disabled), or a write fails later (quota), the adapter copies what it can read into memory, switches to memory, keeps working, and sets the notice: "Your browser is not letting this tool save data, so your progress will not be saved. If you close or reload this page, your answers will be lost." `mountStorageNotice(adapter, element)` shows it in a `role="status"` element. A corrupt entry is read as missing. Keys outside the `skills5c:` namespace are never touched.
+**LocalStorageAdapter.** Keys are `skills5c:v<schemaVersion>:<type>:<id>`, for example `skills5c:v3:sitting:S-0123456789ABCDEF`. Values are the record as JSON. Every access is wrapped in `try/catch`. If storage is unavailable at start-up (blocked, private mode, disabled), or a write fails later (quota), the adapter copies what it can read into memory, switches to memory, keeps working, and sets the notice: "Your browser is not letting this tool save data, so your progress will not be saved. If you close or reload this page, your answers will be lost." `mountStorageNotice(adapter, element)` shows it in a `role="status"` element. A corrupt entry is read as missing. Keys outside the `skills5c:` namespace are never touched.
 
 **MemoryAdapter.** For tests. Same interface, nothing persists, no notice.
 
@@ -235,6 +253,7 @@ To add a version, follow the steps at the top of `src/core/migrate.js`.
 |---|---|---|---|
 | (none) | 1 | First schema | S3 |
 | 1 | 2 | Adds `consent.toolUse`, `participant.settings` (optional), `sitting.skillId`, `windowId` and `programme`, and `status`, `startedAt`, `updatedAt`, `completedAt` and `timerSnapshot` (optional) on task attempts and self-reports. Defaults: `toolUse` true; `skillId` from the sitting's records, else `"_unknown"`; `windowId` `"self"` for assessment, null for practice; `programme` null; attempts `"complete"`, with all three times set to the first response's `shownAt` (else the sitting's `startedAt`, else the Unix epoch). Version 1 data could be made only by the S3 developer harness | S5 |
+| 2 | 3 | Adds `retrospective` and `quality` (both optional, set only on completion) to self-reports. No existing record changes; version 2 self-reports keep their stub scores (scoringVersion 0.3.0) and can be re-scored from their raw responses | S6 |
 
 ## Export formats
 
@@ -243,8 +262,8 @@ The JSON export bundle, as produced by `exportAll()`:
 ```json
 {
   "format": "skills5c-export",
-  "schemaVersion": 2,
-  "appVersion": "0.3.0",
+  "schemaVersion": 3,
+  "appVersion": "0.4.0",
   "exportedAt": "2026-11-26T09:00:00.000Z",
   "records": {
     "participant": [],

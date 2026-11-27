@@ -9,6 +9,7 @@
 | 0.1.0 | Legacy prototype, `legacy/skills-assessment-hult.html` | Legacy; known defects, see `audit/AUDIT-REPORT.md` |
 | 0.2.0 | Rebuilt platform skeleton (S3). Only the developer stub task is scored | No skill measures; nothing to compare |
 | 0.3.0 | Application shell (S5). Adds the developer stub's self-report score | No skill measures; nothing to compare |
+| 1.0.0-draft | Self-reports of the five skills (S6): reverse keying, facet and skill means on 1 to 5, retrospective means, response-quality indicators | Draft: items unreviewed, no pilot data. Not comparable with 0.1.0 (different items, scale and formula) |
 
 ## Release checklist for scoringVersion 1.0.0
 
@@ -66,3 +67,16 @@ To be written in Session 15.
 - Removed the S3 developer harness (`dev/`), replaced by the hub (`index.html?example` shows the stub skill).
 - Added `styles/components.css` shell components (navigation, form fields, checkboxes, dialog, step list, battery, run header) and five contrast pairs to `tests/lint.mjs`.
 - Tests: `tests/progress.test.mjs`; runner autosave, resume and timer tests; migration test with a real version 1 bundle; Playwright end-to-end tests `tests/e2e/hub.e2e.mjs` (`npm run e2e`), including a keyboard-only run with reloads mid-step.
+
+### S6. Self-report rebuild (2026-11-27)
+
+- Recorded the owner's sign-off of `docs/CONSTRUCTS.md` (all five skills, approved as drafted), passing the S2 gate; added the decision to `audit/BUILD-PLAN.md`.
+- Added self-report content for the five skills, `content/<skill>/self-report.js`: 86 form items (8 or 9 per form, every facet on every form, balanced keying recorded per item) and 17 end-of-programme retrospective items, one per facet. All draft. 3 items are IPIP items (X30, V330, V226), cited with code, scale and original wording; 100 are new. No forced-choice or faking items.
+- Added `src/skills/common/`: `self-report.js` (component: one facet per screen, labelled five-point Likert radio groups, Back and Next, autosave of every answer and change, resume), `self-report-score.js` (scoring, scoringVersion 1.0.0-draft) and `manifest.js` (builds a manifest from `SKILL_CATALOGUE`).
+- Registered the five skill modules, `src/skills/<skill>/index.js`, in `SKILL_MODULES`, with self-reports and no tasks yet. `validateManifest` now accepts `tasks: []` when a self-report exists; the skill page shows Practice as in preparation for a skill with no tasks.
+- Runner: `isProgrammeEnd(sitting)` (programme sitting at an even window); retrospective items appended to self-report items in those sittings; `ctx.programmeEnd`; self-report `quality` and `retrospective` stored on completion. `validateContent` checks the optional `retrospective` pool.
+- **scoringVersion 0.3.0 to 1.0.0-draft.** New section in `docs/SCORING.md`. Self-report scores are facet means and a skill mean on 1 to 5; negatively keyed items reversed; facets need at least half their items answered; no consistency statistic. Quality indicators (straight-lining, median time per item under 1 second, longest identical run, provisional threshold 6) are recorded for the coach view only and never shown to students.
+- **schemaVersion 2 to 3.** SelfReport gains optional `retrospective` and `quality` (only on completion). Migration 2 to 3 changes no existing record. Storage prefix moves to `skills5c:v3:`. `docs/DATA-SCHEMA.md`, `docs/data-schema.json` updated.
+- appVersion 0.3.0 to 0.4.0.
+- `docs/ITEM-BANK.md`: pools, item fields, review, sources and licences, and the item table with sources. `docs/VALIDATION-PLAN.md`: provisional rules to be set from pilot data. `docs/ARCHITECTURE.md` updated.
+- Tests: `tests/self-report.test.mjs` (content rules, reverse keying, straight-lining with no penalty and the flag set, missing and invalid responses, timing, retrospective only at the end of the programme, schema). `tests/registry.test.mjs` and `tests/migrate.test.mjs` updated. `tests/e2e/hub.e2e.mjs`: the programme battery now covers all six registered skills and checks retrospective items at window 2; new test of a real self-report (labels, unanswered prompt, reload, Back, nothing about response quality shown).

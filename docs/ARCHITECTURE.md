@@ -26,7 +26,8 @@ src/skills/
   registry.js    the list of skill modules; manifest and content validation
   runner.js      runs one task in a sitting and stores the attempt
   _example/      developer stub skill proving the contract
-  <skill>/       one directory per skill, from S6
+  common/        shared by the five skills (S6): self-report component, its scoring, manifest builder
+  <skill>/       one directory per skill, from S6 (index.js: the manifest)
 src/app/
   main.js        application shell entry (loaded by index.html): store, registry, router, render
   progress.js    pure rules: step and sitting state, windows, forms, programme batteries
@@ -36,7 +37,7 @@ src/app/
   views/         start (first run), hub, skill, run, results, settings
 content/
   _example/      example content for the stub
-  <skill>/       item banks, from S6
+  <skill>/       item banks, from S6 (self-report.js; one file per task from S7)
 ```
 
 Design system (S4): `styles/` (tokens, base, components), `assets/` and `styleguide.html`; see `docs/DESIGN.md`. Planned: `src/report/` (S11, S12), `cohort.html` (S13).
@@ -96,11 +97,13 @@ The S3 prompt's contract is `{id, label, accentToken, facets, selfReport, tasks:
 
 S5 adds `selfReport.mount` (required) and `selfReport.label` (optional), and reserves the task ID `self-report` for the self-report step.
 
+S6 allows `tasks: []` for a skill that has a self-report, so the five skills can be registered with their self-reports before their tasks are built (S7 to S10). A skill must still have at least one step. A self-report's `score()` may also return `quality` and `retrospective`; the runner stores them on the record (see `docs/SCORING.md`, Self-report). The five manifests are built by `skillManifest()` in `src/skills/common/manifest.js` from their `SKILL_CATALOGUE` entries, so labels, accents and facets are defined once.
+
 `validateManifest()` checks every rule above that can be checked without running a task. `createRegistry()` also refuses two skills with the same `id` or the same `accentToken`.
 
 **Steps.** `stepsFor(skill, mode)` gives a skill's ordered steps: the self-report first, then the tasks in manifest order. Practice has no self-report (a self-report has no practice pool), so a practice sitting is the tasks only.
 
-**Skill catalogue.** `SKILL_CATALOGUE` in `src/skills/registry.js` lists the five skills in canonical order with their accent tokens and their facets from `docs/CONSTRUCTS.md` (draft). The hub shows a skill whose module is not yet registered as "in preparation" from this entry. When a skill module is added to `SKILL_MODULES`, its manifest replaces the entry in the hub; its `id`, `label`, `accentToken` and facets should match.
+**Skill catalogue.** `SKILL_CATALOGUE` in `src/skills/registry.js` lists the five skills in canonical order with their accent tokens and their facets from `docs/CONSTRUCTS.md` (signed off by the owner, 2026-11-27). The hub shows a skill whose module is not yet registered as "in preparation" from this entry. Since S6 all five modules are registered in `SKILL_MODULES`; their manifests are built from this entry, and `tests/registry.test.mjs` checks that they agree. A skill with no tasks yet shows Practice as "in preparation" on its skill page.
 
 ### `mount(el, ctx)`
 
@@ -113,6 +116,7 @@ Renders the task into `el` and returns an optional cleanup function. It builds D
 | `formId` | `"A"`, `"B"` or `"practice"` |
 | `items` | The item array for this mode and form, chosen by the runner |
 | `rng` | Seeded generator for this task in this sitting (`src/core/rng.js`). Use it for every random choice |
+| `programmeEnd` | True in an end-of-programme sitting (S6; `isProgrammeEnd` in `src/skills/runner.js`): a programme sitting at an even window. The self-report's retrospective items are then at the end of `items` |
 | `now()` | Clock in epoch milliseconds. Use it for `shownAt` |
 | `createTimer(limitMs, options)` | A timer with the participant's accommodation multiplier already applied (`src/core/timing.js`). Pass `null` for untimed |
 | `record({ itemId, response, shownAt, answeredAt? })` | Record one raw response and autosave. `shownAt` and `answeredAt` are epoch ms; the runner stores `shownAt` as ISO and computes `rtMs`. Returns a Promise that resolves when saved |
@@ -141,6 +145,8 @@ Every item has a unique `id` and `status: "draft"` or `"reviewed"`. Other fields
 - every item has an `id` and a valid `status`;
 - no item ID appears in more than one pool, so practice and assessment items never mix (global rule) and forms A and B are disjoint (audit D-2).
 
+A self-report module may also export `retrospective` (S6): end-of-programme items, one per facet, whose IDs are checked with the other pools. They are added after the form's items only in an end-of-programme sitting.
+
 The runner calls `validateContent()` before every task and refuses to run on invalid content. Items are draft until reviewed by Hult staff.
 
 ## How a step runs
@@ -148,11 +154,11 @@ The runner calls `validateContent()` before every task and refuses to run on inv
 `runStep({ skill, step, sitting, store, el, existing, multiplier })` in `src/skills/runner.js` (S5; `runTask({ task, ... })` is kept as a wrapper):
 
 1. Loads the step's content and validates it.
-2. Chooses the items: the practice pool in practice mode, form A or B in assessment mode (`itemsFor`).
+2. Chooses the items: the practice pool in practice mode, form A or B in assessment mode (`itemsFor`). For a self-report in an end-of-programme sitting, appends the content's `retrospective` items (S6).
 3. Derives the step's seed from the sitting seed, skill ID and step ID.
 4. Saves a new record with `status: "in-progress"`, or takes `existing` (an in-progress record of the same step) to resume.
 5. Mounts the step with its context. Every `record()` appends the response and saves the record; saves run one after another, in order. A timed step's timer state is saved with each response.
-6. When the step calls `complete()`, unmounts it, stops its timer, calls `score(record, items)`, and saves the record with `status: "complete"` through the store (which validates it).
+6. When the step calls `complete()`, unmounts it, stops its timer, calls `score(record, items)` (for a self-report, also storing `quality` and `retrospective` when returned), and saves the record with `status: "complete"` through the store (which validates it).
 
 `cancel()` unmounts without completing: it pauses the timer, saves, and leaves the in-progress record for a later resume. `flush()` waits for pending saves.
 

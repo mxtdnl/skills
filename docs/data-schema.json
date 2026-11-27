@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "skills5c-data-schema-v2",
+  "$id": "skills5c-data-schema-v3",
   "title": "5C Skills Assessment data model",
-  "description": "Records stored under skills5c:v2:* and in JSON exports. Generated from src/core/schema.js; do not edit by hand. Cross-field rules are listed in docs/DATA-SCHEMA.md.",
+  "description": "Records stored under skills5c:v3:* and in JSON exports. Generated from src/core/schema.js; do not edit by hand. Cross-field rules are listed in docs/DATA-SCHEMA.md.",
   "$defs": {
     "participant": {
       "description": "One student, identified only by a random pseudonymous code.",
@@ -522,6 +522,65 @@
               "null"
             ]
           }
+        },
+        "retrospective": {
+          "description": "End-of-programme retrospective (\"then\") rating per facet, 1 to 5; never part of the skill score. Added in schema version 3.",
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "quality": {
+          "description": "Response-quality indicators for the coach view. Never shown to the student and never used in a score. Added in schema version 3.",
+          "type": "object",
+          "properties": {
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "answered": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "missing": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "straightLining": {
+              "type": "boolean"
+            },
+            "medianItemMs": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "fastResponding": {
+              "type": "boolean"
+            },
+            "longestRun": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "longRun": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "items",
+            "answered",
+            "missing",
+            "straightLining",
+            "medianItemMs",
+            "fastResponding",
+            "longestRun",
+            "longRun"
+          ],
+          "additionalProperties": false
         },
         "scoringVersion": {
           "type": "string",

@@ -73,11 +73,24 @@ function v1to2(b) {
 }
 
 /**
+ * Version 2 to 3 (S6): self-reports may carry `retrospective` and `quality`, both optional and
+ * set only by the self-report scoring introduced with scoringVersion 1.0.0-draft. Version 2
+ * records have neither and need no change; their scores (stub scoring, 0.3.0) are kept as they
+ * are and can be re-scored from their raw responses.
+ * @param {Bundle} b
+ * @returns {Bundle}
+ */
+function v2to3(b) {
+  return { ...b, schemaVersion: 3, records: { ...(b.records || {}) } };
+}
+
+/**
  * The real migration chain.
  * @type {Migration[]}
  */
 export const MIGRATIONS = [
   { from: 1, to: 2, describe: 'consent.toolUse; sitting skillId, windowId, programme; attempt status and timestamps', migrate: v1to2 },
+  { from: 2, to: 3, describe: 'optional retrospective and quality on self-reports; no change to existing records', migrate: v2to3 },
 ];
 
 /**

@@ -73,9 +73,9 @@ const realV1 = () => ({
   },
 });
 
-test('the real 1 -> 2 migration produces valid version 2 records and keeps every raw response', () => {
-  const { bundle, applied } = migrate(realV1(), { target: 2 });
-  assert.equal(applied.length, 1);
+test('the real 1 -> 2 migration (then 2 -> 3) produces valid current records and keeps every raw response', () => {
+  const { bundle, applied } = migrate(realV1());
+  assert.equal(applied.length, SCHEMA_VERSION - 1);
   for (const [type, list] of Object.entries(bundle.records)) {
     for (const r of list) assert.deepEqual(validate(type, r).errors, [], `${type} ${r.id}`);
   }
@@ -89,4 +89,16 @@ test('the real 1 -> 2 migration produces valid version 2 records and keeps every
   assert.equal(a.status, 'complete');
   assert.equal(a.startedAt, '2026-11-26T09:00:05.000Z');
   assert.deepEqual(a.itemResponses, realV1().records.taskAttempt[0].itemResponses);
+});
+
+test('the real 2 -> 3 migration leaves version 2 records unchanged apart from schemaVersion', () => {
+  const v2 = migrate(realV1(), { target: 2 }).bundle;
+  const { bundle, applied } = migrate(v2, { target: 3 });
+  assert.deepEqual(applied, ['2->3: optional retrospective and quality on self-reports; no change to existing records']);
+  for (const [type, list] of Object.entries(bundle.records)) {
+    list.forEach((r, i) => {
+      assert.deepEqual({ ...r, schemaVersion: 2 }, v2.records[type][i], `${type} ${r.id}`);
+      assert.deepEqual(validate(type, r).errors, [], `${type} ${r.id}`);
+    });
+  }
 });

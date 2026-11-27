@@ -2,7 +2,9 @@
 
 **DRAFT for Hult review.** Nothing in this document is an official Hult definition, and no wording here is attributed to Hult. These are working definitions written for an assessment and development tool used with undergraduate students. They become operative only when a Hult reviewer approves them in the sign-off table below.
 
-**Revision 2 (26 November 2026).** Updated with the owner's answers to the first round of open questions. Each skill's former "Open questions" section is now "Decisions and open questions". The owner's answers are not a Hult sign-off; the sign-off table is still empty.
+**Revision 2 (26 November 2026).** Updated with the owner's answers to the first round of open questions. Each skill's former "Open questions" section is now "Decisions and open questions". The owner's answers are not a Hult sign-off.
+
+**Sign-off (27 November 2026).** The owner approved all five skills as drafted (table below), which passes the S2 gate. This is an owner sign-off, not a review by Hult staff; Hult review of the definitions (`docs/REVIEW-CHECKLIST.md`) and of every draft item is still required.
 
 ## Sign-off
 
@@ -10,11 +12,11 @@ The S2 gate (`audit/BUILD-PLAN.md`) is passed when every row below is completed.
 
 | Skill | Approved as drafted / approved with changes / rejected | Reviewer (name or role) | Date |
 |---|---|---|---|
-| Collaboration | | | |
-| Curiosity | | | |
-| Critical Thinking | | | |
-| Creativity | | | |
-| Communication | | | |
+| Collaboration | Approved as drafted | Owner | 2026-11-27 |
+| Curiosity | Approved as drafted | Owner | 2026-11-27 |
+| Critical Thinking | Approved as drafted | Owner | 2026-11-27 |
+| Creativity | Approved as drafted | Owner | 2026-11-27 |
+| Communication | Approved as drafted | Owner | 2026-11-27 |
 
 ---
 
