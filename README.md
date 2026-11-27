@@ -26,7 +26,7 @@ The tool must be served over HTTP. Opening the files directly from disk (`file:/
 python3 -m http.server 8000
 ```
 
-Then open <http://localhost:8000/>. The landing page links to the legacy prototype. The developer harness for the platform skeleton is at <http://localhost:8000/dev/platform.html>.
+Then open <http://localhost:8000/>. The landing page links to the legacy prototype. The developer harness for the platform skeleton is at <http://localhost:8000/dev/platform.html>, and the design-system style guide at <http://localhost:8000/styleguide.html>.
 
 ## Running the tests
 

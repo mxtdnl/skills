@@ -1,0 +1,128 @@
+/*
+ * Design tokens for the 5C Skills Assessment.
+ *
+ * Palette values are copied exactly from mxtdnl/slides CLAUDE.md (Visual style, light
+ * theme). The 5C skill mapping is from audit/AUDIT-REPORT.md J-4. Do not change a hex
+ * value here without changing the reference first; tests/lint.mjs checks every text and
+ * background pair listed in its CONTRAST_PAIRS table against these values.
+ *
+ * Light theme only, fixed. No prefers-color-scheme switching.
+ *
+ * Token families:
+ *   --accent-N            fill, rail, border and shape colour
+ *   --accent-N-ink        text colour where the accent fails contrast as text
+ *   --<feedback>          fill and border; --<feedback>-ink text; --<feedback>-tint background
+ *   --skill-<id>          the skill's accent (fills, rails, data)
+ *   --skill-<id>-ink      the skill's colour for text on --bg-card and on the skill tint
+ *   --skill-<id>-on       text colour on a solid fill of the skill's accent
+ *   --skill-<id>-tint     the skill's accent at 10% over --bg-card (secondary emphasis)
+ */
+
+:root {
+  /* Surfaces and text (light theme) */
+  --bg: #F2DFBE;          /* Page and stage background */
+  --bg-card: #FFFAF2;     /* Card and panel background */
+  --bg-deep: #E8D2A8;     /* Inset tracks, deeper surfaces */
+  --text: #2A1F18;        /* Headings, primary text */
+  --text-muted: #6A5A48;  /* Secondary text; never on --bg-deep (4.49:1) */
+  --border: #D8C8A8;      /* Borders, dividers */
+
+  /* Eight accent colours */
+  --accent-1: #5C3A96;    /* Purple */
+  --accent-2: #B52838;    /* Red */
+  --accent-3: #C85218;    /* Burnt orange */
+  --accent-4: #D4A020;    /* Gold */
+  --accent-5: #7A5828;    /* Brown */
+  --accent-6: #B83068;    /* Magenta */
+  --accent-7: #CC6830;    /* Orange */
+  --accent-8: #7E58A8;    /* Lighter purple */
+
+  /* Derived ink tones (text only) */
+  --accent-4-ink: #7A5410; /* Gold text on light surfaces */
+  --accent-7-ink: #9E4718; /* Orange text on light surfaces */
+
+  /* Text on accent fills */
+  --on-accent: #FFFFFF;
+
+  /* Feedback colours (light theme columns of the reference table) */
+  --correct: #2A7A42;
+  --correct-ink: #1F6A36;
+  --correct-tint: #E6F4EA;
+  --incorrect: #B82828;
+  --incorrect-ink: #B82828;
+  --incorrect-tint: #FDEEEE;
+  --ambiguous: #B98A10;
+  --ambiguous-ink: #7A5410;
+  --ambiguous-tint: #FFF3D6;
+
+  /* 5C skill mapping (audit J-4). Canonical order: collaboration, curiosity,
+     critical thinking, creativity, communication. */
+  --skill-collaboration: var(--accent-2);
+  --skill-collaboration-ink: var(--accent-2);
+  --skill-collaboration-on: var(--on-accent);
+  --skill-collaboration-tint: color-mix(in srgb, var(--accent-2) 10%, var(--bg-card));
+
+  --skill-curiosity: var(--accent-4);
+  --skill-curiosity-ink: var(--accent-4-ink);
+  --skill-curiosity-on: var(--text);
+  --skill-curiosity-tint: color-mix(in srgb, var(--accent-4) 10%, var(--bg-card));
+
+  --skill-critical: var(--accent-1);
+  --skill-critical-ink: var(--accent-1);
+  --skill-critical-on: var(--on-accent);
+  --skill-critical-tint: color-mix(in srgb, var(--accent-1) 10%, var(--bg-card));
+
+  --skill-creativity: var(--accent-6);
+  --skill-creativity-ink: var(--accent-6);   /* on --bg-card and tint only; large only on --bg */
+  --skill-creativity-on: var(--on-accent);
+  --skill-creativity-tint: color-mix(in srgb, var(--accent-6) 10%, var(--bg-card));
+
+  --skill-communication: var(--accent-3);
+  /* Burnt orange is 4.32:1 on --bg-card, so it fails as body-size text. Text uses the
+     reference orange ink tone instead (6.00:1). Owner decision, 2026-11-27. */
+  --skill-communication-ink: var(--accent-7-ink);
+  --skill-communication-on: var(--on-accent); /* 4.49:1: large text only on this fill */
+  --skill-communication-tint: color-mix(in srgb, var(--accent-3) 10%, var(--bg-card));
+
+  /* Focus indicator */
+  --focus: var(--accent-1);
+  --focus-on-fill: var(--on-accent);
+
+  /* Typography */
+  --font: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --weight-heading: 800;
+  --weight-label: 700;
+  --weight-body: 400;
+
+  /* Geometry */
+  --rule: 2px;            /* minimum border */
+  --rule-thick: 4px;
+  --rail: 6px;            /* accent rails and colour bars */
+
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --gutter: 16px;
+  --measure: 44rem;       /* reading column */
+  --page-max: 72rem;      /* full app container */
+  --touch: 44px;          /* minimum touch target */
+
+  /* Shadow: warm-tinted, hover only */
+  --shadow-hover: 0 4px 12px rgba(42, 31, 24, 0.1);
+
+  /* Motion (base.css sets every duration to 0.001ms under prefers-reduced-motion) */
+  --dur-hover: 0.15s;
+  --dur-colour: 0.2s;
+  --dur-reveal: 0.3s;
+  --dur-bar: 0.6s;
+  --bar-stagger: 60ms;
+  --lift: translateY(-2px);
+
+  /* Decorative geometry opacity */
+  --geo-opacity: 0.1;
+}

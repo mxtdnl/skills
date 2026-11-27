@@ -1,0 +1,130 @@
+/*
+ * Base styles: reset, system font stack, type scale, focus, reduced motion and print.
+ * Requires styles/tokens.css to load first.
+ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-weight: var(--weight-body);
+  font-size: 1rem;
+  line-height: 1.55;
+  overflow-x: hidden;
+}
+
+/* Type scale. Headings: weight 800, sentence case, --text, never italic (audit J-1). */
+h1, h2, h3, h4 {
+  margin: 0 0 var(--space-3);
+  font-weight: var(--weight-heading);
+  font-style: normal;
+  color: var(--text);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+h1 { font-size: clamp(2rem, 5vw, 3.25rem); line-height: 1.05; }
+h2 { font-size: clamp(1.5rem, 3vw, 2.1rem); }
+h3 { font-size: clamp(1.2rem, 2vw, 1.4rem); }
+h4 { font-size: 1.05rem; }
+h1 em, h2 em, h3 em, h4 em { font-style: normal; }
+
+p { margin: 0 0 var(--space-4); }
+ul, ol { margin: 0 0 var(--space-4); padding-left: 1.25rem; }
+img, svg { max-width: 100%; }
+img { display: block; height: auto; }
+hr { border: 0; border-top: var(--rail) solid var(--accent-1); margin: var(--space-6) 0; }
+
+a {
+  color: var(--accent-1);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.2em;
+  transition: color var(--dur-colour) ease;
+}
+a:hover { color: var(--accent-2); }
+
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+
+table { border-collapse: collapse; width: 100%; }
+th {
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: var(--weight-label);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-bottom: var(--rule) solid var(--text);
+  padding: var(--space-2) var(--space-3);
+}
+td { border-bottom: var(--rule) solid var(--border); padding: var(--space-2) var(--space-3); vertical-align: top; }
+
+/* Focus: a thick accent outline, offset so it sits on the surrounding surface.
+   Inside solid accent fills, set --focus: var(--focus-on-fill). */
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+:focus:not(:focus-visible) { outline: none; }
+
+/* Utility classes (reference naming) */
+.small { font-size: 0.9rem; }
+.micro { font-size: 0.75rem; letter-spacing: 0.04em; }
+.quiet { color: var(--text-muted); }
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0; border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Layout */
+.wrap {
+  width: 100%;
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+.measure { max-width: var(--measure); }
+
+/* Reduced motion: every duration becomes 0.001ms. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-hover: 0.001ms;
+    --dur-colour: 0.001ms;
+    --dur-reveal: 0.001ms;
+    --dur-bar: 0.001ms;
+    --bar-stagger: 0ms;
+  }
+  *, *::before, *::after {
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+    animation-delay: 0ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Print base: white page, no shadows, no controls, colour kept on fills and rails. */
+@media print {
+  :root { --bg: #FFFFFF; }
+  body { background: #FFFFFF; font-size: 11pt; }
+  * { box-shadow: none !important; text-shadow: none !important; }
+  .no-print, nav, button, .btn, .timer-controls, .geo { display: none !important; }
+  * { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  a { color: var(--text); }
+  h1, h2, h3, h4 { break-after: avoid; }
+  .card, .banner, .feedback, .notice, .results-bar, .skill-tile { break-inside: avoid; }
+}
